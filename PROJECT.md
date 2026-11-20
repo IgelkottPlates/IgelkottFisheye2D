@@ -629,6 +629,7 @@ och hit (bygg shaders och prova i Live FX).
   Kostnaden som är kvar är texturläsningarna (en linjär CRC med vektorer provades och gav inget). Ett eget pass för
   taggen hjälper inte: Matchbox-passen har utbildens storlek. `verify_windows.py` och `--canvas` PASS.
   Prestanda i Live FX (tågklippet, se ovan) begränsas av ProRes-avkodningen, inte av noden.
+  Release v0.19 på GitHub (Windows-zippen) 2026-11-21.
   Färgen: Live FX visar tågklippet ljusare än filens värden (ffmpeg-avkodad ruta 361 som jämförelse): med klipp och
   Interface båda Rec709 / Gamma 2.4 är skärmens värden ≈ filens^0,455 i hela tonskalan; med ACEScct → Rec709 / Gamma
   2.4 lyfta skuggor och mellantoner (median 0,60 mot förväntat 0,43). Windows HDR är av (dxdiag G22 P709). Klippets
