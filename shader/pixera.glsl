@@ -33,10 +33,15 @@ struct IgelkottFisheye {
 	float rollR;
 	//@ label: "Right FOV (vertical)", editor: range, min: 1, max: 179, range_min: 1, range_max: 179, range_default: 90
 	float fovR;
+	//@ label: "Right Offset X (% of height)", editor: range, min: -200, max: 200, range_min: -200, range_max: 200, range_default: 0
+	float offsetXR;
+	//@ label: "Right Offset Y (% of height)", editor: range, min: -200, max: 200, range_min: -200, range_max: 200, range_default: 0
+	float offsetYR;
 };
 
 // tex_coords run 0..1 with y up, as in PIXERA's Equirectangular effect; the wall is `aspect` heights wide.
 // Offset X/Y move the finished picture (after the projection), in % of the height: PIXERA gives the effect no pixel size.
+// With Split on, Offset X/Y are the left wall's and Right Offset X/Y the right wall's.
 vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 	vec3 pl = igkPlate(igkTag(s.sampler, 0.0), s.camera, s.pointing);
 	int cam = int(pl.x + 0.5);
@@ -44,18 +49,20 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 	if (igkHasModel(cam)) {
 		float w = max(s.aspect, 0.01);
 		vec2 q = vec2(tex_coords.x * w, tex_coords.y);
-		vec2 o = q - vec2(s.offsetX, s.offsetY) * 0.01;
 		float splitX = s.split ? clamp(s.splitPos, 0.0, 100.0) * 0.01 * w : w;
+		bool right = q.x >= splitX;                                    // Split on, the right wall
+		vec2 o = q - (right ? vec2(s.offsetXR, s.offsetYR) : vec2(s.offsetX, s.offsetY)) * 0.01;
+		vec2 c = o - vec2(right ? 0.5 * (splitX + w) : 0.5 * splitX, 0.5);   // from the wall's middle, in heights
 		vec3 d;
 		bool past = false;
 		if (s.mode == 1) {
-			vec2 e = igkEquirectUV(o, w, 1.0);
-			past = e.y < 0.0 || e.y > 1.0;                              // past a pole: black
-			d = igkEquirectDirection(e);
-		} else if (q.x < splitX) {
-			d = igkWallDirection(o - vec2(0.5 * splitX, 0.5), 1.0, s.yaw, s.pitch, s.roll, s.fov);
+			vec4 e = right ? igkEquirectDirection(c, w, s.yawR, s.pitchR, s.rollR)
+			               : igkEquirectDirection(c, w, s.yaw, s.pitch, s.roll);
+			past = e.w < 0.5;                                          // past a pole: black
+			d = e.xyz;
 		} else {
-			d = igkWallDirection(o - vec2(0.5 * (splitX + w), 0.5), 1.0, s.yawR, s.pitchR, s.rollR, s.fovR);
+			d = right ? igkWallDirection(c, 1.0, s.yawR, s.pitchR, s.rollR, s.fovR)
+			          : igkWallDirection(c, 1.0, s.yaw, s.pitch, s.roll, s.fov);
 		}
 		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
 		if (!past && igkInside(p)) color = igkFetch(s.sampler, p).rgb;

@@ -71,22 +71,29 @@ def wall_direction(cx, cy, h, R, fov):
     return apply(R, (v[0] / l, v[1] / l, v[2] / l))
 
 
-def equi_direction(u, v_up):
-    lon = (u - 0.5) * 2 * math.pi; lat = (v_up - 0.5) * math.pi
-    return (math.cos(lat) * math.sin(lon), math.sin(lat), math.cos(lat) * math.cos(lon))
+def equi_direction(cx, cy, w, R):
+    """Mode Equirect: 360 grader över hela bredden w, samma grader per pixel på höjden, (cx, cy) från väggens mitt,
+    riktad med väggens R; None förbi en pol."""
+    k = 2 * math.pi / w
+    lat, lon = cy * k, cx * k
+    if abs(lat) > math.pi / 2:
+        return None
+    return apply(R, (math.cos(lat) * math.sin(lon), math.sin(lat), math.cos(lat) * math.cos(lon)))
 
 
-def direction(c, qx, qy_up, w, h, ox=0.0, oy=0.0):
-    """Riktningen genom punkten (qx, qy_up) i en utbild w × h (y upp), som nodens Wall/Split/Equirect. (ox, oy) är
-    Offset X/Y i samma enheter: bilden flyttas efter projektionen, Split-gränsen står kvar."""
-    sx, sy = qx - ox, qy_up - oy
-    if c["mode"] == 1:
-        v = 0.5 + (sy - h / 2) * 2 / w                    # 360 grader över bredden, samma grader per pixel på höjden
-        return None if v < 0 or v > 1 else equi_direction(sx / w, v)
+def direction(c, qx, qy_up, w, h, scale=1.0):
+    """Riktningen genom punkten (qx, qy_up) i en utbild w × h (y upp), som nodens Wall/Split/Equirect. Offset X/Y (vänstra
+    väggen) och Right Offset X/Y (högra) flyttar bilden efter projektionen, gånger scale; Split-gränsen står kvar."""
     split_x = c["pos"] / 100 * w if c["split"] else w
-    if qx < split_x:
-        return wall_direction(sx - split_x / 2, sy - h / 2, h, c["R"], c["fov"])
-    return wall_direction(sx - (split_x + w) / 2, sy - h / 2, h, c["RR"], c["right"][3])
+    right = qx >= split_x
+    ox, oy = c["roffset"] if right else c["offset"]
+    sx, sy = qx - ox * scale, qy_up - oy * scale
+    cx = sx - ((split_x + w) / 2 if right else split_x / 2)
+    cy = sy - h / 2
+    R = c["RR"] if right else c["R"]
+    if c["mode"] == 1:
+        return equi_direction(cx, cy, w, R)
+    return wall_direction(cx, cy, h, R, c["right"][3] if right else c["fov"])
 
 
 def warning(qx, qy_top, size):
@@ -373,6 +380,7 @@ def setup_matchbox(p, c):
     setf(p, "adsk_result_w", c["w"]); setf(p, "adsk_result_h", c["h"])
     seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
     setf(p, "offset_x", c["offset"][0]); setf(p, "offset_y", c["offset"][1]); seti(p, "mode", c["mode"])
+    setf(p, "offset_xr", c["roffset"][0]); setf(p, "offset_yr", c["roffset"][1])
     setf(p, "yaw", c["yaw"]); setf(p, "pitch", c["pitch"]); setf(p, "roll", c["roll"]); setf(p, "fov", c["fov"])
     seti(p, "split", c["split"]); setf(p, "split_pos", c["pos"])
     for n, v in zip(("yaw_r", "pitch_r", "roll_r", "fov_r"), c["right"]):
@@ -386,6 +394,7 @@ def setup_pixera(p, c):
     seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
     # PIXERA: Offset X/Y i % av höjden; fallet anger pixlar i utbilden
     setf(p, "offsetX", c["offset"][0] / c["h"] * 100); setf(p, "offsetY", c["offset"][1] / c["h"] * 100)
+    setf(p, "offsetXR", c["roffset"][0] / c["h"] * 100); setf(p, "offsetYR", c["roffset"][1] / c["h"] * 100)
     seti(p, "mode", c["mode"])
     setf(p, "yaw", c["yaw"]); setf(p, "pitch", c["pitch"]); setf(p, "roll", c["roll"]); setf(p, "fov", c["fov"])
     setf(p, "aspect", c["w"] / c["h"]); seti(p, "split", c["split"]); setf(p, "splitPos", c["pos"])
@@ -396,11 +405,11 @@ def setup_pixera(p, c):
 glUniform2f = ext("glUniform2f", None, GLint, GLfloat, GLfloat)
 
 
-def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
+def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), roffset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
          split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag=None, expect=None, pixera=False, step=1):
     """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (panelens värden).
     offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, varning) som noden ska välja; utan = handvalet."""
-    c = dict(name=name, w=w, h=h, cam=cam, pointing=pointing, offset=offset, mode=mode, yaw=yaw, pitch=pitch,
+    c = dict(name=name, w=w, h=h, cam=cam, pointing=pointing, offset=offset, roffset=roffset, mode=mode, yaw=yaw, pitch=pitch,
              roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, pixera=pixera, step=step,
              expect=expect or (cam, pointing == 2, cam not in CAMS))
     c["R"] = rotation(yaw, pitch, roll); c["RR"] = rotation(*right[:3])
@@ -434,8 +443,14 @@ cases = [
          right=(90, 5, 3, 40), pixera=True),
     case("Split 30 %, Venice: left roll 10, right yaw -120 FOV 70", 384, 216, cam=2, roll=10, fov=50, split=True, pos=30,
          right=(-120, 0, 0, 70), pixera=True),
-    case("Split 40 % with Offset (-30, 20) px: the edge stays, both pictures move", 384, 216, fov=60, split=True,
-         pos=40, right=(90, 0, 0, 60), offset=(-30.0, 20.0), pixera=True),
+    case("Split 40 % with Offset (-30, 20) and Right Offset (25, -15) px: the edge stays, each picture moves", 384,
+         216, fov=60, split=True, pos=40, right=(90, 0, 0, 60), offset=(-30.0, 20.0), roffset=(25.0, -15.0), pixera=True),
+    case("Split off: Right Offset is not used", 256, 144, yaw=20, fov=60, roffset=(40.0, 30.0), pixera=True),
+    case("Equirect aimed: yaw 40, pitch 10, roll 5", 512, 256, mode=1, yaw=40, pitch=10, roll=5, pixera=True),
+    case("Equirect 32:9 Split 50 %: left yaw 0, right yaw 180 pitch 5", 768, 216, mode=1, split=True,
+         right=(180, 5, 0, 90), pixera=True),
+    case("Equirect Split 35 %, Venice nadir, Right Offset (20, 10) px", 768, 216, cam=2, pointing=2, mode=1,
+         split=True, pos=35, yaw=-30, right=(120, -8, 3, 90), offset=(-10.0, 5.0), roffset=(20.0, 10.0), pixera=True),
     case("Split off: the right wall's values are not used", 256, 144, yaw=40, fov=60, right=(90, 10, 5, 30)),
     case("Z-Cam E2 S6: no lens model, black and the warning", 192, 108, cam=3, pixera=True),
     case("Auto, PYXIS zenith tag in every corner", 384, 216, cam=0, pointing=0,
@@ -504,9 +519,9 @@ def check(c, px, n, host):
                 else:
                     qx, qy_up = (x + ox) / h, (row + oy) / h                   # PIXERA: höjden = 1
                 if host == "livefx":
-                    d = direction(c, qx, qy_up, w, h, *c["offset"])
+                    d = direction(c, qx, qy_up, w, h)
                 else:
-                    d = direction(c, qx, qy_up, w / h, 1.0, c["offset"][0] / h, c["offset"][1] / h)
+                    d = direction(c, qx, qy_up, w / h, 1.0, 1.0 / h)
                 if cam not in CAMS or d is None:
                     continue
                 p = point(d, cam, nadir)

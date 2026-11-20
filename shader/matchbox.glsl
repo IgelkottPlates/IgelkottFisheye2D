@@ -9,6 +9,8 @@ uniform int camera;
 uniform int pointing;
 uniform float offset_x;
 uniform float offset_y;
+uniform float offset_xr;
+uniform float offset_yr;
 uniform int mode;
 uniform float yaw;
 uniform float pitch;
@@ -25,9 +27,8 @@ void main() {
     vec3 pl = igkPlate(igkTag(0.0), camera, pointing);
     int cam = int(pl.x + 0.5);
     bool nadir = pl.y > 0.5;
-    // Offset X/Y move the finished picture, after the projection (Eric 2026-11-20): output pixels, +X right, +Y up.
-    // The Split edge stays where Split Position puts it; each wall's picture moves inside it.
-    vec2 offset = vec2(offset_x, offset_y);
+    // Offset X/Y move the finished picture, after the projection (Eric 2026-11-20): output pixels, +X right, +Y up; the
+    // left wall's with Split on, and Right Offset X/Y the right wall's. The Split edge stays where Split Position puts it.
     float w = adsk_result_w;
     float h = adsk_result_h;
     float splitX = split ? clamp(split_pos, 0.0, 100.0) * 0.01 * w : w;
@@ -38,16 +39,18 @@ void main() {
             for (int i = 0; i < 2; i++) {
                 vec2 q = gl_FragCoord.xy + (vec2(float(i), float(j)) + 0.5) * 0.5 - 0.5;
                 q.y = h - q.y;                                                  // y up from the bottom
-                vec2 s = q - offset;                                            // where the picture came from
+                bool right = q.x >= splitX;                                     // Split on, the right wall
+                vec2 s = q - (right ? vec2(offset_xr, offset_yr) : vec2(offset_x, offset_y));
+                vec2 c = s - vec2(right ? 0.5 * (splitX + w) : 0.5 * splitX, 0.5 * h);   // from the wall's middle
                 vec3 d;
                 if (mode == 1) {
-                    vec2 e = igkEquirectUV(s, w, h);
-                    if (e.y < 0.0 || e.y > 1.0) continue;                       // past a pole: black
-                    d = igkEquirectDirection(e);
-                } else if (q.x < splitX) {
-                    d = igkWallDirection(s - vec2(0.5 * splitX, 0.5 * h), h, yaw, pitch, roll, fov);
+                    vec4 e = right ? igkEquirectDirection(c, w, yaw_r, pitch_r, roll_r)
+                                   : igkEquirectDirection(c, w, yaw, pitch, roll);
+                    if (e.w < 0.5) continue;                                    // past a pole: black
+                    d = e.xyz;
                 } else {
-                    d = igkWallDirection(s - vec2(0.5 * (splitX + w), 0.5 * h), h, yaw_r, pitch_r, roll_r, fov_r);
+                    d = right ? igkWallDirection(c, h, yaw_r, pitch_r, roll_r, fov_r)
+                              : igkWallDirection(c, h, yaw, pitch, roll, fov);
                 }
                 vec2 p = igkLensPoint(d, cam, nadir);
                 if (igkInside(p)) sum += FETCH(p).rgb;

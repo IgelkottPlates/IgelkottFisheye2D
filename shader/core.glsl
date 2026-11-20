@@ -58,18 +58,17 @@ vec3 igkWallDirection(vec2 c, float h, float yaw, float pitch, float roll, float
     return igkRotation(yaw, pitch, roll) * normalize(vec3(c.x / f, c.y / f, 1.0));
 }
 
-// The whole sphere, 2:1: uv in fractions, y up; u = lon / 2pi + 0.5, the middle is yaw 0 (FisheyetoEqui's equirect)
-// Mode Equirect on any canvas (Eric 2026-11-20, "crop to 360 wide"): 360 degrees over the width, the same degrees per
-// pixel up and down, centred on the horizon. 2:1 is the whole sphere; wider canvases are cropped top and bottom (32:9:
-// 101 degrees); narrower ones reach past the poles, and that part is black (igkEquirectUV gives v outside 0..1).
-vec2 igkEquirectUV(vec2 s, float w, float h) {
-    return vec2(s.x / w, 0.5 + (s.y - 0.5 * h) * 2.0 / w);
-}
-
-vec3 igkEquirectDirection(vec2 uv) {
-    float lon = (uv.x - 0.5) * 2.0 * IGK_PI;
-    float lat = (uv.y - 0.5) * IGK_PI;
-    return vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));
+// Mode Equirect (Eric 2026-11-20): 360 degrees over the whole canvas width w, the same degrees per pixel up and down
+// ("crop to 360 wide"). c = the point relative to the middle of its wall (y up): one wall without Split, each Split wall
+// a window centred on its own Yaw/Pitch/Roll at the same scale ("same scale, own aim"); FOV is not used. A 2:1 canvas
+// without Split, Yaw 0, is the whole sphere as FisheyetoEqui's equirect (lon 0 in the middle); wider canvases are cropped
+// top and bottom (32:9: 101 degrees); past a pole is black (w = 0 in the result).
+vec4 igkEquirectDirection(vec2 c, float w, float yaw, float pitch, float roll) {
+    float k = 2.0 * IGK_PI / w;
+    float lat = c.y * k;
+    if (abs(lat) > 0.5 * IGK_PI) return vec4(0.0);
+    float lon = c.x * k;
+    return vec4(igkRotation(yaw, pitch, roll) * vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon)), 1.0);
 }
 
 // MARK: The pixel tag (PixelTag in _shared/IgelkottFisheyeLens, IgelkottLensMark; the rules live there)

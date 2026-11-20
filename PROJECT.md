@@ -533,6 +533,15 @@ och hit (bygg shaders och prova i Live FX).
   svart. PIXERA: samma över lagrets Aspect (kedjan med PIXERA:s Equirectangular förutsätter Aspect 2). Provet: nya fall
   32:9 och 16:9, allt PASS. **Sedd i Live FX samma dag** (omstart): A001C016 på 7680 × 2160 visar 360° utan utdragning,
   QR-hörnen bortskurna så när som på spetsarna överst.
+- **0.17 (2026-11-20): Split i Equirect och Right Offset** (Eric: "split ska fungera i equi också", valde "same scale,
+  own aim"; "offset ska finnas på right också"). Equirect: 360° över hela dukens bredd (inte per vägg), samma grader
+  per pixel på höjden; varje vägg är ett fönster centrerat på sina Yaw/Pitch/Roll (också utan Split: Yaw/Pitch/Roll
+  riktar Equirect nu, FOV används inte). Offset X/Y är vänstra väggens, nya Right Offset X/Y (Matchbox `offset_xr`,
+  `offset_yr`; PIXERA `offsetXR`, `offsetYR` i % av höjden) den högras. Provet: nya fall, allt PASS. **Sedd i Live FX:**
+  A001C016 på 7680 × 2160, Equirect, Split 50 %, Right Yaw 180 ger hela 360° i två halvor utan skarv i bilden; Right
+  Offset Y 300 flyttar bara högra halvan. **Varning:** när panelen fick nya reglage laddade noden i det sparade projektet
+  fel värden (Offset X 213, Offset Y −44, Mode Wall i stället för 0, 0, Equirect), och Reset rättade inte Offset;
+  kontrollera nodens värden efter en uppdatering som lägger till reglage.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.

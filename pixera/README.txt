@@ -26,21 +26,24 @@ yellow warning sign shows in the top left corner. Z-Cam E2 S6 has no lens model
 yet: the picture stays black, with the warning sign.
 
 Offset X / Y move the finished picture, after the projection, in % of the
-layer's height (+X right, +Y up). The plate must be centred (as IgelkottDarkroom
+layer's height (+X right, +Y up); with Split on, the left wall's picture, and
+Right Offset X / Y the right wall's. The plate must be centred (as IgelkottDarkroom
 and Fisheye to Equi make it).
 
 Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
 height, and the layer's Aspect (width / height).
 
-Mode Equirect gives 360 degrees over the layer's width, straight ahead in the
-middle, with the same degrees per pixel up and down: the whole sphere at Aspect
+Mode Equirect gives 360 degrees over the layer's whole width, aimed with Yaw,
+Pitch and Roll, with the same degrees per pixel up and down: the whole sphere at Aspect
 2, cropped top and bottom on wider layers (32:9: 101 degrees high), black past
 the poles on narrower ones. Put PIXERA's own Equirectangular effect after it
 (at Aspect 2) for curved screens and domes.
 
 Split: two walls side by side from the same plate, with a sharp edge at Split
-Position (% of the width). The left wall uses Yaw / Pitch / Roll / FOV, the
-right one Right Yaw / Pitch / Roll / FOV.
+Position (% of the width). The left wall uses Yaw / Pitch / Roll / FOV and
+Offset, the right one Right Yaw / Pitch / Roll / FOV and Right Offset. In Mode
+Equirect each wall is a window at the same scale, centred on its own Yaw /
+Pitch / Roll.
 
 
 Checked

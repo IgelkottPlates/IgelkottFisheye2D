@@ -39,12 +39,14 @@ Put one node on the fisheye clip for each wall.
 - **Camera** and **Pointing**: on **Auto (tag)**, the default, the camera and whether the lens pointed up (zenith) or
   down (nadir) are read from a small black and white pixel tag in the plate's corners (written by IgelkottDarkroom and
   Fisheye to Equi). Or choose them by hand. With Auto and no tag, a yellow warning sign shows in the top left corner.
-- **Offset X / Y** move the finished picture, in output pixels (PIXERA: % of the height). The plate must be centred.
+- **Offset X / Y** move the finished picture, in output pixels (PIXERA: % of the height); with Split on, the left
+  wall's picture, and **Right Offset X / Y** the right wall's. The plate must be centred.
 - **Yaw, Pitch, Roll, FOV**: the wall's view. FOV is the vertical angle over the node's height.
-- **Mode**: Wall (a flat view) or Equirect: 360° over the width with square degrees, so the whole sphere at 2:1 and
-  cropped top and bottom on wider canvases such as 32:9.
+- **Mode**: Wall (a flat view) or Equirect: 360° over the whole width with square degrees, aimed with Yaw, Pitch and
+  Roll, so the whole sphere at 2:1 and cropped top and bottom on wider canvases such as 32:9.
 - **Split**: two walls side by side from one plate, with a sharp edge at Split Position; the right wall has its own
-  Right Yaw / Pitch / Roll / FOV.
+  Right Yaw / Pitch / Roll / FOV and Right Offset. In Equirect each wall is a window at the same scale, centred on its
+  own Yaw / Pitch / Roll (Split 50 % with Right Yaw 180 gives the whole 360° side by side).
 
 Use `.mov` clips in Live FX. PNG sequences are not supported: Live FX reads them upside down.
 

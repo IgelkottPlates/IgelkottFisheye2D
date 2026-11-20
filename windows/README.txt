@@ -44,18 +44,22 @@ a small yellow warning sign shows in the top left corner. Z-Cam E2 S6 has no
 lens model yet: the picture stays black, with the warning sign.
 
 Offset X / Y move the finished picture, after the projection, in output pixels
-(+X right, +Y up). The plate must be centred (as IgelkottDarkroom and Fisheye
-to Equi make it).
+(+X right, +Y up). With Split on, they move the left wall's picture and Right
+Offset X / Y the right wall's. The plate must be centred (as IgelkottDarkroom
+and Fisheye to Equi make it).
 
 Yaw, Pitch, Roll and FOV work as on Eq->2D Transformer. FOV is the vertical
 angle over the node's height.
 
-Mode: Wall (a flat view) or Equirect: 360 degrees over the width, with the
-same degrees per pixel up and down (the whole sphere at 2:1, cropped top and
-bottom on wider canvases such as 32:9).
+Mode: Wall (a flat view) or Equirect: 360 degrees over the whole width, with
+the same degrees per pixel up and down, aimed with Yaw, Pitch and Roll (the
+whole sphere at 2:1, cropped top and bottom on wider canvases such as 32:9).
 
 Split puts two walls side by side from the same plate, with a sharp edge at
-Split Position; the right wall has its own Right Yaw / Pitch / Roll / FOV.
+Split Position; the right wall has its own Right Yaw / Pitch / Roll / FOV and
+Right Offset X / Y. In Equirect each wall is a window at the same scale,
+centred on its own Yaw / Pitch / Roll: Split 50 % with Right Yaw 180 shows the
+whole 360 degrees side by side.
 
 Use .mov clips. PNG image sequences are not supported: Live FX turns them
 upside down.
