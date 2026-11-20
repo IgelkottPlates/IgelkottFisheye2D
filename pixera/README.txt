@@ -34,10 +34,11 @@ Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
 height, and the layer's Aspect (width / height).
 
 Mode Equirect gives 360 degrees over the layer's whole width, aimed with Yaw,
-Pitch and Roll, with the same degrees per pixel up and down: the whole sphere at Aspect
-2, cropped top and bottom on wider layers (32:9: 101 degrees high), black past
-the poles on narrower ones. Put PIXERA's own Equirectangular effect after it
-(at Aspect 2) for curved screens and domes.
+Pitch and Roll, with the same degrees per pixel up and down: the whole sphere
+at Aspect 2, cropped top and bottom on wider layers (32:9: 101 degrees high),
+black past the poles on narrower ones. Put PIXERA's own Equirectangular effect
+after it for curved screens and domes, with Aspect 2 and Split off (with Split
+on, the layer holds two windows, not one whole sphere).
 
 Split: two walls side by side from the same plate, with a sharp edge at Split
 Position (% of the width). The left wall uses Yaw / Pitch / Roll / FOV and
@@ -49,7 +50,7 @@ Pitch / Roll.
 Checked
 -------
 The effect is drawn on a graphics card (OpenGL 4.5 on Windows) and compared
-pixel by pixel with the lens model: within 0.03 source pixels. In Mode
+pixel by pixel with the lens model: within 0.1 source pixels. In Mode
 Equirect followed by PIXERA's own Equirectangular effect, every pixel lands
 within 0.4 source pixels of where the lens model puts it.
 Not yet checked inside PIXERA itself.

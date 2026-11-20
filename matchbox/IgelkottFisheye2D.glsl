@@ -69,23 +69,25 @@ mat3 igkRotation(float y, float p, float r) {
     return ry * rx * rz;
 }
 
-// A flat wall: c = the point relative to the wall's middle (y up), h = the height c is measured in, fov = vertical angle
-vec3 igkWallDirection(vec2 c, float h, float yaw, float pitch, float roll, float fov) {
+// A flat wall: c = the point relative to the wall's middle (y up), h = the height c is measured in, fov = vertical angle,
+// r = the wall's igkRotation (built once per pixel, not per sample)
+vec3 igkWallDirection(vec2 c, float h, mat3 r, float fov) {
     float f = 0.5 * h / tan(clamp(fov, 1.0, 179.0) * IGK_DEG * 0.5);
-    return igkRotation(yaw, pitch, roll) * normalize(vec3(c.x / f, c.y / f, 1.0));
+    return r * normalize(vec3(c.x / f, c.y / f, 1.0));
 }
 
 // Mode Equirect (Eric 2026-11-20): 360 degrees over the whole canvas width w, the same degrees per pixel up and down
 // ("crop to 360 wide"). c = the point relative to the middle of its wall (y up): one wall without Split, each Split wall
-// a window centred on its own Yaw/Pitch/Roll at the same scale ("same scale, own aim"); FOV is not used. A 2:1 canvas
+// a window centred on its own Yaw/Pitch/Roll (r = its igkRotation) at the same scale ("same scale, own aim"); FOV is
+// not used. A 2:1 canvas
 // without Split, Yaw 0, is the whole sphere as FisheyetoEqui's equirect (lon 0 in the middle); wider canvases are cropped
 // top and bottom (32:9: 101 degrees); past a pole is black (w = 0 in the result).
-vec4 igkEquirectDirection(vec2 c, float w, float yaw, float pitch, float roll) {
+vec4 igkEquirectDirection(vec2 c, float w, mat3 r) {
     float k = 2.0 * IGK_PI / w;
     float lat = c.y * k;
     if (abs(lat) > 0.5 * IGK_PI) return vec4(0.0);
     float lon = c.x * k;
-    return vec4(igkRotation(yaw, pitch, roll) * vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon)), 1.0);
+    return vec4(r * vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon)), 1.0);
 }
 
 // MARK: The pixel tag (PixelTag in _shared/IgelkottFisheyeLens, IgelkottLensMark; the rules live there)
@@ -235,6 +237,8 @@ void main() {
     float w = adsk_result_w;
     float h = adsk_result_h;
     float splitX = split ? clamp(split_pos, 0.0, 100.0) * 0.01 * w : w;
+    mat3 rLeft = igkRotation(yaw, pitch, roll);
+    mat3 rRight = igkRotation(yaw_r, pitch_r, roll_r);
     vec3 sum = vec3(0.0);
     if (igkHasModel(cam)) {
         // 2 x 2 samples over the pixel
@@ -247,13 +251,11 @@ void main() {
                 vec2 c = s - vec2(right ? 0.5 * (splitX + w) : 0.5 * splitX, 0.5 * h);   // from the wall's middle
                 vec3 d;
                 if (mode == 1) {
-                    vec4 e = right ? igkEquirectDirection(c, w, yaw_r, pitch_r, roll_r)
-                                   : igkEquirectDirection(c, w, yaw, pitch, roll);
+                    vec4 e = igkEquirectDirection(c, w, right ? rRight : rLeft);
                     if (e.w < 0.5) continue;                                    // past a pole: black
                     d = e.xyz;
                 } else {
-                    d = right ? igkWallDirection(c, h, yaw_r, pitch_r, roll_r, fov_r)
-                              : igkWallDirection(c, h, yaw, pitch, roll, fov);
+                    d = igkWallDirection(c, h, right ? rRight : rLeft, right ? fov_r : fov);
                 }
                 vec2 p = igkLensPoint(d, cam, nadir);
                 if (igkInside(p)) sum += texture2D(front, p).rgb;

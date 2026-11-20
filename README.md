@@ -50,6 +50,10 @@ Put one node on the fisheye clip for each wall.
 
 Use `.mov` clips in Live FX. PNG sequences are not supported: Live FX reads them upside down.
 
+After updating the node, check its values in saved projects: Live FX has been seen loading wrong values (Offset, Mode)
+into existing nodes when a version adds controls, and Reset does not fix Offset. Since 0.17, Mode Equirect is aimed with
+Yaw, Pitch and Roll, so a node with leftover wall angles shows a rotated sphere.
+
 ## How it is built
 
 The shader source is in `shader/`: `core.glsl` (the lens, the pixel tag, the warning sign), one thin wrapper per player

@@ -32,6 +32,8 @@ void main() {
     float w = adsk_result_w;
     float h = adsk_result_h;
     float splitX = split ? clamp(split_pos, 0.0, 100.0) * 0.01 * w : w;
+    mat3 rLeft = igkRotation(yaw, pitch, roll);
+    mat3 rRight = igkRotation(yaw_r, pitch_r, roll_r);
     vec3 sum = vec3(0.0);
     if (igkHasModel(cam)) {
         // 2 x 2 samples over the pixel
@@ -44,13 +46,11 @@ void main() {
                 vec2 c = s - vec2(right ? 0.5 * (splitX + w) : 0.5 * splitX, 0.5 * h);   // from the wall's middle
                 vec3 d;
                 if (mode == 1) {
-                    vec4 e = right ? igkEquirectDirection(c, w, yaw_r, pitch_r, roll_r)
-                                   : igkEquirectDirection(c, w, yaw, pitch, roll);
+                    vec4 e = igkEquirectDirection(c, w, right ? rRight : rLeft);
                     if (e.w < 0.5) continue;                                    // past a pole: black
                     d = e.xyz;
                 } else {
-                    d = right ? igkWallDirection(c, h, yaw_r, pitch_r, roll_r, fov_r)
-                              : igkWallDirection(c, h, yaw, pitch, roll, fov);
+                    d = igkWallDirection(c, h, right ? rRight : rLeft, right ? fov_r : fov);
                 }
                 vec2 p = igkLensPoint(d, cam, nadir);
                 if (igkInside(p)) sum += FETCH(p).rgb;

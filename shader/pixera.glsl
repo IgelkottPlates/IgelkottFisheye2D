@@ -53,16 +53,15 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 		bool right = q.x >= splitX;                                    // Split on, the right wall
 		vec2 o = q - (right ? vec2(s.offsetXR, s.offsetYR) : vec2(s.offsetX, s.offsetY)) * 0.01;
 		vec2 c = o - vec2(right ? 0.5 * (splitX + w) : 0.5 * splitX, 0.5);   // from the wall's middle, in heights
+		mat3 r = right ? igkRotation(s.yawR, s.pitchR, s.rollR) : igkRotation(s.yaw, s.pitch, s.roll);
 		vec3 d;
 		bool past = false;
 		if (s.mode == 1) {
-			vec4 e = right ? igkEquirectDirection(c, w, s.yawR, s.pitchR, s.rollR)
-			               : igkEquirectDirection(c, w, s.yaw, s.pitch, s.roll);
+			vec4 e = igkEquirectDirection(c, w, r);
 			past = e.w < 0.5;                                          // past a pole: black
 			d = e.xyz;
 		} else {
-			d = right ? igkWallDirection(c, 1.0, s.yawR, s.pitchR, s.rollR, s.fovR)
-			          : igkWallDirection(c, 1.0, s.yaw, s.pitch, s.roll, s.fov);
+			d = igkWallDirection(c, 1.0, r, right ? s.fovR : s.fov);
 		}
 		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
 		if (!past && igkInside(p)) color = igkFetch(s.sampler, p).rgb;

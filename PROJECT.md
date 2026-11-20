@@ -51,12 +51,12 @@ för nodens storlek):
 |---|---|---|
 | Plate | Camera | Auto (tag) (standard): taggens kamera; PYXIS 12K, Sony Venice 2, Z-Cam E2 S6 (ingen linsmodell än: svart och varningen) väljs för hand. Auto utan giltig tagg: PYXIS 12K och varningstecknet uppe till vänster (0.15, Eric 2026-11-20: Plate-reglaget borta, Auto i listorna) |
 | | Pointing | Auto (tag) (standard), Zenith, Nadir: nadir läses som (x, −y, −z), som Stage 1 och Motion. Auto utan tagg: Zenith och varningen |
-| | Offset X/Y | Flyttar den färdiga bilden efter projektionen, utbildens pixlar (+X höger, +Y upp); Split-gränsen står kvar (0.15, Eric 2026-11-20: "offset ska vara efter projektion"). PIXERA: % av höjden. Objektivets mitt kan inte längre flyttas: plåten ska vara centrerad (Darkroom/Fisheye to Equi) |
+| | Offset X/Y | Flyttar den färdiga bilden efter projektionen, utbildens pixlar (+X höger, +Y upp); med Split på bara vänstra väggens bild, Split-gränsen står kvar (0.15, Eric 2026-11-20: "offset ska vara efter projektion"). PIXERA: % av höjden. Objektivets mitt kan inte längre flyttas: plåten ska vara centrerad (Darkroom/Fisheye to Equi) |
 | View | Yaw, Pitch, Roll | Som Eq->2D: yaw 0 = mitten av den equirect FisheyetoEqui gör, + = höger; pitch + = upp. Vänster vägg när Split är på |
 | | FOV | Den lodräta vinkeln över nodens höjd, som Eq->2D ([eq2d-fov-framing](../_atlas/knowledge/assimilate/eq2d-fov-framing.md)) |
-| | Mode | Wall eller Equirect (hela sfären, 2:1, yaw 0 i mitten; Yaw/Pitch/Roll/FOV och Split används inte) |
-| Split | Split, Split Position | Två väggar ur samma plåt bredvid varandra, skarp gräns vid Split Position (% av bredden från vänster); varje halva har egen mitt |
-| Right Wall | Right Yaw/Pitch/Roll/FOV | Högra väggen när Split är på |
+| | Mode | Wall eller Equirect: 360° över hela nodens bredd, samma grader per pixel på höjden, riktad med Yaw/Pitch/Roll (0.17; före 0.17 användes de inte); 2:1 utan Split och Yaw 0 är hela sfären som FisheyetoEquis equirect, bredare dukar beskärs upptill och nertill, förbi polerna svart. FOV används inte |
+| Split | Split, Split Position | Två väggar ur samma plåt bredvid varandra, skarp gräns vid Split Position (% av bredden från vänster); varje halva har egen mitt. I Equirect är varje vägg ett fönster i samma skala riktat med sina egna Yaw/Pitch/Roll (0.17) |
+| Right Wall | Right Yaw/Pitch/Roll/FOV, Right Offset X/Y | Högra väggen när Split är på; Right Offset X/Y flyttar dess bild som Offset (0.17, Eric 2026-11-20) |
 
 Fast: 2 × 2 prov per pixel, bilderna uppifrån (Live FX på Mac och Windows). Borta i 0.14: Stab, Sensor Height, Lens Scale,
 Quality, Flip Vertical, Custom-kameran, Fisheye (stabilize) och Tracking view. Avsnitten nedan om dem är historik.
@@ -528,7 +528,7 @@ och hit (bygg shaders och prova i Live FX).
 - **32:9 med Equirect (Eric 2026-11-20):** 7680 × 2160, A001C016 (nadir), Mode Equirect: hela sfären över hela duken,
   alltså 1,78 × utdragen på bredden mot en 2:1-equirect; plåtens hörn (QR och pixeltagg) syns i himlen överst.
 - **0.16 (2026-11-20): Equirect 360° på bredden** (Eric: "Crop to 360° wide"). Mode Equirect lägger 360° över dukens
-  bredd och samma grader per pixel på höjden, centrerat på horisonten (`igkEquirectUV` i `core.glsl`): 2:1 är hela sfären
+  bredd och samma grader per pixel på höjden, centrerat på horisonten (0.16:s `igkEquirectUV`, sedan 0.17 `igkEquirectDirection` i `core.glsl`): 2:1 är hela sfären
   som förut, 32:9 visar 101° på höjden (beskuret upptill och nertill), smalare dukar än 2:1 når förbi polerna och det blir
   svart. PIXERA: samma över lagrets Aspect (kedjan med PIXERA:s Equirectangular förutsätter Aspect 2). Provet: nya fall
   32:9 och 16:9, allt PASS. **Sedd i Live FX samma dag** (omstart): A001C016 på 7680 × 2160 visar 360° utan utdragning,
@@ -542,6 +542,9 @@ och hit (bygg shaders och prova i Live FX).
   Offset Y 300 flyttar bara högra halvan. **Varning:** när panelen fick nya reglage laddade noden i det sparade projektet
   fel värden (Offset X 213, Offset Y −44, Mode Wall i stället för 0, 0, Equirect), och Reset rättade inte Offset;
   kontrollera nodens värden efter en uppdatering som lägger till reglage.
+  Granskning före release (2026-11-20): rotationen byggs en gång per pixel (`igkWallDirection`/`igkEquirectDirection` tar
+  en `mat3`); PIXERA-README: Equirectangular-kedjan kräver Split av, noggrannheten "inom 0,1 källpixlar" (riktad
+  Equirect mäter 0,069). Inte prövat: 0.15–0.17 på Mac (Metal-översättningen).
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
