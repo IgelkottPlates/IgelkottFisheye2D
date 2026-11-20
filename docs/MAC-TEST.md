@@ -108,7 +108,8 @@ For each size, play the clip and write down whether it plays in real time.
 ## 10. Colour (optional)
 
 - [ ] Media → Data Format: Color ACEScg (AP1), EOTF ACEScct on the Store clips. Settings → Monitors → Interface:
-      Rec709, Gamma 2.4. **Look:** normal contrast, the same as on Windows.
+      Rec709, Gamma 2.4. **Look:** normal contrast. (On Windows the Interface needs Scene Linear instead of Gamma 2.4,
+      because Windows encodes the viewer itself; write down which one looks right on the Mac.)
 
 ## Afterwards
 

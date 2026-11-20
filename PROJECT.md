@@ -635,6 +635,12 @@ och hit (bygg shaders och prova i Live FX).
   2.4 lyfta skuggor och mellantoner (median 0,60 mot förväntat 0,43). Windows HDR är av (dxdiag G22 P709). Klippets
   `colr` är `nclc` 12-17-2 (P3-D65, ST 428, matris ospecificerad), ingen `gama`-atom. Om det är Apples ProRes-avkodare på
   Windows eller Live FX:s visning är inte avgjort; nästa prov är att rendera en ruta ur Live FX till fil.
+  **Löst samma natt: det är visningen.** En 16-stegs gråskala som TIFF lyftes lika mycket som ProRes (Interface Rec709 /
+  Gamma 2.4: 0 73 102 … 193 … 255 i stället för 0 17 34 … 136 … 255): Live FX lämnar viewern till Windows som linjärt ljus
+  och Windows sRGB-kodar den, så Gamma 2.4 kodar två gånger. **Monitors → Interface: Rec709 / Scene Linear** ger rätt
+  gråskala och tågklippet ser ut som i IgelkottStage på Mac. Inställt så på Windows-datorn. Atlas:
+  [livefx-windows-interface-eotf](../_atlas/knowledge/assimilate/livefx-windows-interface-eotf.md). Provklippen
+  (`D:\IgelkottFisheye-Testamp\`) ligger som slot 11–13 i `IgelkottFisheye Store`.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
