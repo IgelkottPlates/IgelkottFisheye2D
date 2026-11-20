@@ -14,16 +14,19 @@ const float IGK_PI = 3.14159265358979;
 // (Ref-Eric/Equirectangular.glsl.txt), which would clash in a stricter compiler.
 const float IGK_DEG = 0.017453292519943295;
 
-// Cameras: the pixel tag's codes. 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6 (no lens model yet), 0 and 4-7 none.
+// Cameras: the pixel tag's codes. 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6 (FisheyeLens.zcamE2S6, 2026-11-20),
+// 0 and 4-7 none.
 bool igkHasModel(int cam) {
-    return cam == 1 || cam == 2;
+    return cam >= 1 && cam <= 3;
 }
 
 vec2 igkLensCenter(int cam) {
+    if (cam == 3) return IGK_ZCAM_CENTER / IGK_ZCAM_REF;
     return cam == 2 ? IGK_VENICE_CENTER / IGK_VENICE_REF : IGK_PYXIS_CENTER / IGK_PYXIS_REF;
 }
 
 vec4 igkLensK(int cam) {
+    if (cam == 3) return IGK_ZCAM_K / IGK_ZCAM_REF;
     return cam == 2 ? IGK_VENICE_K / IGK_VENICE_REF : IGK_PYXIS_K / IGK_PYXIS_REF;
 }
 
@@ -52,10 +55,11 @@ mat3 igkRotation(float y, float p, float r) {
     return ry * rx * rz;
 }
 
-// A flat wall: c = the point relative to the wall's middle (y up), h = the height c is measured in, fov = vertical angle,
-// r = the wall's igkRotation (built once per pixel, not per sample)
-vec3 igkWallDirection(vec2 c, float h, mat3 r, float fov) {
-    float f = 0.5 * h / tan(clamp(fov, 1.0, 179.0) * IGK_DEG * 0.5);
+// A flat wall: c = the point relative to the wall's middle (y up), ww = the wall's width in the same units, fov = the
+// horizontal angle from the wall's left edge to its right edge (Eric 2026-11-20: 90 degrees means 90 degrees along the
+// horizon; until 0.17 it was the vertical angle, as Eq->2D), r = the wall's igkRotation (built once per pixel)
+vec3 igkWallDirection(vec2 c, float ww, mat3 r, float fov) {
+    float f = 0.5 * max(ww, 1e-4) / tan(clamp(fov, 1.0, 179.0) * IGK_DEG * 0.5);
     return r * normalize(vec3(c.x / f, c.y / f, 1.0));
 }
 
@@ -161,8 +165,8 @@ float igkTag(SRC_PARAM float unused) {
 
 // The plate: vec3(camera, nadir 0/1, warning 0/1). Eric 2026-11-20: Auto is a choice in each list, no Plate control.
 // Camera: 0 Auto (the tag's camera), 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6. Pointing: 0 Auto, 1 Zenith, 2 Nadir.
-// A list on Auto with no valid tag: PYXIS 12K / Zenith and the warning. A camera without a lens model (Z-Cam E2 S6 today,
-// chosen or from the tag): black and the warning, never another camera's model.
+// A list on Auto with no valid tag: PYXIS 12K / Zenith and the warning. A camera without a lens model (a tag code 4-7,
+// none today): black and the warning, never another camera's model.
 vec3 igkPlate(float tag, int camera, int pointing) {
     bool hasTag = tag >= 0.0;
     int cam = camera;

@@ -41,7 +41,7 @@ Put one node on the fisheye clip for each wall.
   Fisheye to Equi). Or choose them by hand. With Auto and no tag, a yellow warning sign shows in the top left corner.
 - **Offset X / Y** move the finished picture, in output pixels (PIXERA: % of the height); with Split on, the left
   wall's picture, and **Right Offset X / Y** the right wall's. The plate must be centred.
-- **Yaw, Pitch, Roll, FOV**: the wall's view. FOV is the vertical angle over the node's height.
+- **Yaw, Pitch, Roll, FOV**: the wall's view. FOV is the horizontal angle, from the wall's left edge to its right edge (with Split on, each wall's own width).
 - **Mode**: Wall (a flat view) or Equirect: 360° over the whole width with square degrees, aimed with Yaw, Pitch and
   Roll, so the whole sphere at 2:1 and cropped top and bottom on wider canvases such as 32:9.
 - **Split**: two walls side by side from one plate, with a sharp edge at Split Position; the right wall has its own
@@ -63,6 +63,7 @@ and the Live FX panel `IgelkottFisheye2D.xml`. The files in `matchbox/` and `pix
 python tools/build_shaders.py           # writes matchbox/ and pixera/
 python tools/build_shaders.py --check   # 0 when they are up to date
 python tools/verify_windows.py          # Windows: draws both on the graphics card, compares every pixel with the lens model
+python3 tools/verify_mac.py             # Mac: the same cases for the Live FX version
 ```
 
 Only Python 3 is needed, with no packages. The camera numbers are in `shader/cameras.json`. Don't edit them by hand,

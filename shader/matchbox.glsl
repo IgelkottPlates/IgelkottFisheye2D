@@ -50,7 +50,7 @@ void main() {
                     if (e.w < 0.5) continue;                                    // past a pole: black
                     d = e.xyz;
                 } else {
-                    d = igkWallDirection(c, h, right ? rRight : rLeft, right ? fov_r : fov);
+                    d = igkWallDirection(c, right ? w - splitX : splitX, right ? rRight : rLeft, right ? fov_r : fov);
                 }
                 vec2 p = igkLensPoint(d, cam, nadir);
                 if (igkInside(p)) sum += FETCH(p).rgb;

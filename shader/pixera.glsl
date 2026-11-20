@@ -17,7 +17,7 @@ struct IgelkottFisheye {
 	float pitch;
 	//@ label: "Roll", editor: range, min: -180, max: 180, range_min: -180, range_max: 180, range_default: 0
 	float roll;
-	//@ label: "FOV (vertical)", editor: range, min: 1, max: 179, range_min: 1, range_max: 179, range_default: 90
+	//@ label: "FOV (horizontal)", editor: range, min: 1, max: 179, range_min: 1, range_max: 179, range_default: 90
 	float fov;
 	//@ label: "Aspect (width / height)", editor: range, min: 0.1, max: 10, range_min: 0.1, range_max: 10, range_default: 1.7778
 	float aspect;
@@ -31,7 +31,7 @@ struct IgelkottFisheye {
 	float pitchR;
 	//@ label: "Right Roll", editor: range, min: -180, max: 180, range_min: -180, range_max: 180, range_default: 0
 	float rollR;
-	//@ label: "Right FOV (vertical)", editor: range, min: 1, max: 179, range_min: 1, range_max: 179, range_default: 90
+	//@ label: "Right FOV (horizontal)", editor: range, min: 1, max: 179, range_min: 1, range_max: 179, range_default: 90
 	float fovR;
 	//@ label: "Right Offset X (% of height)", editor: range, min: -200, max: 200, range_min: -200, range_max: 200, range_default: 0
 	float offsetXR;
@@ -61,7 +61,7 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 			past = e.w < 0.5;                                          // past a pole: black
 			d = e.xyz;
 		} else {
-			d = igkWallDirection(c, 1.0, r, right ? s.fovR : s.fov);
+			d = igkWallDirection(c, right ? w - splitX : splitX, r, right ? s.fovR : s.fov);
 		}
 		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
 		if (!past && igkInside(p)) color = igkFetch(s.sampler, p).rgb;

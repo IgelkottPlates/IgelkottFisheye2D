@@ -25,7 +25,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).
 - `app/` — installationsappen (Mac), som också kör Direction Lock. `windows/` — installeraren för Windows (`.cmd` +
   PowerShell, `README.txt`) och `build-package.ps1` → `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip`.
-- `tools/` — `build_shaders.py`, proven `verify_windows.py` (Windows, båda utgåvorna), `verify.swift` och
+- `tools/` — `build_shaders.py`, proven `verify_windows.py` (Windows, båda utgåvorna), `verify_mac.py` (Mac, samma fall för Live FX-utgåvan,
+  läser och kör `verify_windows.py` med CGL), `verify.swift` och
   `verify_pixera.swift` (Mac, före 0.14), `make_testplates.py` (provplåtar med och utan tagg), `autoyaw/` (Swift-paket:
   klippet → Stab Yaw), `directionlock.swift` (tracker-CSV → Stab-kurvor), `fixtures/` (facit för Direction Lock).
 
@@ -35,8 +36,10 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   Kamerornas tal kommer bara ur `_shared/IgelkottFisheyeLens`; proven jämför dem.
 - Pixeltaggens regler (plats, bitar, CRC, kontrast) står bara i `PixelTag` i `_shared/IgelkottFisheyeLens`
   (`IgelkottLensMark`); `shader/core.glsl` följer den och `verify_windows.py` provar mot dess provvektorer.
-- En kamera utan linsmodell (Z-Cam E2 S6 i dag) spelas aldrig med en annan kameras modell: svart eller Manual-valet,
-  och varningstecknet.
+- En kamera utan linsmodell (taggkod 4–7; ingen i listan sedan Z-Cam E2 S6 fick sin modell 2026-11-20) spelas aldrig
+  med en annan kameras modell: svart och varningstecknet.
+- FOV är den vågräta vinkeln från väggens vänstra till högra kant, med Split varje väggs egen bredd (Eric 2026-11-20:
+  "90 grader för mig betyder 90 grader på horisonten"; till och med 0.17 lodrät som Eq->2D).
 - Reglagen är Erics (2026-11-19, ändrade 2026-11-20): Camera och Pointing med "Auto (tag)" först (inget Plate-reglage),
   Offset X/Y (flyttar bilden efter projektionen, utbildens pixlar), Yaw, Pitch, Roll, FOV, Mode (Wall, Equirect), Split,
   Split Position, Right Yaw/Pitch/Roll/FOV, Right Offset X/Y (2026-11-20). Equirect: 360° över hela bredden, riktad
@@ -69,7 +72,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `python tools/build_shaders.py --check` — de gjorda filerna stämmer med `shader/`
 - `python tools/verify_windows.py` (Windows) — båda utgåvorna mot linsmodellen och pixeltaggen
 - `python tools/verify_windows.py . --canvas` (Windows) — LED-dukarna 4K, 8K och 16K × 2160 i full storlek
-- `swift tools/verify.swift` och `swift tools/verify_pixera.swift` (Mac) — provar reglagen före 0.14, ska skrivas om
+- `python3 tools/verify_mac.py` (Mac) — Live FX-utgåvan mot linsmodellen och pixeltaggen; `. --canvas` för dukarna
+- `swift tools/verify.swift` och `swift tools/verify_pixera.swift` (Mac) — provar reglagen före 0.14; används inte längre
 - `swift tools/directionlock.swift --test tools/fixtures`
 - `autoyaw --selftest` (byggs av `build-app.sh`)
 - `node tools/test-stabilizer.mjs`

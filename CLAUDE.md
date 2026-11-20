@@ -34,12 +34,12 @@ undvika sync-konflikter och path-divergens mellan Macar. Se
 ## Arbetsregler för det här projektet
 
 - **Räkningen är IgelkottStages.** Shaders ska ge exakt samma källpunkt som IgelkottStages fisheye-väg: väggens kamera
-  (`StageProtocol/CameraCost.rotation`, Eq->2D:s lodräta FOV) och objektivet (`_shared/IgelkottFisheyeLens`,
+  (`StageProtocol/CameraCost.rotation`; FOV är däremot vågrät över väggens bredd sedan 0.18, Erics beslut) och objektivet (`_shared/IgelkottFisheyeLens`,
   `FisheyeLens.point`, nadir som (x, −y, −z)). Ändras något där — ändra i `shader/`, kör `python tools/build_shaders.py`
   och provet. Redigera aldrig `matchbox/` eller `pixera/IgelkottFisheye.glsl` för hand.
 - **Provet före varje leverans:** `python tools/verify_windows.py` (Windows) ritar båda utgåvorna på riktigt och jämför
-  varje pixel med Stages formler; gränsen är 0,5 källpixlar vid 8040. `swift tools/verify.swift` (Mac) provar reglagen
-  före 0.14 och måste skrivas om innan `build-app.sh` bygger igen.
+  varje pixel med Stages formler; gränsen är 0,5 källpixlar vid 8040. `python3 tools/verify_mac.py` (Mac) kör samma fall
+  för Live FX-utgåvan (CGL, GLSL 1.20; PIXERA bara på Windows); `build-app.sh` kör det sedan 0.18.
 - **GLSL 1.20 och 4.50 samtidigt.** Live FX översätter Matchbox-shaders till Metal på Mac och kör OpenGL på Windows;
   PIXERA kör 4.50. `shader/core.glsl` håller sig till det båda läser (inga bitoperationer på heltal, inga arrayer).
 - **Gissa aldrig hur Live FX beter sig.** Det som bara syns i Live FX (nodens utformat, bildens orientering, om ett klipp

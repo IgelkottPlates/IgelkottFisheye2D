@@ -8,7 +8,7 @@
 #
 # Källan är en gradient (R = x, G = y uppifrån, normerade), så utpixelns färg är källpunkten shadern läste. Pixeltaggen
 # (PixelTag i _shared/IgelkottFisheyeLens) ritas i hörnen som Darkroom ritar den; dess bitar kontrolleras mot Swift-testets
-# provvektorer. Fallen täcker Plate Manual och Auto (tagg i alla hörn, i ett hörn, efter en LUT, trasig CRC, Z-Cam,
+# provvektorer. Fallen täcker Plate Manual och Auto (tagg i alla hörn, i ett hörn, efter en LUT, trasig CRC, Z-Cam, kod 4 utan modell,
 # majoritet, för svag kontrast, ingen tagg), PYXIS 12K och Sony Venice 2, zenit och nadir, Wall, Split och Equirect,
 # och varningstecknet pixel för pixel. Gränsen är 0,5 källpixlar vid 8040.
 #
@@ -29,7 +29,10 @@ K = (2068.8673345215607, -31.032060077989637, 0.1394366394877631, -0.00029359255
 VREF = 5760.0
 VCENTER = (2848.031459694644, 2854.3896750742356)
 VK = (1440.3464186123263, -21.606695057429874, 0.09789618777410111, -0.0002943394610105899)
-CAMS = {1: (REF, CENTER, K), 2: (VREF, VCENTER, VK)}
+ZREF = 3872.0
+ZCENTER = (1936.0, 1936.0)
+ZK = (965.3796533166083, -9.478101051830038, 0.2498244786039206, -0.5051113655662752)
+CAMS = {1: (REF, CENTER, K), 2: (VREF, VCENTER, VK), 3: (ZREF, ZCENTER, ZK)}
 YELLOW = (1.0, 0.78, 0.0)
 
 
@@ -64,8 +67,9 @@ def point(d, cam, nadir):
     return (c[0] / ref + d[0] * f, c[1] / ref + d[2] * f)
 
 
-def wall_direction(cx, cy, h, R, fov):
-    f = (h / 2) / math.tan(fov * math.pi / 360)
+def wall_direction(cx, cy, ww, R, fov):
+    """FOV vågrätt över väggens bredd ww (Eric 2026-11-20; till och med 0.17 lodrätt över höjden)."""
+    f = (ww / 2) / math.tan(fov * math.pi / 360)
     v = (cx / f, cy / f, 1.0)
     l = math.sqrt(v[0] ** 2 + v[1] ** 2 + 1)
     return apply(R, (v[0] / l, v[1] / l, v[2] / l))
@@ -93,7 +97,7 @@ def direction(c, qx, qy_up, w, h, scale=1.0):
     R = c["RR"] if right else c["R"]
     if c["mode"] == 1:
         return equi_direction(cx, cy, w, R)
-    return wall_direction(cx, cy, h, R, c["right"][3] if right else c["fov"])
+    return wall_direction(cx, cy, w - split_x if right else split_x, R, c["right"][3] if right else c["fov"])
 
 
 def warning(qx, qy_top, size):
@@ -452,7 +456,8 @@ cases = [
     case("Equirect Split 35 %, Venice nadir, Right Offset (20, 10) px", 768, 216, cam=2, pointing=2, mode=1,
          split=True, pos=35, yaw=-30, right=(120, -8, 3, 90), offset=(-10.0, 5.0), roffset=(20.0, 10.0), pixera=True),
     case("Split off: the right wall's values are not used", 256, 144, yaw=40, fov=60, right=(90, 10, 5, 30)),
-    case("Z-Cam E2 S6: no lens model, black and the warning", 192, 108, cam=3, pixera=True),
+    case("Z-Cam E2 S6, Back", 192, 108, cam=3, pitch=15, fov=58.5, pixera=True),
+    case("Z-Cam E2 S6 nadir, Equirect", 512, 256, cam=3, pointing=2, mode=1, pixera=True),
     case("Auto, PYXIS zenith tag in every corner", 384, 216, cam=0, pointing=0,
          pitch=10, fov=60, tag=every(PYXIS_UP), expect=(1, False, False), pixera=True),
     case("Auto, Venice nadir tag in the bottom right corner only", 384, 216, cam=0, pointing=0, yaw=20, pitch=-15,
@@ -463,8 +468,10 @@ cases = [
          pixera=True),
     case("Auto, broken CRC in every corner: PYXIS zenith and the warning", 256, 144, cam=0, pointing=0, yaw=10,
          tag=every(broken), expect=(1, False, True)),
-    case("Auto, Z-Cam tag: never another camera's model, black and the warning", 256, 144, cam=0, pointing=0,
-         tag=every(tag_cells(3, False)), expect=(3, False, True)),
+    case("Auto, Z-Cam zenith tag: its own model, no warning", 256, 144, cam=0, pointing=0, yaw=30,
+         tag=every(tag_cells(3, False)), expect=(3, False, False), pixera=True),
+    case("Auto, tag code 4 (no lens model): never another camera's model, black and the warning", 256, 144, cam=0,
+         pointing=0, tag=every(tag_cells(4, False)), expect=(4, False, True)),
     case("Auto, three corners PYXIS nadir, one Venice zenith: the majority", 256, 144, cam=0, pointing=0, pitch=-30,
          tag=[(PYXIS_DOWN, 1.0, 0.0)] * 3 + [(VENICE_UP, 1.0, 0.0)], expect=(1, True, False)),
     case("Auto, contrast 0.05 (under 0.1): PYXIS zenith and the warning", 256, 144, cam=0, pointing=0,
@@ -714,14 +721,15 @@ else:
         shared = fh.read()
     source = "shader/cameras.json (no _shared here)"
 same = True
-for name, nums in (("pyxis12K", CENTER + K), ("sonyVenice2", VCENTER + VK)):
+for name, nums in (("pyxis12K", CENTER + K), ("sonyVenice2", VCENTER + VK), ("zcamE2S6", ZCENTER + ZK)):
     at = shared.find("static let " + name) if source.startswith("_shared") else shared.find('"%s"' % name)
     block = shared[at:at + 600] if at >= 0 else ""
     for v in nums:
-        if repr(v) not in block or repr(v) not in matchbox_src or repr(v) not in pixera_src:
+        in_block = repr(v) in block or (repr(v).endswith(".0") and repr(v)[:-2] in block)   # Swift: 1936
+        if not in_block or repr(v) not in matchbox_src or repr(v) not in pixera_src:
             same = False; print("  differs: %s %r" % (name, v))
 all_good &= same
-print("  %s PYXIS 12K and Sony Venice 2: both shaders and this test use the numbers in %s"
+print("  %s PYXIS 12K, Sony Venice 2 and Z-Cam E2 S6: both shaders and this test use the numbers in %s"
       % ("PASS" if same else "FAIL", source))
 
 print("All cases match IgelkottStage." if all_good else "Some cases differ from IgelkottStage.")

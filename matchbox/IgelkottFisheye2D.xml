@@ -3,7 +3,7 @@
 
 Camera and Pointing on Auto (tag): the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. Choose a camera or a pointing to set it by hand. With Auto and no tag (PYXIS 12K / Zenith is used), or a camera without a lens model (black), a small warning sign shows in the top left corner.
 Offset X/Y: moves the finished picture, after the projection, in output pixels (+X right, +Y up); with Split on, the left wall's picture, and Right Offset X/Y the right wall's.
-Mode: Wall (a flat view like Eq-&gt;2D: Yaw, Pitch, Roll and FOV, the vertical angle over the node's height) or Equirect (360 degrees over the node's whole width, the same degrees per pixel up and down, aimed with Yaw, Pitch and Roll: the whole sphere at 2:1, cropped top and bottom on wider canvases, black past the poles on narrower ones; FOV is not used).
+Mode: Wall (a flat view: Yaw, Pitch, Roll and FOV, the horizontal angle from the wall's left edge to its right edge) or Equirect (360 degrees over the node's whole width, the same degrees per pixel up and down, aimed with Yaw, Pitch and Roll: the whole sphere at 2:1, cropped top and bottom on wider canvases, black past the poles on narrower ones; FOV is not used).
 Split: two walls side by side from the same plate, split at Split Position (% of the width, a sharp edge). The left wall uses Yaw/Pitch/Roll/FOV and Offset, the right one Right Yaw/Pitch/Roll/FOV and Right Offset. In Equirect each wall is a window at the same scale, centred on its own Yaw/Pitch/Roll.
 
 Igelkott Film AB"
@@ -19,7 +19,7 @@ Igelkott Film AB"
     SoftwareVersion="2017.0.0"
     TimelineUseBack="False"
     SupportsTimeline="False"
-    Version="0.17">
+    Version="0.18">
     <Shader
         Index="1"
         OutputBitDepth="Float16">
@@ -144,7 +144,7 @@ Igelkott Film AB"
         </Uniform>
         <Uniform
             Type="float"
-            Tooltip="Vertical angle over the node's height, as in Eq-&gt;2D. The left wall when Split is on"
+            Tooltip="Horizontal angle, from the left edge of the wall to the right edge. The left wall when Split is on"
             DisplayName="FOV"
             ChannelName="fov"
             Name="fov"
@@ -244,7 +244,7 @@ Igelkott Film AB"
         </Uniform>
         <Uniform
             Type="float"
-            Tooltip="Split: the right wall's vertical angle over the node's height"
+            Tooltip="Split: the right wall's horizontal angle, from its left edge to its right edge"
             DisplayName="Right FOV"
             ChannelName="fov_r"
             Name="fov_r"

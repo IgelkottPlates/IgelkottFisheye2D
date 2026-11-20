@@ -13,7 +13,7 @@ The effect is one fragment (pixel) shader. `shader/core.glsl` needs the host to 
 
 - **Random access to the source**: read the plate at any point, not only at the output pixel. The lens maps every wall
   pixel to an arbitrary point in the fisheye, and the pixel tag reads 80 cells in the corners.
-- **The output pixel's position and the output size**, to build the wall's view (Yaw, Pitch, Roll, vertical FOV).
+- **The output pixel's position and the output size**, to build the wall's view (Yaw, Pitch, Roll, horizontal FOV over the wall's width).
 - **Floats, `atan2`, fixed-length loops and 3 × 3 matrices.** No integer bit operations and no arrays, so the same
   text also compiles as GLSL 1.20.
 - **Parameters**: popups (Plate, Camera, Pointing, Mode) and floats (Yaw, Pitch, Roll, FOV, Lens Offset, Split).

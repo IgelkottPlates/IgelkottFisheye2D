@@ -40,16 +40,17 @@ lens pointed up (zenith) or down (nadir) are read from the small black and
 white tag that IgelkottDarkroom and Fisheye to Equi write next to the QR codes
 in the corners. Choose PYXIS 12K, Sony Venice 2 or Z-Cam E2 S6, and Zenith or
 Nadir, to set them by hand. With Auto and no tag (PYXIS 12K / Zenith is used),
-a small yellow warning sign shows in the top left corner. Z-Cam E2 S6 has no
-lens model yet: the picture stays black, with the warning sign.
+a small yellow warning sign shows in the top left corner.
 
 Offset X / Y move the finished picture, after the projection, in output pixels
 (+X right, +Y up). With Split on, they move the left wall's picture and Right
 Offset X / Y the right wall's. The plate must be centred (as IgelkottDarkroom
 and Fisheye to Equi make it).
 
-Yaw, Pitch, Roll and FOV work as on Eq->2D Transformer. FOV is the vertical
-angle over the node's height.
+Yaw, Pitch and Roll work as on Eq->2D Transformer. FOV is the horizontal
+angle, from the wall's left edge to its right edge (with Split on, each wall's
+own width): FOV 90 shows 90 degrees along the horizon. Until 0.17 it was the
+vertical angle, as on Eq->2D.
 
 Mode: Wall (a flat view) or Equirect: 360 degrees over the whole width, with
 the same degrees per pixel up and down, aimed with Yaw, Pitch and Roll (the

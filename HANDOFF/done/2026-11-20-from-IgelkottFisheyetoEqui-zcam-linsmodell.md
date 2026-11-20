@@ -4,7 +4,7 @@ to: IgelkottLiveFXFisheye
 date: 2026-11-20
 urgency: normal
 topic: Z CAM E2-S6 har en linsmodell i _shared (FisheyeLens.zcamE2S6)
-status: pending
+status: done
 ---
 
 # Från IgelkottFisheyetoEqui till IgelkottLiveFXFisheye: Z CAM-modellen i det delade biblioteket
@@ -22,3 +22,9 @@ Eric 2026-11-20 ("Kör", skalan "Entaniyas tabell", "i det delade biblioteket"):
 
 - [ ] Bygg om mot paketet. En kameraväljare som listar `FisheyeLens.cameras` visar nu också Z CAM E2-S6.
 - [ ] Shaders/verktyg som genererar linsens tal ur paketet: ta med kod 3.
+
+## Anteckning
+
+Klart 2026-11-20 i IgelkottLiveFXFisheye 0.18: `build_shaders.py` läser `FisheyeLens.zcamE2S6` som tredje kamera,
+Camera Z-Cam och taggkod 3 spelar med sin egen modell. Provat på Mac (CGL-kopian av `verify_windows.py`, 61 fall PASS)
+och sett i Live FX. Inget riktigt Z-Cam-klipp provat.

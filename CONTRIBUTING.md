@@ -38,6 +38,7 @@ Fork the repository, make a branch, and open a pull request against `main`. Befo
 ```
 python tools/build_shaders.py --check
 python tools/verify_windows.py        # on Windows
+python3 tools/verify_mac.py           # on a Mac (the Live FX version; PIXERA is tested on Windows)
 ```
 
 and say what you ran and what you saw. Small pull requests are easier to review than big ones.

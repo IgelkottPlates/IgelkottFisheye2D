@@ -2,7 +2,7 @@
 # Bygg IgelkottLiveFXFisheye.app — en skript-app som bär Matchbox-noden IgelkottFisheye2D och installerar den i Live FX.
 #
 # Usage:
-#   ./build-app.sh            # provet (tools/verify.swift) och sedan <byggkatalog>/IgelkottLiveFXFisheye.app
+#   ./build-app.sh            # provet (tools/verify_mac.py) och sedan <byggkatalog>/IgelkottLiveFXFisheye.app
 #   ./build-app.sh --open
 set -euo pipefail
 OPEN_AFTER=0
@@ -23,13 +23,13 @@ BUILD_NUMBER="$(date +%Y%m%d%H%M)"
 
 # Shadern måste stämma med IgelkottStage innan den levereras
 echo "==> Provet: shadern mot IgelkottStages räkning"
-(cd "$SRC_ROOT" && swift tools/verify.swift 2>/dev/null | grep -E "PASS|FAIL|All cases|differ") || { echo "FEL: provet gick inte igenom"; exit 1; }
+# verify_mac.py kör verify_windows.py:s fall med CGL (Live FX-utgåvan; PIXERA provas bara på Windows, GLSL 4.50)
+(cd "$SRC_ROOT" && python3 tools/verify_mac.py . | grep -E "PASS|FAIL|All cases|differ|PIXERA|verify_mac"; exit "${PIPESTATUS[0]}") \
+    || { echo "FEL: provet gick inte igenom"; exit 1; }
 xmllint --noout "$SRC_ROOT/matchbox/IgelkottFisheye2D.xml"
 echo "==> Provet: Direction Lock mot 2025-filerna"
 (cd "$SRC_ROOT" && swift tools/directionlock.swift --test tools/fixtures 2>/dev/null) || { echo "FEL: Direction Lock-provet gick inte igenom"; exit 1; }
 
-echo "==> Provet: PIXERA-effekten mot linsmodellen och PIXERA:s Equirectangular"
-(cd "$SRC_ROOT" && swift tools/verify_pixera.swift 2>/dev/null | grep -E "PASS|FAIL|matches|differs|compile") || { echo "FEL: PIXERA-provet gick inte igenom"; exit 1; }
 
 echo "==> Provet: Auto Stabilize mot en känd pan"
 AUTOYAW_BIN="$BUILD_DIR/autoyaw-build/release/autoyaw"

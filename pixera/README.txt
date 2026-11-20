@@ -22,16 +22,16 @@ pointed up (zenith) or down (nadir) are read from the small black and white tag
 that IgelkottDarkroom and Fisheye to Equi write next to the QR codes in the
 corners. Choose PYXIS 12K, Sony Venice 2 or Z-Cam E2 S6, and Zenith or Nadir,
 to set them by hand. With Auto and no tag (PYXIS 12K / Zenith is used), a small
-yellow warning sign shows in the top left corner. Z-Cam E2 S6 has no lens model
-yet: the picture stays black, with the warning sign.
+yellow warning sign shows in the top left corner.
 
 Offset X / Y move the finished picture, after the projection, in % of the
 layer's height (+X right, +Y up); with Split on, the left wall's picture, and
 Right Offset X / Y the right wall's. The plate must be centred (as IgelkottDarkroom
 and Fisheye to Equi make it).
 
-Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
-height, and the layer's Aspect (width / height).
+Mode Wall is a flat view: Yaw, Pitch, Roll, a horizontal FOV from the wall's
+left edge to its right edge (with Split on, each wall's own width), and the
+layer's Aspect (width / height).
 
 Mode Equirect gives 360 degrees over the layer's whole width, aimed with Yaw,
 Pitch and Roll, with the same degrees per pixel up and down: the whole sphere

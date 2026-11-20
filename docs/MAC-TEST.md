@@ -68,7 +68,8 @@ order than on Windows, and the shader then needs a Mac-specific fix.
 - [ ] **Pointing: Zenith on A001C016 (look):** the picture is wrong, upside down or the wrong part. Set it back to
       Auto (tag).
 - [ ] **The clip without a tag, Auto / Auto (look):** a small yellow warning sign shows in the top left corner.
-- [ ] **Camera: Z-Cam E2 S6:** the picture is black, with the warning sign.
+- [ ] **Camera: Z-Cam E2 S6 on a Venice clip (look):** a picture (the Z-Cam's own lens model, 0.18), no warning sign.
+- [ ] **FOV 90, Yaw 45 (look):** what was straight ahead at Yaw 0 is now at the left edge: FOV is horizontal (0.18).
 
 ## 6. Offset and Split (Mode Wall)
 
@@ -114,6 +115,7 @@ For each size, play the clip and write down whether it plays in real time.
 - Write the results into `PROJECT.md` under the version, with the date, the Mac and the Live FX version, plus anything
   that differed from Windows.
 - If anything fails, open an issue with the log lines and screenshots.
-- `tools/verify.swift` and `tools/verify_pixera.swift` still test the controls from before 0.14. They need to be
-  rewritten as a Mac version of `tools/verify_windows.py`, which draws through Metal, before `build-app.sh` can build the
-  Mac installer. That is a separate task.
+- `python3 tools/verify_mac.py` runs the cases of `tools/verify_windows.py` on the Mac (Live FX version only; PIXERA needs
+  GLSL 4.50 and is tested on Windows). It compiles the shader with Apple's GLSL 1.20, not through Live FX's Metal
+  translation, so the steps above are still needed. `build-app.sh` runs it before it builds the
+  Mac installer.

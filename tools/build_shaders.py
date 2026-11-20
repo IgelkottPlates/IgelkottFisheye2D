@@ -5,7 +5,7 @@
 #   shader/IgelkottFisheye2D.xml  panelen (@VERSION@)     -> matchbox/IgelkottFisheye2D.xml
 #   shader/pixera.glsl          PIXERA-omslaget           -> pixera/IgelkottFisheye.glsl
 #
-# Kamerornas tal (PYXIS 12K, Sony Venice 2) läses ur _shared/IgelkottFisheyeLens/…/FisheyeLens.swift, som text, så att
+# Kamerornas tal (PYXIS 12K, Sony Venice 2, Z-Cam E2 S6) läses ur _shared/IgelkottFisheyeLens/…/FisheyeLens.swift, som text, så att
 # shaders har exakt samma siffror, och skrivs av till shader/cameras.json. Den kopian ligger i GitHub-repot, så att den
 # som klonar utan _shared kan bygga; finns _shared är den källan och --check fäller en inaktuell kopia. Versionen ur VERSION.
 #
@@ -23,16 +23,23 @@ def read(*p):
         return fh.read()
 
 
+def flt(v):
+    """Ett tal som GLSL-flyttal: 1936 -> 1936.0 (Z-Cam-mitten står som heltal i Swift)."""
+    v = v.strip()
+    return v if re.search(r"[.eE]", v) else v + ".0"
+
+
 def camera(swift, name):
     """reference, center (2) och k (4) som text, ur `static let <name> = FisheyeLens(...)`."""
     m = re.search(r"static let %s = FisheyeLens\(reference: ([0-9.]+),\s*center: SIMD2\(([^)]*)\),\s*k: SIMD4\(([^)]*)\)" % name, swift)
     if not m:
         sys.exit("build_shaders: %s not found in %s" % (name, LENS))
     ref = m.group(1) if "." in m.group(1) else m.group(1) + ".0"
-    return ref, [v.strip() for v in m.group(2).split(",")], [v.strip() for v in m.group(3).split(",")]
+    return ref, [flt(v) for v in m.group(2).split(",")], [flt(v) for v in m.group(3).split(",")]
 
 
-CAMERAS = (("PYXIS", "pyxis12K", "PYXIS 12K"), ("VENICE", "sonyVenice2", "Sony Venice 2"))
+CAMERAS = (("PYXIS", "pyxis12K", "PYXIS 12K"), ("VENICE", "sonyVenice2", "Sony Venice 2"),
+           ("ZCAM", "zcamE2S6", "Z-Cam E2 S6"))
 
 
 def cameras():

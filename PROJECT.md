@@ -10,7 +10,7 @@
 
 En Matchbox-nod för Assimilate Live FX, **IgelkottFisheye2D**, som spelar 8040 × 8040-fisheyen (PYXIS 12K + Entaniya
 HAL 250) direkt på väggarna, som IgelkottStage gör (Eric 2026-10-05: "gör en plugin till livefx som spelar 8040x8040 som
-vi gör"). Den ersätter Eq->2D Transformer på varje vägg i ett fisheyeklipp: samma Yaw, Pitch, Roll och lodräta FOV, men
+vi gör"). Den ersätter Eq->2D Transformer på varje vägg i ett fisheyeklipp: samma Yaw, Pitch och Roll (FOV är sedan 0.18 vågrät, inte Eq->2D:s lodräta), men
 källan samplas genom objektivets modell i stället för en equirect från FisheyetoEqui — en omsampling i stället för två.
 
 ## Stack
@@ -49,11 +49,11 @@ för nodens storlek):
 
 | Kolumn | Reglage | Vad |
 |---|---|---|
-| Plate | Camera | Auto (tag) (standard): taggens kamera; PYXIS 12K, Sony Venice 2, Z-Cam E2 S6 (ingen linsmodell än: svart och varningen) väljs för hand. Auto utan giltig tagg: PYXIS 12K och varningstecknet uppe till vänster (0.15, Eric 2026-11-20: Plate-reglaget borta, Auto i listorna) |
+| Plate | Camera | Auto (tag) (standard): taggens kamera; PYXIS 12K, Sony Venice 2, Z-Cam E2 S6 (egen linsmodell sedan 0.18) väljs för hand; en taggkod utan modell (4–7) ger svart och varningen. Auto utan giltig tagg: PYXIS 12K och varningstecknet uppe till vänster (0.15, Eric 2026-11-20: Plate-reglaget borta, Auto i listorna) |
 | | Pointing | Auto (tag) (standard), Zenith, Nadir: nadir läses som (x, −y, −z), som Stage 1 och Motion. Auto utan tagg: Zenith och varningen |
 | | Offset X/Y | Flyttar den färdiga bilden efter projektionen, utbildens pixlar (+X höger, +Y upp); med Split på bara vänstra väggens bild, Split-gränsen står kvar (0.15, Eric 2026-11-20: "offset ska vara efter projektion"). PIXERA: % av höjden. Objektivets mitt kan inte längre flyttas: plåten ska vara centrerad (Darkroom/Fisheye to Equi) |
 | View | Yaw, Pitch, Roll | Som Eq->2D: yaw 0 = mitten av den equirect FisheyetoEqui gör, + = höger; pitch + = upp. Vänster vägg när Split är på |
-| | FOV | Den lodräta vinkeln över nodens höjd, som Eq->2D ([eq2d-fov-framing](../_atlas/knowledge/assimilate/eq2d-fov-framing.md)) |
+| | FOV | Den vågräta vinkeln från väggens vänstra till högra kant; med Split varje väggs egen bredd (0.18, Eric 2026-11-20: "90 grader för mig betyder 90 grader på horisonten"). Till och med 0.17 lodrät över höjden, som Eq->2D ([eq2d-fov-framing](../_atlas/knowledge/assimilate/eq2d-fov-framing.md)) |
 | | Mode | Wall eller Equirect: 360° över hela nodens bredd, samma grader per pixel på höjden, riktad med Yaw/Pitch/Roll (0.17; före 0.17 användes de inte); 2:1 utan Split och Yaw 0 är hela sfären som FisheyetoEquis equirect, bredare dukar beskärs upptill och nertill, förbi polerna svart. FOV används inte |
 | Split | Split, Split Position | Två väggar ur samma plåt bredvid varandra, skarp gräns vid Split Position (% av bredden från vänster); varje halva har egen mitt. I Equirect är varje vägg ett fönster i samma skala riktat med sina egna Yaw/Pitch/Roll (0.17) |
 | Right Wall | Right Yaw/Pitch/Roll/FOV, Right Offset X/Y | Högra väggen när Split är på; Right Offset X/Y flyttar dess bild som Offset (0.17, Eric 2026-11-20) |
@@ -544,8 +544,63 @@ och hit (bygg shaders och prova i Live FX).
   kontrollera nodens värden efter en uppdatering som lägger till reglage.
   Granskning före release (2026-11-20): rotationen byggs en gång per pixel (`igkWallDirection`/`igkEquirectDirection` tar
   en `mat3`); PIXERA-README: Equirectangular-kedjan kräver Split av, noggrannheten "inom 0,1 källpixlar" (riktad
-  Equirect mäter 0,069). Inte prövat: 0.14–0.17 på Mac (Metal-översättningen); testlista i `docs/MAC-TEST.md`.
+  Equirect mäter 0,069). Mac: se "0.17 i Live FX på Mac" nedan.
   Release v0.17 på GitHub (Windows-zippen) samma dag.
+- **Mac, förberett (2026-11-20 kväll, M3Ultra, Live FX 9.9.1212):** 0.17 (`build_shaders.py --check` aktuell) kopierad
+  till `/Library/Application Support/Assimilator/Plugins/Matchbox/shaders`; Live FX inte startat sedan dess. Apples
+  GLSL 1.20-kompilator (CGL Legacy, M3 Ultra) godtar `IgelkottFisheye2D.glsl` utan varningar — säger inget om
+  SpaMatchbox Metal-översättning. Provklipp i `~/Movies/IgelkottFisheye-MacTest/` (`notag.mov`, `pyxis_zenith_tag.mov`,
+  `venice_nadir_tag.mov`, ProRes ur `make_testplates.py`); Store-klippen läses från `/Volumes/igelkottstore.com/2025/Free
+  Demo 2025/Store`.
+- **0.17 i Live FX på Mac (2026-11-20 kväll, M3Ultra, Live FX 9.9 build 1212 macOS, Metal GPUFamily Apple 9; Claude via
+  datorstyrning, `docs/MAC-TEST.md` avsnitt 1–9):** eget projekt `IgelkottFisheye MacTest` (A013C004 slot 0, A001C016
+  slot 1, `notag.mov` slot 2, `notag_long.mov` slot 3 = `notag.mov` loopad till 60 s). **Allt som provades fungerar som
+  på Windows; ingen Mac-rättning behövs.**
+  - **Kompilerar:** Junxion.xml registrerar `IgelkottFisheye2D` version 0.17; noden ritar direkt; loggen har inga
+    SpaMatchbox-/Metal-fel. Panelen: Plate, View, Split, Right Wall som i listan; tooltips på engelska.
+  - **Orientering (HD 1080-24, Wall, FOV 90):** A013C004 upprätt, himmel uppe, motorhuv nere, horisonten rak; Yaw 90
+    tittar åt höger, −90 åt vänster, Pitch 30 uppåt. A001C016 (nadir): vatten och land nere, himmel uppe; Yaw 180 visar
+    drönarens armar upptill. Provvärlden i `notag.mov`: fram röd i mitten, vänster gul till vänster, höger grön till höger.
+  - **Taggen:** Venice-klippen på Auto/Auto utan varningstecken. Camera PYXIS 12K på Venice ändrar bilden; Pointing Zenith
+    på A001C016 ger bilden upp och ner; `notag.mov` ger varningstecknet uppe till vänster; Z-Cam E2 S6 ger svart med tecknet.
+  - **Offset och Split (Wall):** Offset X 200 åt höger, Offset Y 200 uppåt; Split 50 % + Right Yaw 90 ger två väggar med
+    skarp gräns; Offset X flyttar bara vänstra; Right Offset Y bara högra.
+  - **Equirect:** 3840 × 1920 hela sfären, framåt i mitten, horisonten rak; Yaw rullar, Pitch tippar, Roll vrider;
+    7680 × 2160 360° över bredden utan utdragning; Split 50 % + Right Yaw 180 framåt vänster, bakåt höger, hela 360°;
+    HD 1080-24 smala svarta band upptill och nertill.
+  - **Uppspelning (`notag_long.mov`, lokalt, ProRes 422 HQ 1536², 25 fps):** 4K UHD, 8K UHD och 15360 × 2160 spelar alla
+    i realtid (242–243 bilder på 10 s). **Store-klippen spelar 2–5 bilder/s, men det är nätverket:** ProRes 4444 5760² är
+    ~4 Gbit/s (~21 MB per bild) och SMB-monteringen `/Volumes/igelkottstore.com` läser 56 MB/s (`dd`). Lägg dem lokalt
+    för att spela dem i realtid.
+  - **Sparade värden:** Offset X 50, Yaw 20, Equirect, Split på, Right Offset Y 30 och duken 15360 × 2160 låg kvar efter
+    Close Project och ny öppning. Inget äldre projekt med noden i bruk finns på M3Ultra (`fisheye_test` har bara en
+    överbliven nod utan ingång: loggen "SpaMatchbox: Input 1 for 'front' not connected!"), så laddningen av gamla
+    värden är inte provad på Mac.
+  - **Inte gjort:** avsnitt 10 (färg, frivilligt) — det ändrar Monitors → Interface för hela programmet.
+  - **Att veta i Live FX på Mac:** ett värdefält öppnar ett sifferfönster som bara tar klick (tangentbordet går till
+    kortkommandon, "−" byter panel); minus sätts med +/-. Viewern behåller sin zoom när dukens storlek ändras, så en
+    större duk visar bara mitten; "fit" visar hela tidslinjens duk. Kontrollera hörnen (varningstecknet) i den vyn.
+    Plug-ins.. lägger noden på spelhuvudets klipp, inte det man dubbelklickat i Construct.
+- **0.18 (2026-11-20 kväll, M3Ultra): Z-Cam-modellen och vågrät FOV.**
+  - **Z-Cam E2 S6** (handoff från IgelkottFisheyetoEqui 2026-11-20): `FisheyeLens.zcamE2S6` (reference 3872, mitten 1936,
+    1936) läses av `build_shaders.py` som tredje kamera; Camera Z-Cam och taggkod 3 spelar nu med sin egen modell.
+    Taggkod 4–7 (ingen modell) ger fortfarande svart och varningen. `build_shaders.py` skriver heltal som `1936.0`.
+  - **FOV vågrät** (Eric 2026-11-20: "90 grader för mig betyder 90 grader på horisonten"): FOV är vinkeln från väggens
+    vänstra till högra kant; med Split varje väggs egen bredd (Right FOV den högras). Till och med 0.17 var den lodrät
+    över nodens höjd, som Eq->2D. **Följd:** sparade noder och IgelkottLiveFXLoaders FOV-värden (Eq->2D:s lodräta) ger
+    en smalare bild än förut; handoff till Loadern. PIXERA: etiketten "FOV (horizontal)".
+  - **Provet på Mac:** `tools/verify_mac.py` (`verify_windows.py` med CGL i stället för WGL, bara Live FX-utgåvan:
+    Macens OpenGL har inte GLSL 4.50): 61 fall PASS, största fel 0,02 källpixlar vid 8040, Z-Cam-fallen och taggkod 4
+    inräknade; talen stämmer med `_shared`. `. --canvas` (4K–16384 × 2160 i full storlek): allt PASS, största fel 0,010,
+    49 s. `verify_mac.py` läser `verify_windows.py` och byter bara kontexten, så fallen finns på ett ställe; ändras
+    markeringarna där fäller den med ett besked. **`verify_windows.py` på Windows och PIXERA-utgåvan är inte körda.**
+  - **`build-app.sh` kör `verify_mac.py`** i stället för `verify.swift` och `verify_pixera.swift` (reglagen före 0.14,
+    används inte längre). Bygget går igenom igen; ett fällt prov stoppar det.
+  - **Deployad 2026-11-20 22:44** (build 202611202243) till `_applaunchers`, installerad via Suit på M3Ultra och
+    "Aktuell" där (Uppdatera listan behövdes först). Live FX:s Matchbox-mapp har 0.18-shadern.
+  - **Sett i Live FX (Mac, efter omstart, Junxion 0.18):** A013C004 4K, FOV 90: smalare vägg än förut; Yaw 45 flyttar bil
+    och skylt så som 90° över bredden ger. Camera Z-Cam på ett Venice-klipp ritar (samma Entaniya-objektiv, nästan samma
+    bild), ingen varning. Inget riktigt Z-Cam-klipp provat.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
@@ -625,7 +680,8 @@ swift tools/verify.swift          # provet: shadern mot IgelkottStages räkning
 swift tools/directionlock.swift --test tools/fixtures   # provet: Direction Lock mot 2025-filerna
 swift build -c release --package-path tools/autoyaw --build-path ~/Library/Caches/Igelkott/IgelkottLiveFXFisheye/autoyaw-build && ~/Library/Caches/Igelkott/IgelkottLiveFXFisheye/autoyaw-build/release/autoyaw --selftest   # provet: Auto Stabilize mot en känd pan
 node tools/test-stabilizer.mjs    # provet: Stabilizer-sidan mot samma facit
-./build-app.sh                    # provet + appen i ~/Library/Caches/Igelkott/IgelkottLiveFXFisheye
+python3 tools/verify_mac.py       # provet: Live FX-utgåvan mot linsmodellen och taggen (CGL; [. --canvas] för dukarna)
+./build-app.sh                    # provet (verify_mac.py) + appen i ~/Library/Caches/Igelkott/IgelkottLiveFXFisheye
 ./deploy-launcher.sh              # appen som _applaunchers/IgelkottLiveFXFisheye.app.zip
 IGELKOTT_NO_DIALOG=1 IGELKOTT_MATCHBOX_DIR=/tmp/x <app>/Contents/MacOS/IgelkottLiveFXFisheye   # installationen mot en provmapp
 ```
@@ -643,7 +699,7 @@ powershell -ExecutionPolicy Bypass -File windows/build-package.ps1   # paketet: 
 - Artefakt: `_applaunchers/IgelkottLiveFXFisheye.app.zip` (kind: zipApp, `post_install: launch` — Suit startar appen, som
   lägger noden i Live FX:s Matchbox-mapp; starta sedan om Live FX).
 - Post i `_atlas/suite.yaml`: `id` = IgelkottLiveFXFisheye.
-- Senast verifierad installerad via Suit: 2026-10-12 (0.9, build 202610120033, m3max)
+- Senast verifierad installerad via Suit: 2026-11-20 (0.18, build 202611202243, M3Ultra, "Aktuell")
 
 Kontrakt: [igelkottsuit-contract](../_atlas/knowledge/macos/igelkottsuit-contract.md).
 
