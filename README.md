@@ -64,5 +64,6 @@ a source pixel from where the lens model puts it, at 8040 px.
 
 ## Licence
 
-GNU General Public License v3.0, see [LICENSE](LICENSE). You may use, change and share it, also commercially. If you
-share a changed version, you must share its source under the same licence.
+The IgelkottFisheye Licence, see [LICENSE](LICENSE). You may use and change IgelkottFisheye, also for commercial work,
+but only to play back plates from Igelkott Film AB ([igelkottplates.com](https://igelkottplates.com)). Using it with
+other footage, or selling or redistributing it, is not allowed. Changes are shared by contributing them here.

@@ -42,5 +42,5 @@ python tools/verify_windows.py        # on Windows
 
 and say what you ran and what you saw. Small pull requests are easier to review than big ones.
 
-By opening a pull request you agree that your contribution is licensed under the GNU General Public License v3.0, like
-the rest of the project (see [LICENSE](LICENSE)).
+By opening a pull request you give Igelkott Film AB the right to use, change and distribute your contribution, as
+section 3 of [LICENSE](LICENSE) says. IgelkottFisheye may be used only to play back Igelkott plates.

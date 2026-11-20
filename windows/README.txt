@@ -76,4 +76,4 @@ Files
   PIXERA\                           the same effect for PIXERA
   VERSION                           version of this package
 
-Igelkott Studios AB
+Igelkott Film AB

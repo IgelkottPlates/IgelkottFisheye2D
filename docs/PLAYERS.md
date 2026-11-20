@@ -118,4 +118,4 @@ same way as Live FX and PIXERA before it goes to Nuke Stage.
   vectors are inside the test itself.
 - The PIXERA chain test needs PIXERA's own `Equirectangular` effect, which is not ours to publish. Without it, that test
   is skipped.
-- Licence: GNU GPL v3.0 (`LICENSE`).
+- Licence: the IgelkottFisheye Licence (`LICENSE`): use, also commercially, only to play back Igelkott plates.

@@ -48,6 +48,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   `node tools/test-stabilizer.mjs` fäller bygget annars.
 - Stabilizer-sidan har inga fält att skriva tal i.
 - Allt som en användare utanför Igelkott ser är på engelska.
+- Licensen är Erics (2026-11-20): koden får användas, även kommersiellt, bara för att spela upp Igelkott-plåtar
+  (Igelkott Film AB). Ingen öppen licens. Bolaget i allt utåt är Igelkott Film AB.
 - Erics DL-formel finns kvar oförändrad: `ut[n] = (t[n] − t[n−1]) + k · ut[n−1]`.
 - Program: rapporterar till IgelkottSuit och höjer version vid deploy (atlas regel 12 och 13).
 - Artefakt: `_applaunchers/IgelkottLiveFXFisheye.app.zip` (Mac); `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip` (Windows).

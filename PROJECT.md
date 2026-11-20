@@ -28,7 +28,7 @@ källan samplas genom objektivets modell i stället för en equirect från Fishe
   i alla stora spelare — Live FX, PIXERA, Nuke med flera — och med hjälp från andra användare (då publikt repo, inte beslutat).
   Förberett för publikt 2026-11-20: `README.md`, `CONTRIBUTING.md` (engelska), kamerornas tal som kopia i
   `shader/cameras.json` (skrivs av `build_shaders.py` ur `_shared`; utan `_shared` läser bygget och provet kopian),
-  PIXERA-kedjan i provet hoppas över utan `Ref-Eric/`. Licens GPL-3.0 (Eric 2026-11-20, `LICENSE`). Inte gjort: GitHub Actions (gh-inloggningen
+  PIXERA-kedjan i provet hoppas över utan `Ref-Eric/`. Licens: egen, `LICENSE` (Eric 2026-11-20: "får använda koden för att spela upp igelkottplates kommerciellt, inget annat"; ej granskad av jurist). Inte gjort: GitHub Actions (gh-inloggningen
   saknar scope `workflow`), repot fortfarande privat.
 
 ## Grundbeslut (Eric 2026-10-05)
