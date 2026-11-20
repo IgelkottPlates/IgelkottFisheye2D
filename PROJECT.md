@@ -606,6 +606,7 @@ och hit (bygg shaders och prova i Live FX).
     `--canvas` (4K–16384 × 2160, båda utgåvorna): allt PASS, största fel 0,015. Efter omstart ritar noden i projektet `IgelkottFisheye Store` (natt, Tower Bridge, Split 50 %). Wall med FOV 90:
     varje halva 960 px bred visar 90° på bredden; Camera Z-Cam ritar en bild utan varningstecken. Projektets värden
     (Equirect, Yaw 5, Offset Y −200, Right Yaw −124) låg kvar och är återställda efter provet.
+    Release v0.18 på GitHub (Windows-zippen) samma natt.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
