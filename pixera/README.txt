@@ -17,17 +17,17 @@ Install
 
 Using the effect
 ----------------
-Plate Auto (default): the camera and whether the lens pointed up (zenith) or
-down (nadir) are read from the small black and white tag that IgelkottDarkroom
-and Fisheye to Equi write next to the QR codes in the corners. With no tag, a
-small yellow warning sign shows in the top left corner and the Manual choice
-below is used: switch to Manual, or use a plate with the tag.
+Camera and Pointing on Auto (tag), the default: the camera and whether the lens
+pointed up (zenith) or down (nadir) are read from the small black and white tag
+that IgelkottDarkroom and Fisheye to Equi write next to the QR codes in the
+corners. Choose PYXIS 12K, Sony Venice 2 or Z-Cam E2 S6, and Zenith or Nadir,
+to set them by hand. With Auto and no tag (PYXIS 12K / Zenith is used), a small
+yellow warning sign shows in the top left corner. Z-Cam E2 S6 has no lens model
+yet: the picture stays black, with the warning sign.
 
-Plate Manual: Camera (PYXIS 12K, Sony Venice 2, Z-Cam E2 S6) and Pointing
-(Zenith, Nadir). Z-Cam E2 S6 has no lens model yet: the picture stays black.
-
-Lens Offset X / Y move the lens centre, in source pixels at 8040 whatever the
-clip's size. 0 for centred plates.
+Offset X / Y move the finished picture, after the projection, in % of the
+layer's height (+X right, +Y up). The plate must be centred (as IgelkottDarkroom
+and Fisheye to Equi make it).
 
 Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
 height, and the layer's Aspect (width / height).

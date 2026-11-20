@@ -45,10 +45,9 @@ för nodens storlek):
 
 | Kolumn | Reglage | Vad |
 |---|---|---|
-| Plate | Plate | Auto (standard): kamera och zenit/nadir ur pixeltaggen; utan giltig tagg ett varningstecken uppe till vänster och valen nedan. Manual: valen nedan |
-| | Camera | PYXIS 12K (standard), Sony Venice 2, Z-Cam E2 S6 (ingen linsmodell än: svart och varningen) |
-| | Pointing | Zenith (standard) / Nadir: nadir läses som (x, −y, −z), som Stage 1 och Motion |
-| | Lens Offset X/Y | Flyttar objektivets mitt, källpixlar vid 8040 (+X = hämta längre till höger, +Y längre ned); i Auto ovanpå taggens kamera |
+| Plate | Camera | Auto (tag) (standard): taggens kamera; PYXIS 12K, Sony Venice 2, Z-Cam E2 S6 (ingen linsmodell än: svart och varningen) väljs för hand. Auto utan giltig tagg: PYXIS 12K och varningstecknet uppe till vänster (0.15, Eric 2026-11-20: Plate-reglaget borta, Auto i listorna) |
+| | Pointing | Auto (tag) (standard), Zenith, Nadir: nadir läses som (x, −y, −z), som Stage 1 och Motion. Auto utan tagg: Zenith och varningen |
+| | Offset X/Y | Flyttar den färdiga bilden efter projektionen, utbildens pixlar (+X höger, +Y upp); Split-gränsen står kvar (0.15, Eric 2026-11-20: "offset ska vara efter projektion"). PIXERA: % av höjden. Objektivets mitt kan inte längre flyttas: plåten ska vara centrerad (Darkroom/Fisheye to Equi) |
 | View | Yaw, Pitch, Roll | Som Eq->2D: yaw 0 = mitten av den equirect FisheyetoEqui gör, + = höger; pitch + = upp. Vänster vägg när Split är på |
 | | FOV | Den lodräta vinkeln över nodens höjd, som Eq->2D ([eq2d-fov-framing](../_atlas/knowledge/assimilate/eq2d-fov-framing.md)) |
 | | Mode | Wall eller Equirect (hela sfären, 2:1, yaw 0 i mitten; Yaw/Pitch/Roll/FOV och Split används inte) |
@@ -507,6 +506,14 @@ och hit (bygg shaders och prova i Live FX).
     (Fisheye to Equi-klippen ovan fungerar). **Beslut (Eric 2026-11-19: "inge stöd för png"):** PNG-klipp stöds inte; de kommer vridna
     180° och det är så med flit. Ingen Flip Vertical och ingen hörnbit i taggen för det. DPX, EXR och TIFF är inte provade.
     `tools/make_testplates.py` skriver PNG och duger därför bara för att se att taggen läses, inte orienteringen.
+
+- **0.15 (2026-11-20, ERIC-DESKTOP): Auto i listorna och Offset efter projektionen** (Eric: "camera: deklarerar fel kamera",
+  "offset ska vara efter projektion, inte före"). Panelen visade "Camera: PYXIS 12K" fast noden spelade Venice ur taggen (en
+  shader kan inte skriva tillbaka till panelen). Nu: Camera och Pointing har "Auto (tag)" först, Plate-reglaget är borta; Lens
+  Offset (objektivets mitt) ersatt av Offset X/Y som flyttar väggbilden i utbildens pixlar. Provet: alla fall PASS (största fel
+  0,026 källpixlar), nya fall för blandat Auto/handval och offset i Split och Equirect. **Följd:** plåtar med förskjuten
+  bildcirkel (Offroad-plåten ovan, Lens Offset ≈ −24, −39) kan inte längre rättas i noden. Noden installerad i Live FX 13:22
+  men **inte sedd i Live FX**: programmet var öppet hos Eric och kör den gamla panelen tills det startas om.
 
 - **Loadern (2026-10-06):** IgelkottLiveFXLoader bygger projekt där varje vägg i en slot med ett 8040 × 8040-klipp
   är IgelkottFisheye2D med mallens vinklar och storlek (se loaderns PROJECT.md). Inte öppnat i Live FX än.

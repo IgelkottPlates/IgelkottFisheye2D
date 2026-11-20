@@ -13,16 +13,14 @@ const float IGK_PI = 3.14159265358979;
 // Degrees to radians without the built-in radians(): PIXERA's own effects define a radians() of their own
 // (Ref-Eric/Equirectangular.glsl.txt), which would clash in a stricter compiler.
 const float IGK_DEG = 0.017453292519943295;
-const float IGK_OFFSET_REF = 8040.0;                 // Lens Offset X/Y are source pixels at 8040, whatever the clip's size
 
 // Cameras: the pixel tag's codes. 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6 (no lens model yet), 0 and 4-7 none.
 bool igkHasModel(int cam) {
     return cam == 1 || cam == 2;
 }
 
-vec2 igkLensCenter(int cam, vec2 offset) {
-    vec2 c = cam == 2 ? IGK_VENICE_CENTER / IGK_VENICE_REF : IGK_PYXIS_CENTER / IGK_PYXIS_REF;
-    return c + offset / IGK_OFFSET_REF;
+vec2 igkLensCenter(int cam) {
+    return cam == 2 ? IGK_VENICE_CENTER / IGK_VENICE_REF : IGK_PYXIS_CENTER / IGK_PYXIS_REF;
 }
 
 vec4 igkLensK(int cam) {
@@ -30,7 +28,7 @@ vec4 igkLensK(int cam) {
 }
 
 // The direction's point in the source, fractions of the picture, top row first
-vec2 igkLensPoint(vec3 d, int cam, bool nadir, vec2 offset) {
+vec2 igkLensPoint(vec3 d, int cam, bool nadir) {
     if (nadir) d = vec3(d.x, -d.y, -d.z);
     vec4 k = igkLensK(cam);
     float rho = length(d.xz);
@@ -38,7 +36,7 @@ vec2 igkLensPoint(vec3 d, int cam, bool nadir, vec2 offset) {
     float t2 = th * th;
     float poly = k.x + t2 * (k.y + t2 * (k.z + t2 * k.w));
     float f = rho > 1e-9 ? poly * th / rho : poly;
-    return igkLensCenter(cam, offset) + d.xz * f;
+    return igkLensCenter(cam) + d.xz * f;
 }
 
 bool igkInside(vec2 p) {
@@ -153,18 +151,18 @@ float igkTag(SRC_PARAM float unused) {
     return best;
 }
 
-// The plate: vec3(camera, nadir 0/1, warning 0/1).
-// Plate Auto (0): the tag's camera and pointing. With no valid tag, or a camera without a lens model (Z-Cam E2 S6 today),
-// the Manual choice holds and the warning is drawn (Eric 2026-11-19: "gör som du föreslår"); never another camera's model.
-// Plate Manual (1): Camera and Pointing; a camera without a model draws black and the warning.
-vec3 igkPlate(float tag, int plate, int camera, int pointing) {
-    int cam = camera < 1 ? 1 : camera;
-    float nadir = pointing == 1 ? 1.0 : 0.0;
-    if (plate == 0 && tag >= 0.0) {
-        int tagCam = int(floor(tag / 2.0 + 0.25));
-        if (igkHasModel(tagCam)) return vec3(float(tagCam), mod(tag, 2.0), 0.0);
-    }
-    float warn = (plate == 0 || !igkHasModel(cam)) ? 1.0 : 0.0;
+// The plate: vec3(camera, nadir 0/1, warning 0/1). Eric 2026-11-20: Auto is a choice in each list, no Plate control.
+// Camera: 0 Auto (the tag's camera), 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6. Pointing: 0 Auto, 1 Zenith, 2 Nadir.
+// A list on Auto with no valid tag: PYXIS 12K / Zenith and the warning. A camera without a lens model (Z-Cam E2 S6 today,
+// chosen or from the tag): black and the warning, never another camera's model.
+vec3 igkPlate(float tag, int camera, int pointing) {
+    bool hasTag = tag >= 0.0;
+    int cam = camera;
+    if (camera == 0) cam = hasTag ? int(floor(tag / 2.0 + 0.25)) : 1;
+    float nadir = pointing == 2 ? 1.0 : 0.0;
+    if (pointing == 0 && hasTag) nadir = mod(tag, 2.0);
+    bool missing = !hasTag && (camera == 0 || pointing == 0);
+    float warn = (missing || !igkHasModel(cam)) ? 1.0 : 0.0;
     return vec3(float(cam), nadir, warn);
 }
 

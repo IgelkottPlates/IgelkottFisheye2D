@@ -1,15 +1,13 @@
 //@implements: sampler2D
 struct IgelkottFisheye {
 	sampler2D sampler;
-	//@ label: "Plate", editor: enum, enum_default: 0, values: "Auto, Manual"
-	int plate;
-	//@ label: "Camera (Manual)", editor: enum, enum_default: 0, values: "PYXIS_12K, Sony_Venice_2, Z-Cam_E2_S6"
+	//@ label: "Camera", editor: enum, enum_default: 0, values: "Auto_(tag), PYXIS_12K, Sony_Venice_2, Z-Cam_E2_S6"
 	int camera;
-	//@ label: "Pointing (Manual)", editor: enum, enum_default: 0, values: "Zenith, Nadir"
+	//@ label: "Pointing", editor: enum, enum_default: 0, values: "Auto_(tag), Zenith, Nadir"
 	int pointing;
-	//@ label: "Lens Offset X (px at 8040)", editor: range, min: -500, max: 500, range_min: -500, range_max: 500, range_default: 0
+	//@ label: "Offset X (% of height)", editor: range, min: -200, max: 200, range_min: -200, range_max: 200, range_default: 0
 	float offsetX;
-	//@ label: "Lens Offset Y (px at 8040)", editor: range, min: -500, max: 500, range_min: -500, range_max: 500, range_default: 0
+	//@ label: "Offset Y (% of height)", editor: range, min: -200, max: 200, range_min: -200, range_max: 200, range_default: 0
 	float offsetY;
 	//@ label: "Mode", editor: enum, enum_default: 0, values: "Wall, Equirect"
 	int mode;
@@ -38,23 +36,25 @@ struct IgelkottFisheye {
 };
 
 // tex_coords run 0..1 with y up, as in PIXERA's Equirectangular effect; the wall is `aspect` heights wide.
+// Offset X/Y move the finished picture (after the projection), in % of the height: PIXERA gives the effect no pixel size.
 vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
-	vec3 pl = igkPlate(igkTag(s.sampler, 0.0), s.plate, s.camera + 1, s.pointing);
+	vec3 pl = igkPlate(igkTag(s.sampler, 0.0), s.camera, s.pointing);
 	int cam = int(pl.x + 0.5);
 	vec3 color = vec3(0.0);
 	if (igkHasModel(cam)) {
 		float w = max(s.aspect, 0.01);
 		vec2 q = vec2(tex_coords.x * w, tex_coords.y);
+		vec2 o = q - vec2(s.offsetX, s.offsetY) * 0.01;
 		float splitX = s.split ? clamp(s.splitPos, 0.0, 100.0) * 0.01 * w : w;
 		vec3 d;
 		if (s.mode == 1) {
-			d = igkEquirectDirection(tex_coords);
+			d = igkEquirectDirection(vec2(o.x / w, o.y));
 		} else if (q.x < splitX) {
-			d = igkWallDirection(q - vec2(0.5 * splitX, 0.5), 1.0, s.yaw, s.pitch, s.roll, s.fov);
+			d = igkWallDirection(o - vec2(0.5 * splitX, 0.5), 1.0, s.yaw, s.pitch, s.roll, s.fov);
 		} else {
-			d = igkWallDirection(q - vec2(0.5 * (splitX + w), 0.5), 1.0, s.yawR, s.pitchR, s.rollR, s.fovR);
+			d = igkWallDirection(o - vec2(0.5 * (splitX + w), 0.5), 1.0, s.yawR, s.pitchR, s.rollR, s.fovR);
 		}
-		vec2 p = igkLensPoint(d, cam, pl.y > 0.5, vec2(s.offsetX, s.offsetY));
+		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
 		if (igkInside(p)) color = igkFetch(s.sampler, p).rgb;
 	}
 	if (pl.z > 0.5) {

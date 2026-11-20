@@ -33,8 +33,9 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   (`IgelkottLensMark`); `shader/core.glsl` följer den och `verify_windows.py` provar mot dess provvektorer.
 - En kamera utan linsmodell (Z-Cam E2 S6 i dag) spelas aldrig med en annan kameras modell: svart eller Manual-valet,
   och varningstecknet.
-- Reglagen är Erics (2026-11-19): Plate, Camera, Pointing, Lens Offset X/Y, Yaw, Pitch, Roll, FOV, Mode (Wall,
-  Equirect), Split, Split Position, Right Yaw/Pitch/Roll/FOV. Nya reglage kräver hans beslut.
+- Reglagen är Erics (2026-11-19, ändrade 2026-11-20): Camera och Pointing med "Auto (tag)" först (inget Plate-reglage),
+  Offset X/Y (flyttar bilden efter projektionen, utbildens pixlar), Yaw, Pitch, Roll, FOV, Mode (Wall, Equirect), Split,
+  Split Position, Right Yaw/Pitch/Roll/FOV. Nya reglage kräver hans beslut.
 - PNG-klipp stöds inte (Eric 2026-11-19: "inge stöd för png"): Live FX lägger dem nerifrån och väggen blir vriden 180°.
   Ingen Flip Vertical. Orienteringen provas på `.mov`.
 - Shaders håller sig till det GLSL 1.20 och 4.50 båda läser: inga heltalsoperationer på bitar, inga arrayer.

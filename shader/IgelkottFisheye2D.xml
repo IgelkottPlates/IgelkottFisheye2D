@@ -1,9 +1,8 @@
 <ShaderNodePreset
     Description="IgelkottFisheye: walls straight from the square fisheye clip (PYXIS 12K or Sony Venice 2 + Entaniya HAL 250, any size), the way IgelkottStage plays it. One resampling, through the lens model.
 
-Plate Auto: the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. With no tag, or a camera without a lens model, a small warning sign shows in the top left corner and the Manual choice is used: switch to Manual, or use a plate with the tag.
-Plate Manual: Camera and Pointing below.
-Lens Offset X/Y: moves the lens centre right/left and down/up, in source pixels at 8040 whatever the clip's size (+X fetches further right, +Y further down). 0 for centred plates.
+Camera and Pointing on Auto (tag): the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. Choose a camera or a pointing to set it by hand. With Auto and no tag (PYXIS 12K / Zenith is used), or a camera without a lens model (black), a small warning sign shows in the top left corner.
+Offset X/Y: moves the finished picture, after the projection, in output pixels (+X right, +Y up).
 Mode: Wall (a flat view like Eq-&gt;2D: Yaw, Pitch, Roll and FOV, the vertical angle over the node's height) or Equirect (the whole sphere, 2:1, yaw 0 in the middle).
 Split: two walls side by side from the same plate, split at Split Position (% of the width, a sharp edge). The left wall uses Yaw/Pitch/Roll/FOV, the right one Right Yaw/Pitch/Roll/FOV.
 
@@ -39,75 +38,63 @@ Igelkott Film AB"
         </Uniform>
         <Uniform
             Type="int"
-            Tooltip="Auto: camera and zenith/nadir from the plate's pixel tag (a warning sign shows when there is none). Manual: Camera and Pointing below"
-            DisplayName="Plate"
-            ChannelName="plate"
-            Name="plate"
+            Tooltip="Auto (tag): the camera from the plate's pixel tag (a warning sign shows when there is none). Or the camera the plate was shot with"
+            DisplayName="Camera"
+            ChannelName="camera"
+            Name="camera"
             Col="0"
             Row="0"
             Page="0"
             Default="0"
             ValueType="Popup">
-            <PopupEntry Title="Auto" Value="0"></PopupEntry>
-            <PopupEntry Title="Manual" Value="1"></PopupEntry>
-        </Uniform>
-        <Uniform
-            Type="int"
-            Tooltip="Manual, or Auto without a tag: the camera the plate was shot with"
-            DisplayName="Camera"
-            ChannelName="camera"
-            Name="camera"
-            Col="0"
-            Row="1"
-            Page="0"
-            Default="0"
-            ValueType="Popup">
+            <PopupEntry Title="Auto (tag)" Value="0"></PopupEntry>
             <PopupEntry Title="PYXIS 12K" Value="1"></PopupEntry>
             <PopupEntry Title="Sony Venice 2" Value="2"></PopupEntry>
             <PopupEntry Title="Z-Cam E2 S6" Value="3"></PopupEntry>
         </Uniform>
         <Uniform
             Type="int"
-            Tooltip="Manual, or Auto without a tag: Zenith = lens pointing up (car plates), Nadir = lens pointing down (flying plates)"
+            Tooltip="Auto (tag): from the plate's pixel tag. Zenith = lens pointing up (car plates), Nadir = lens pointing down (flying plates)"
             DisplayName="Pointing"
             ChannelName="pointing"
             Name="pointing"
             Col="0"
-            Row="2"
+            Row="1"
             Page="0"
             Default="0"
             ValueType="Popup">
-            <PopupEntry Title="Zenith" Value="0"></PopupEntry>
-            <PopupEntry Title="Nadir" Value="1"></PopupEntry>
+            <PopupEntry Title="Auto (tag)" Value="0"></PopupEntry>
+            <PopupEntry Title="Zenith" Value="1"></PopupEntry>
+            <PopupEntry Title="Nadir" Value="2"></PopupEntry>
         </Uniform>
         <Uniform
             Type="float"
-            Tooltip="Moves the lens centre: source pixels at 8040 (+ fetches further right)"
-            DisplayName="Lens Offset X"
+            Tooltip="Moves the finished picture right, after the projection: output pixels"
+            DisplayName="Offset X"
             ChannelName="offset_x"
             Name="offset_x"
             Col="0"
-            Row="3"
+            Row="2"
             Page="0"
             Default="0.0"
-            Inc="0.1"
-            Min="-500.0"
-            Max="500.0"
+            Inc="1.0"
+            Min="-8000.0"
+            Max="8000.0"
             ResDependant="None">
         </Uniform>
         <Uniform
             Type="float"
-            Tooltip="Moves the lens centre: source pixels at 8040 (+ fetches further down)"
-            DisplayName="Lens Offset Y"
+            Tooltip="Moves the finished picture up, after the projection: output pixels"
+            DisplayName="Offset Y"
             ChannelName="offset_y"
             Name="offset_y"
             Col="0"
-            Row="4"
+            Row="3"
             Page="0"
             Default="0.0"
-            Inc="0.1"
-            Min="-500.0"
-            Max="500.0"
+            Inc="1.0"
+            Min="-8000.0"
+            Max="8000.0"
             ResDependant="None">
         </Uniform>
         <Uniform

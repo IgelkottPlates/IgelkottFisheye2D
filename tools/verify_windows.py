@@ -52,7 +52,7 @@ def rotation(yaw, pitch, roll):
     return mul(mul(ry, rx), rz)
 
 
-def point(d, cam, nadir, offset):
+def point(d, cam, nadir):
     """FisheyeLens.point / referensen, nadir som (x, −y, −z): källpunkten i andelar, uppifrån."""
     if nadir:
         d = (d[0], -d[1], -d[2])
@@ -61,7 +61,7 @@ def point(d, cam, nadir, offset):
     th = math.atan2(rho, d[1]); t2 = th * th
     poly = (k[0] + t2 * (k[1] + t2 * (k[2] + t2 * k[3]))) / ref
     f = poly * th / rho if rho > 1e-9 else poly
-    return (c[0] / ref + d[0] * f + offset[0] / REF, c[1] / ref + d[2] * f + offset[1] / REF)
+    return (c[0] / ref + d[0] * f, c[1] / ref + d[2] * f)
 
 
 def wall_direction(cx, cy, h, R, fov):
@@ -76,14 +76,16 @@ def equi_direction(u, v_up):
     return (math.cos(lat) * math.sin(lon), math.sin(lat), math.cos(lat) * math.cos(lon))
 
 
-def direction(c, qx, qy_up, w, h):
-    """Riktningen genom punkten (qx, qy_up) i en utbild w × h (y upp), som nodens Wall/Split/Equirect."""
+def direction(c, qx, qy_up, w, h, ox=0.0, oy=0.0):
+    """Riktningen genom punkten (qx, qy_up) i en utbild w × h (y upp), som nodens Wall/Split/Equirect. (ox, oy) är
+    Offset X/Y i samma enheter: bilden flyttas efter projektionen, Split-gränsen står kvar."""
+    sx, sy = qx - ox, qy_up - oy
     if c["mode"] == 1:
-        return equi_direction(qx / w, qy_up / h)
+        return equi_direction(sx / w, sy / h)
     split_x = c["pos"] / 100 * w if c["split"] else w
     if qx < split_x:
-        return wall_direction(qx - split_x / 2, qy_up - h / 2, h, c["R"], c["fov"])
-    return wall_direction(qx - (split_x + w) / 2, qy_up - h / 2, h, c["RR"], c["right"][3])
+        return wall_direction(sx - split_x / 2, sy - h / 2, h, c["R"], c["fov"])
+    return wall_direction(sx - (split_x + w) / 2, sy - h / 2, h, c["RR"], c["right"][3])
 
 
 def warning(qx, qy_top, size):
@@ -359,7 +361,7 @@ def setup_matchbox(p, c):
     setf, seti = uniforms("")
     seti(p, "front", 0)
     setf(p, "adsk_result_w", c["w"]); setf(p, "adsk_result_h", c["h"])
-    seti(p, "plate", c["plate"]); seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
+    seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
     setf(p, "offset_x", c["offset"][0]); setf(p, "offset_y", c["offset"][1]); seti(p, "mode", c["mode"])
     setf(p, "yaw", c["yaw"]); setf(p, "pitch", c["pitch"]); setf(p, "roll", c["roll"]); setf(p, "fov", c["fov"])
     seti(p, "split", c["split"]); setf(p, "split_pos", c["pos"])
@@ -371,8 +373,10 @@ def setup_pixera(p, c):
     setf, seti = uniforms("u.")
     seti(p, "sampler", 0)
     glUniform2f(glGetUniformLocation(p, b"u_size"), GLfloat(c["w"]), GLfloat(c["h"]))
-    seti(p, "plate", c["plate"]); seti(p, "camera", c["cam"] - 1); seti(p, "pointing", c["pointing"])
-    setf(p, "offsetX", c["offset"][0]); setf(p, "offsetY", c["offset"][1]); seti(p, "mode", c["mode"])
+    seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
+    # PIXERA: Offset X/Y i % av höjden; fallet anger pixlar i utbilden
+    setf(p, "offsetX", c["offset"][0] / c["h"] * 100); setf(p, "offsetY", c["offset"][1] / c["h"] * 100)
+    seti(p, "mode", c["mode"])
     setf(p, "yaw", c["yaw"]); setf(p, "pitch", c["pitch"]); setf(p, "roll", c["roll"]); setf(p, "fov", c["fov"])
     setf(p, "aspect", c["w"] / c["h"]); seti(p, "split", c["split"]); setf(p, "splitPos", c["pos"])
     for n, v in zip(("yawR", "pitchR", "rollR", "fovR"), c["right"]):
@@ -382,12 +386,13 @@ def setup_pixera(p, c):
 glUniform2f = ext("glUniform2f", None, GLint, GLfloat, GLfloat)
 
 
-def case(name, w, h, plate=1, cam=1, pointing=0, offset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
+def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
          split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag=None, expect=None, pixera=False):
-    """expect = (kamera, nadir, varning) som noden ska välja; utan = Manual-valet utan varning."""
-    c = dict(name=name, w=w, h=h, plate=plate, cam=cam, pointing=pointing, offset=offset, mode=mode, yaw=yaw, pitch=pitch,
+    """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (panelens värden).
+    offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, varning) som noden ska välja; utan = handvalet."""
+    c = dict(name=name, w=w, h=h, cam=cam, pointing=pointing, offset=offset, mode=mode, yaw=yaw, pitch=pitch,
              roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, pixera=pixera,
-             expect=expect or (cam, pointing == 1, cam not in CAMS))
+             expect=expect or (cam, pointing == 2, cam not in CAMS))
     c["R"] = rotation(yaw, pitch, roll); c["RR"] = rotation(*right[:3])
     return c
 
@@ -401,41 +406,51 @@ VENICE_UP, VENICE_DOWN = tag_cells(2, False), tag_cells(2, True)
 broken = list(VENICE_DOWN); broken[7] = not broken[7]                    # ruta 7 (nadir) vänd: fel CRC
 O = (12.5, -7.25)
 cases = [
-    case("Manual PYXIS, Back 384x216, pitch 15, FOV 58.5", 384, 216, pitch=15, fov=58.5, pixera=True),
-    case("Manual PYXIS, Side yaw 90, square", 256, 256, yaw=90),
-    case("Manual PYXIS, Sky yaw -35, pitch 70, roll 12, FOV 100", 256, 256, yaw=-35, pitch=70, roll=12, fov=100),
-    case("Manual PYXIS, LED 192x108, yaw 81.8, FOV 10", 192, 108, yaw=81.8, pitch=-4, fov=10),
-    case("Manual PYXIS, Ref TV yaw 180, Lens Offset (12.5, -7.25)", 192, 108, yaw=180, pitch=2, roll=-3, fov=20, offset=O,
+    case("PYXIS, Back 384x216, pitch 15, FOV 58.5", 384, 216, pitch=15, fov=58.5, pixera=True),
+    case("PYXIS, Side yaw 90, square", 256, 256, yaw=90),
+    case("PYXIS, Sky yaw -35, pitch 70, roll 12, FOV 100", 256, 256, yaw=-35, pitch=70, roll=12, fov=100),
+    case("PYXIS, LED 192x108, yaw 81.8, FOV 10", 192, 108, yaw=81.8, pitch=-4, fov=10),
+    case("PYXIS, Ref TV yaw 180, Offset (12.5, -7.25) px", 192, 108, yaw=180, pitch=2, roll=-3, fov=20, offset=O,
          pixera=True),
-    case("Manual PYXIS, Equirect 512x256", 512, 256, mode=1, pixera=True),
-    case("Manual Sony Venice 2, Back", 384, 216, cam=2, pitch=15, fov=58.5),
-    case("Manual Sony Venice 2, Ref TV yaw 180, Lens Offset", 192, 108, cam=2, yaw=180, pitch=2, roll=-3, fov=20, offset=O),
-    case("Manual PYXIS Nadir, yaw 30, pitch -20", 384, 216, pointing=1, yaw=30, pitch=-20, fov=70, pixera=True),
-    case("Manual Sony Venice 2 Nadir, Equirect", 512, 256, cam=2, pointing=1, mode=1),
+    case("PYXIS, Equirect 512x256", 512, 256, mode=1, pixera=True),
+    case("PYXIS, Equirect, Offset (40, 10) px", 512, 256, mode=1, offset=(40.0, 10.0)),
+    case("Sony Venice 2, Back", 384, 216, cam=2, pitch=15, fov=58.5),
+    case("Sony Venice 2, Ref TV yaw 180, Offset", 192, 108, cam=2, yaw=180, pitch=2, roll=-3, fov=20, offset=O),
+    case("PYXIS Nadir, yaw 30, pitch -20", 384, 216, pointing=2, yaw=30, pitch=-20, fov=70, pixera=True),
+    case("Sony Venice 2 Nadir, Equirect", 512, 256, cam=2, pointing=2, mode=1),
     case("Split 50 %: left yaw 0 FOV 60, right yaw 90 pitch 5 roll 3 FOV 40", 384, 216, fov=60, split=True,
          right=(90, 5, 3, 40), pixera=True),
     case("Split 30 %, Venice: left roll 10, right yaw -120 FOV 70", 384, 216, cam=2, roll=10, fov=50, split=True, pos=30,
          right=(-120, 0, 0, 70), pixera=True),
+    case("Split 40 % with Offset (-30, 20) px: the edge stays, both pictures move", 384, 216, fov=60, split=True,
+         pos=40, right=(90, 0, 0, 60), offset=(-30.0, 20.0), pixera=True),
     case("Split off: the right wall's values are not used", 256, 144, yaw=40, fov=60, right=(90, 10, 5, 30)),
-    case("Manual Z-Cam E2 S6: no lens model, black and the warning", 192, 108, cam=3, pixera=True),
-    case("Auto, PYXIS zenith tag in every corner (Manual says Venice nadir)", 384, 216, plate=0, cam=2, pointing=1,
+    case("Z-Cam E2 S6: no lens model, black and the warning", 192, 108, cam=3, pixera=True),
+    case("Auto, PYXIS zenith tag in every corner", 384, 216, cam=0, pointing=0,
          pitch=10, fov=60, tag=every(PYXIS_UP), expect=(1, False, False), pixera=True),
-    case("Auto, Venice nadir tag in the bottom right corner only", 384, 216, plate=0, cam=1, yaw=20, pitch=-15, fov=60,
-         tag=[None, None, None, (VENICE_DOWN, 1.0, 0.0)], expect=(2, True, False), pixera=True),
-    case("Auto, Venice tag after a LUT (white 0.62, black 0.38)", 256, 144, plate=0, cam=1, yaw=-60,
+    case("Auto, Venice nadir tag in the bottom right corner only", 384, 216, cam=0, pointing=0, yaw=20, pitch=-15,
+         fov=60, tag=[None, None, None, (VENICE_DOWN, 1.0, 0.0)], expect=(2, True, False), pixera=True),
+    case("Auto, Venice tag after a LUT (white 0.62, black 0.38)", 256, 144, cam=0, pointing=0, yaw=-60,
          tag=every(VENICE_UP, 0.62, 0.38), expect=(2, False, False)),
-    case("Auto, no tag: Manual (Venice) and the warning", 256, 144, plate=0, cam=2, yaw=60, expect=(2, False, True),
+    case("Auto, no tag: PYXIS zenith and the warning", 256, 144, cam=0, pointing=0, yaw=60, expect=(1, False, True),
          pixera=True),
-    case("Auto, broken CRC in every corner: Manual (PYXIS) and the warning", 256, 144, plate=0, cam=1, yaw=10,
+    case("Auto, broken CRC in every corner: PYXIS zenith and the warning", 256, 144, cam=0, pointing=0, yaw=10,
          tag=every(broken), expect=(1, False, True)),
-    case("Auto, Z-Cam tag: never another camera's model, Manual (Venice) and the warning", 256, 144, plate=0, cam=2,
-         tag=every(tag_cells(3, False)), expect=(2, False, True)),
-    case("Auto, three corners PYXIS nadir, one Venice zenith: the majority", 256, 144, plate=0, cam=2, pitch=-30,
+    case("Auto, Z-Cam tag: never another camera's model, black and the warning", 256, 144, cam=0, pointing=0,
+         tag=every(tag_cells(3, False)), expect=(3, False, True)),
+    case("Auto, three corners PYXIS nadir, one Venice zenith: the majority", 256, 144, cam=0, pointing=0, pitch=-30,
          tag=[(PYXIS_DOWN, 1.0, 0.0)] * 3 + [(VENICE_UP, 1.0, 0.0)], expect=(1, True, False)),
-    case("Auto, contrast 0.05 (under 0.1): Manual and the warning", 256, 144, plate=0, cam=1,
+    case("Auto, contrast 0.05 (under 0.1): PYXIS zenith and the warning", 256, 144, cam=0, pointing=0,
          tag=every(PYXIS_DOWN, 0.55, 0.5), expect=(1, False, True)),
-    case("Auto, Venice nadir in the top corners, Equirect", 512, 256, plate=0, cam=1, mode=1,
+    case("Auto, Venice nadir in the top corners, Equirect", 512, 256, cam=0, pointing=0, mode=1,
          tag=[(VENICE_DOWN, 1.0, 0.0), (VENICE_DOWN, 1.0, 0.0), None, None], expect=(2, True, False), pixera=True),
+    case("Camera Venice chosen, Pointing Auto, PYXIS nadir tag: Venice nadir", 256, 144, cam=2, pointing=0,
+         pitch=-20, tag=every(PYXIS_DOWN), expect=(2, True, False), pixera=True),
+    case("Camera Auto, Pointing Zenith chosen, Venice nadir tag: Venice zenith", 256, 144, cam=0, pointing=1,
+         pitch=20, tag=every(VENICE_DOWN), expect=(2, False, False)),
+    case("Camera PYXIS chosen, Pointing Auto, no tag: PYXIS zenith and the warning", 256, 144, cam=1, pointing=0,
+         expect=(1, False, True)),
+    case("Both chosen, no tag: no warning", 256, 144, cam=2, pointing=2, pitch=-10, expect=(2, True, False)),
 ]
 
 
@@ -466,10 +481,13 @@ def check(c, px, n, host):
                     qx, qy_up = x + ox, h - (row + oy)
                 else:
                     qx, qy_up = (x + ox) / h, (row + oy) / h                   # PIXERA: höjden = 1
-                d = direction(c, qx, qy_up, w if host == "livefx" else w / h, h if host == "livefx" else 1.0)
+                if host == "livefx":
+                    d = direction(c, qx, qy_up, w, h, *c["offset"])
+                else:
+                    d = direction(c, qx, qy_up, w / h, 1.0, c["offset"][0] / h, c["offset"][1] / h)
                 if cam not in CAMS:
                     continue
-                p = point(d, cam, nadir, c["offset"])
+                p = point(d, cam, nadir)
                 if 0 <= p[0] <= 1 and 0 <= p[1] <= 1:
                     if c["tag"] and in_tag_zone(p):
                         skip = True
@@ -496,7 +514,7 @@ for n in (1024, 1008):
     print("Live FX (top row first), source %d x %d:" % (n, n))
     last = "unset"
     for c in cases:
-        if n == 1008 and not c["tag"] and c["plate"] == 1 and c["cam"] == 1 and c["name"] != cases[0]["name"]:
+        if n == 1008 and not c["tag"] and c["cam"] == 1 and c["pointing"] != 0 and c["name"] != cases[0]["name"]:
             continue
         if last != repr(c["tag"]):
             upload(n, c["tag"], True); last = repr(c["tag"])
@@ -550,7 +568,7 @@ print("PIXERA chain: IgelkottFisheye Mode Equirect -> PIXERA's own Equirectangul
 for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice 2 nadir")):
     upload(1024, None, False)
     EW, EH = 4096, 2048
-    ce = case("chain", EW, EH, cam=cam, pointing=1 if nadir else 0, mode=1)
+    ce = case("chain", EW, EH, cam=cam, pointing=2 if nadir else 1, mode=1)
     equi_tex, _ = render_texture(pixera, EW, EH, lambda p: (glActiveTexture(GL_TEXTURE0), gl.glBindTexture(GL_TEXTURE_2D, src_tex),
                                                          setup_pixera(p, ce)))
     # Skärmkartan: M × M texlar, världspunkten i texelns mitt; en plan skärm 10 enheter fram (+X), 12 × 12 stor
@@ -589,7 +607,7 @@ for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice
             sv = ((1.0 - ty) - 0.5) * scale + 0.5
             n = world(su, sv)
             l = math.sqrt(sum(c * c for c in n)); n = tuple(c / l for c in n)
-            p = point((n[2], n[1], n[0]), cam, nadir, (0.0, 0.0))
+            p = point((n[2], n[1], n[0]), cam, nadir)
             if not (0.01 < p[0] < 0.99 and 0.01 < p[1] < 0.99):
                 continue
             k = (row * W + x) * 4
