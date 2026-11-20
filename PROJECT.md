@@ -620,7 +620,7 @@ och hit (bygg shaders och prova i Live FX).
     tillbaka på Rec709 / Gamma 2.4, LUT:en ligger laddad men av.
     **Ett nyimporterat klipp får Data Format Rec709 / Gamma 2.4** (Live FX standard), inte ACEScct: det ser då mjölkigt
     och blekt ut. Med Media → Data Format ACEScg (AP1) / ACEScct ser tågklippet ut som i IgelkottStage (Eric:s
-    jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp, eller i Project Settings → Media Defaults.
+    jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp: Project Settings → Media Defaults har bara kamerornas RAW-format (ARRI, BRAW, R3D, ProRes RAW m.fl.), inget för ProRes/QuickTime (sett 2026-11-20). Live FX läser annars färgrymden ur filens taggar.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
