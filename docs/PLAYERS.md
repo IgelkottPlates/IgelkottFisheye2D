@@ -27,8 +27,8 @@ an STMap or UV map could play a *baked* version (one map per camera, pointing an
 |---|---|---|---|---|---|
 | **Assimilate Live FX** | ICVFX playback, grading | Matchbox node | GLSL 1.20 + XML | done | **0.14, tested in the GUI** (`matchbox/`) |
 | **PIXERA** (AV Stumpfl) | Media server | GLSL effect file | GLSL 4.50 | done | **0.14, tested against PIXERA's own Equirectangular, not inside PIXERA** (`pixera/`) |
-| **Autodesk Flame** | Finishing | Matchbox (the format Live FX adopted) | GLSL 1.20 + XML | same files as Live FX | not tried in Flame |
-| **Foundry Nuke Stage** | ICVFX playback on LED walls | Custom node: GLSL, input `srcX`, output `dstX0` ([docs](https://learn.foundry.com/nuke-stage/1.1/content/reference_guide/nodes/utility/custom_node.html)) | GLSL | new wrapper around `core.glsl` | not started |
+| **Autodesk Flame** (macOS, Linux) | Finishing | Matchbox (the format Live FX adopted) | GLSL 1.20 + XML | the Live FX files, or a build without the row flip | first look in Flame needed (below) |
+| **Foundry Nuke Stage** | ICVFX playback on LED walls | Custom node: GLSL `main()`, input `src0()` / `absolute_src0(uv)`, output `dst0` ([docs](https://learn.foundry.com/nuke-stage/1.1v3/content/reference_guide/nodes/utility/custom_node.html)) | GLSL | new wrapper around `core.glsl` | first look in Nuke Stage needed (below) |
 | **Foundry Nuke** | Compositing, plate prep | BlinkScript kernel, `eAccessRandom` source ([docs](https://learn.foundry.com/nuke/developers/16.0/BlinkUserGuide/BlinkKernelAPIReference/Images/RandomAccess.html)) | Blink (C++-like) | hand port of the core | not started |
 | **Unreal Engine** (nDisplay) | Most LED volumes; also Pixotope, Zero Density, Aximmetry DE *(unverified)* | Material with a Custom (HLSL) node on a Media Plate; the material must have a `MediaTexture` parameter ([docs](https://dev.epicgames.com/documentation/en-us/unreal-engine/the-media-plate-actor-in-unreal-engine)) | HLSL | HLSL core + material | not started |
 | **disguise** | Media server, ICVFX | No custom shader layer found in its effect layers ([docs](https://help.disguise.one/designer/layers/layer-types/effect/effect-layers-overview)); likely route: a Notch block *(unverified)* or Unreal via RenderStream | via Notch or Unreal | depends on those | not started |
@@ -52,6 +52,52 @@ an STMap or UV map could play a *baked* version (one map per camera, pointing an
 5. **Nuke (BlinkScript)**: plate prep and comp.
 6. **Resolve (DCTL)**: grading; check first that a DCTL can read the source at any point.
 7. The rest on request from people who use them.
+
+## First look in Flame and Nuke Stage
+
+Neither player's documentation settles the points that decide whether the wall comes out upright, so each port starts
+with one test in the player itself. Use a `.mov` plate with the pixel tag (any clip from Fisheye to Equi 1.94 or later).
+
+### Flame
+
+Copy `matchbox/IgelkottFisheye2D.glsl` and `.xml` to Flame's Matchbox folder, put the node on the clip, leave everything
+at the default (Plate Auto, Mode Wall, Yaw 0, FOV 90) and look at the wall:
+
+- **Upright, no yellow warning sign**: Flame lays images out top row first like Live FX does for `.mov`. The Live FX files
+  are the Flame files; nothing to build.
+- **Turned 180°** (sky at the bottom) and the warning sign in the bottom left, upside down: Flame lays images out bottom
+  row first, as Live FX does for PNG. Flame then needs its own build without the row flip (`q.y = h - q.y` and the
+  source read turned the other way), a few lines in `tools/build_shaders.py`.
+- **Black or a compile error**: send the error from Flame's shell or log.
+
+Write down the Flame version and the platform (macOS or Linux).
+
+### Nuke Stage
+
+The Custom node's documentation shows the input as `src0()`, `offset_src0(vec2)`, `absolute_src0(vec2 uv)` and
+`size_src0()`, and the output as `dst0`. It does not say whether `absolute_src0` takes fractions or pixels, how a node
+finds the pixel it is drawing, where row 0 is, or how to give the node controls. Paste this into a Custom node on a
+fisheye plate:
+
+```glsl
+void main() {
+    vec2 s = size_src0();
+    vec2 p = gl_FragCoord.xy;
+    dst0 = p.x < 0.5 * s.x ? absolute_src0(p / s) : absolute_src0(p);
+    if (p.y < 0.05 * s.y) dst0 = vec4(1.0, 0.0, 0.0, 1.0);
+}
+```
+
+- **It compiles** → `gl_FragCoord` works, and the effect can find its pixel.
+- **The left half shows the plate the right way round** → `absolute_src0` takes fractions; **the right half does** →
+  it takes pixels.
+- **The red stripe is at the top** → row 0 is the top; **at the bottom** → row 0 is the bottom. If the half that shows
+  the plate shows it upside down, the source and the output count rows from different ends.
+- Also note: can the Custom node have controls (Yaw, FOV …), or must they be numbers at the top of the source? Can its
+  output be a different size from its input (a 16:9 wall from a square plate)?
+
+With these answers the Nuke Stage version is `shader/core.glsl` with a small wrapper, and it is tested on a GPU here the
+same way as Live FX and PIXERA before it goes to Nuke Stage.
 
 ## How a port is added
 
