@@ -1,0 +1,20 @@
+# Third-party reference files (PIXERA's own effects): not ours to publish
+Ref-Eric/
+
+# Build results (built elsewhere, see AGENTS.md)
+pixera.zip
+.build/
+.swiftpm/
+DerivedData/
+__pycache__/
+*.pyc
+node_modules/
+
+# OS and sync clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+*.tmp
+.SynologyWorkingDirectory/
+#SynoRecycle/

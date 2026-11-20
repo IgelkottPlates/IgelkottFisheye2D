@@ -1,0 +1,282 @@
+<ShaderNodePreset
+    Description="IgelkottFisheye: walls straight from the square fisheye clip (PYXIS 12K or Sony Venice 2 + Entaniya HAL 250, any size), the way IgelkottStage plays it. One resampling, through the lens model.
+
+Plate Auto: the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. With no tag, or a camera without a lens model, a small warning sign shows in the top left corner and the Manual choice is used: switch to Manual, or use a plate with the tag.
+Plate Manual: Camera and Pointing below.
+Lens Offset X/Y: moves the lens centre right/left and down/up, in source pixels at 8040 whatever the clip's size (+X fetches further right, +Y further down). 0 for centred plates.
+Mode: Wall (a flat view like Eq-&gt;2D: Yaw, Pitch, Roll and FOV, the vertical angle over the node's height) or Equirect (the whole sphere, 2:1, yaw 0 in the middle).
+Split: two walls side by side from the same plate, split at Split Position (% of the width, a sharp edge). The left wall uses Yaw/Pitch/Roll/FOV, the right one Right Yaw/Pitch/Roll/FOV.
+
+Igelkott Film AB"
+    Name="IgelkottFisheye2D"
+    HelpLink=""
+    LimitInputsToTexture="True"
+    MatteProvider="False"
+    SupportsAction="False"
+    SupportsTransition="False"
+    SupportsAdaptiveDegradation="False"
+    CommercialUsePermitted="True"
+    ShaderType="Matchbox"
+    SoftwareVersion="2017.0.0"
+    TimelineUseBack="False"
+    SupportsTimeline="False"
+    Version="@VERSION@">
+    <Shader
+        Index="1"
+        OutputBitDepth="Float16">
+        <Uniform
+            Type="sampler2D"
+            DisplayName="Fisheye"
+            Name="front"
+            Index="0"
+            NoInput="Error"
+            Mipmaps="False"
+            GL_TEXTURE_MIN_FILTER="GL_LINEAR"
+            GL_TEXTURE_MAG_FILTER="GL_LINEAR"
+            GL_TEXTURE_WRAP_S="GL_CLAMP_TO_EDGE"
+            GL_TEXTURE_WRAP_T="GL_CLAMP_TO_EDGE"
+            InputType="Front">
+        </Uniform>
+        <Uniform
+            Type="int"
+            Tooltip="Auto: camera and zenith/nadir from the plate's pixel tag (a warning sign shows when there is none). Manual: Camera and Pointing below"
+            DisplayName="Plate"
+            ChannelName="plate"
+            Name="plate"
+            Col="0"
+            Row="0"
+            Page="0"
+            Default="0"
+            ValueType="Popup">
+            <PopupEntry Title="Auto" Value="0"></PopupEntry>
+            <PopupEntry Title="Manual" Value="1"></PopupEntry>
+        </Uniform>
+        <Uniform
+            Type="int"
+            Tooltip="Manual, or Auto without a tag: the camera the plate was shot with"
+            DisplayName="Camera"
+            ChannelName="camera"
+            Name="camera"
+            Col="0"
+            Row="1"
+            Page="0"
+            Default="0"
+            ValueType="Popup">
+            <PopupEntry Title="PYXIS 12K" Value="1"></PopupEntry>
+            <PopupEntry Title="Sony Venice 2" Value="2"></PopupEntry>
+            <PopupEntry Title="Z-Cam E2 S6" Value="3"></PopupEntry>
+        </Uniform>
+        <Uniform
+            Type="int"
+            Tooltip="Manual, or Auto without a tag: Zenith = lens pointing up (car plates), Nadir = lens pointing down (flying plates)"
+            DisplayName="Pointing"
+            ChannelName="pointing"
+            Name="pointing"
+            Col="0"
+            Row="2"
+            Page="0"
+            Default="0"
+            ValueType="Popup">
+            <PopupEntry Title="Zenith" Value="0"></PopupEntry>
+            <PopupEntry Title="Nadir" Value="1"></PopupEntry>
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Moves the lens centre: source pixels at 8040 (+ fetches further right)"
+            DisplayName="Lens Offset X"
+            ChannelName="offset_x"
+            Name="offset_x"
+            Col="0"
+            Row="3"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-500.0"
+            Max="500.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Moves the lens centre: source pixels at 8040 (+ fetches further down)"
+            DisplayName="Lens Offset Y"
+            ChannelName="offset_y"
+            Name="offset_y"
+            Col="0"
+            Row="4"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-500.0"
+            Max="500.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Turns right (yaw 0 looks at the middle of the equirect FisheyetoEqui makes). The left wall when Split is on"
+            DisplayName="Yaw"
+            ChannelName="yaw"
+            Name="yaw"
+            Col="1"
+            Row="0"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-360.0"
+            Max="360.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Looks up. The left wall when Split is on"
+            DisplayName="Pitch"
+            ChannelName="pitch"
+            Name="pitch"
+            Col="1"
+            Row="1"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-90.0"
+            Max="90.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Rotates the wall around its view direction. The left wall when Split is on"
+            DisplayName="Roll"
+            ChannelName="roll"
+            Name="roll"
+            Col="1"
+            Row="2"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-180.0"
+            Max="180.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Vertical angle over the node's height, as in Eq-&gt;2D. The left wall when Split is on"
+            DisplayName="FOV"
+            ChannelName="fov"
+            Name="fov"
+            Col="1"
+            Row="3"
+            Page="0"
+            Default="90.0"
+            Inc="0.1"
+            Min="1.0"
+            Max="179.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="int"
+            Tooltip="Wall: a flat view. Equirect: the whole sphere, 2:1 (Yaw, Pitch, Roll, FOV and Split are not used)"
+            DisplayName="Mode"
+            ChannelName="mode"
+            Name="mode"
+            Col="1"
+            Row="4"
+            Page="0"
+            Default="0"
+            ValueType="Popup">
+            <PopupEntry Title="Wall" Value="0"></PopupEntry>
+            <PopupEntry Title="Equirect" Value="1"></PopupEntry>
+        </Uniform>
+        <Uniform
+            Type="bool"
+            Tooltip="Two walls side by side from the same plate, with a sharp edge at Split Position"
+            DisplayName="Split"
+            ChannelName="split"
+            Name="split"
+            Col="2"
+            Row="0"
+            Page="0"
+            Default="False">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Where the edge between the two walls is, % of the width from the left"
+            DisplayName="Split Position"
+            ChannelName="split_pos"
+            Name="split_pos"
+            Col="2"
+            Row="1"
+            Page="0"
+            Default="50.0"
+            Inc="0.1"
+            Min="0.0"
+            Max="100.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Split: the right wall's Yaw"
+            DisplayName="Right Yaw"
+            ChannelName="yaw_r"
+            Name="yaw_r"
+            Col="3"
+            Row="0"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-360.0"
+            Max="360.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Split: the right wall's Pitch"
+            DisplayName="Right Pitch"
+            ChannelName="pitch_r"
+            Name="pitch_r"
+            Col="3"
+            Row="1"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-90.0"
+            Max="90.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Split: the right wall's Roll"
+            DisplayName="Right Roll"
+            ChannelName="roll_r"
+            Name="roll_r"
+            Col="3"
+            Row="2"
+            Page="0"
+            Default="0.0"
+            Inc="0.1"
+            Min="-180.0"
+            Max="180.0"
+            ResDependant="None">
+        </Uniform>
+        <Uniform
+            Type="float"
+            Tooltip="Split: the right wall's vertical angle over the node's height"
+            DisplayName="Right FOV"
+            ChannelName="fov_r"
+            Name="fov_r"
+            Col="3"
+            Row="3"
+            Page="0"
+            Default="90.0"
+            Inc="0.1"
+            Min="1.0"
+            Max="179.0"
+            ResDependant="None">
+        </Uniform>
+    </Shader>
+    <Page
+        Name="IgelkottFisheye"
+        Page="0">
+        <Col Name="Plate" Col="0" Page="0"></Col>
+        <Col Name="View" Col="1" Page="0"></Col>
+        <Col Name="Split" Col="2" Page="0"></Col>
+        <Col Name="Right Wall" Col="3" Page="0"></Col>
+    </Page>
+</ShaderNodePreset>

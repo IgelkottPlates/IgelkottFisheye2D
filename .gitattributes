@@ -1,0 +1,5 @@
+# Keep LF everywhere (shell scripts and shaders run on Mac too); Windows batch files need CRLF
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf

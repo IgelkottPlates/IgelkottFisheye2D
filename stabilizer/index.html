@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IgelkottFisheye Stabilizer</title>
+<!--
+  IgelkottFisheye Stabilizer — one file, runs in any browser on Mac and Windows, nothing to install, nothing uploaded.
+  Turns a point tracked in Live FX (Framing Offset X / Y, tracked in an IgelkottFisheye node in Mode: Tracking view)
+  into a Stab Yaw curve for the IgelkottFisheye nodes. The Tracking view draws DEG_PER_PIXEL degrees per pixel
+  everywhere, so nothing has to be typed in here: no FOV, no image size, no start point.
+  tools/test-stabilizer.mjs runs the script block "core" below in Node.
+-->
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #1c1c1a; --muted: #6b6a66; --line: #dcdad4;
+    --accent: #1f6f5c; --accent-ink: #ffffff; --road: #b3541e; --warn: #b3261e; --grid: #ebe9e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #9a988f; --line: #33322f;
+            --accent: #58b79f; --accent-ink: #0d1f1a; --road: #e09a63; --warn: #f2857c; --grid: #2a2927; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 24px; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+  h2 { font-size: 15px; margin: 0 0 4px; }
+  h2 span { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%;
+            background: var(--accent); color: var(--accent-ink); font-size: 12px; margin-right: 8px; }
+  p.help { color: var(--muted); margin: 0 0 12px; font-size: 13.5px; }
+  #drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 22px; text-align: center; cursor: pointer; }
+  #drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  #files { margin-top: 10px; font-size: 13.5px; }
+  .ok { color: var(--accent); } .err { color: var(--warn); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+  input[type=number], select { width: 110px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px;
+            background: var(--bg); color: var(--ink); font: inherit; font-variant-numeric: tabular-nums; }
+  label.check { flex-direction: row; align-items: center; gap: 7px; color: var(--ink); font-size: 14px; }
+  canvas { width: 100%; height: 190px; display: block; }
+  #c2 { cursor: col-resize; touch-action: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--muted); margin: 6px 0 2px; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+  .stats { font-size: 13.5px; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+  button { font: inherit; padding: 9px 16px; border-radius: 7px; border: 1px solid var(--accent); background: var(--accent);
+           color: var(--accent-ink); cursor: pointer; font-weight: 600; }
+  button.ghost { background: transparent; color: var(--accent); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  input[type=range] { width: 220px; accent-color: var(--accent); }
+  details { margin: 0 0 10px; } summary { cursor: pointer; color: var(--muted); font-size: 13.5px; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 18px; }
+  ol.next { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>IgelkottFisheye Stabilizer</h1>
+  <p class="sub">Remove the shake from a fisheye or 360° plate in Live FX: tracked keys in, a stabilizing curve out. Everything stays on this computer.</p>
+
+  <section>
+    <h2><span>1</span>The tracked point</h2>
+    <p class="help"><b>Fisheye plate:</b> set the clip's IgelkottFisheye node to <b>Mode: Tracking view</b>, aim it with Yaw at something far away on the horizon,
+      then Framing → Stabilize → Track 1 Point → Apply to Framing, and export <b>Framing Offset X</b> and <b>Offset Y</b> from the Curve Editor.<br>
+      <b>360° plate (equirect):</b> track with Stabilize the same way and export the keys it wrote — <b>Pan 360 Yaw / Pitch / Roll</b> in degrees, or Framing Offset X / Y in pixels.<br>
+      Drop the export here (one file with all the curves, or one file per curve).</p>
+    <div id="drop" tabindex="0">Drop the CSV file or files here, or click to choose</div>
+    <input id="pick" type="file" accept=".csv,text/csv,text/plain" multiple hidden>
+    <div id="files"></div>
+    <div id="source" class="row" style="margin-top:12px" hidden>
+      <label>These are pixels. What did you track in?
+        <select id="src" style="width:auto">
+          <option value="tracking">IgelkottFisheye — Mode: Tracking view</option>
+          <option value="equirect">A 360° equirect picture</option>
+        </select></label>
+      <label id="widthBox" hidden>Width of the picture
+        <select id="width" style="width:auto">
+          <option>2048</option><option>3840</option><option>4096</option><option>5760</option><option>6144</option><option selected>7680</option>
+          <option>8192</option><option>11520</option><option>12288</option><option>15360</option><option>16384</option>
+        </select></label>
+    </div>
+  </section>
+
+  <section>
+    <h2><span>2</span>Road and shake</h2>
+    <p class="help">The slow part of the movement is the road turning and stays in the picture. The fast part is the shake and becomes Stab Yaw.</p>
+    <div class="row" style="margin-bottom:10px">
+      <label class="check"><input id="autofix" type="checkbox" checked>Fix spikes automatically</label>
+      <label class="check"><input id="pitch" type="checkbox">Stabilize pitch too</label>
+      <button id="undo" class="ghost" hidden>Undo hand fixes</button>
+    </div>
+    <p class="help">A spike is the tracker slipping onto something in the foreground. Still see one? <b>Drag across it</b> in the lower chart.</p>
+    <details>
+      <summary>Options</summary>
+      <div class="row" style="margin-top:12px">
+        <label>Smoothing: <b id="smv" style="color:var(--ink)"></b><input id="smooth" type="range" min="3" max="75" step="1" value="12"></label>
+        <label class="check"><input id="invert" type="checkbox">Invert direction</label>
+        <label class="check"><input id="invertPitch" type="checkbox">Invert pitch</label>
+      </div>
+    </details>
+    <div class="legend"><span><i style="background:var(--ink)"></i>Tracked pan</span><span><i style="background:var(--road)"></i>Road (kept)</span></div>
+    <canvas id="c1"></canvas>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Shake → Stab Yaw</span><span><i style="background:var(--muted);opacity:.5"></i>Before the fix</span><span><i style="background:var(--warn);height:10px;opacity:.25"></i>Fixed stretch</span><span><i style="background:var(--warn)"></i>Spike left</span></div>
+    <canvas id="c2"></canvas>
+    <div id="pitchBox" hidden>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Up and down → Stab Pitch</span><span><i style="background:var(--muted);opacity:.5"></i>Before the fix</span></div>
+      <canvas id="c3"></canvas>
+      <p class="help" style="margin-top:6px">Pitch is right when the tracked point is straight ahead of the car (the Tracking view aimed with Yaw near 0).
+        A point to the side shows the car rolling instead, and one point cannot tell the two apart. Tracked a point behind the car? Open Options and tick Invert pitch.</p>
+    </div>
+    <p class="stats" id="stats">Drop the tracker files to see the curve.</p>
+  </section>
+
+  <section>
+    <h2><span>3</span>Save and import</h2>
+    <div class="row">
+      <button id="saveYaw" disabled>Save Stab Yaw.csv</button>
+      <button id="savePitch" class="ghost" disabled hidden>Save Stab Pitch.csv</button>
+      <button id="saveRoll" class="ghost" hidden>Save Stab Roll.csv</button>
+    </div>
+    <ol class="next">
+      <li>In Live FX, select a wall's IgelkottFisheye node and open the Curve Editor.</li>
+      <li>Select <b>Stab Yaw</b> → Import → choose the saved file. Repeat for every wall.</li>
+      <li>Stab Pitch: leave it at 0, or import Stab Pitch.csv the same way if you ticked “Stabilize pitch too”. Stab Roll stays at 0.</li>
+      <li>If the picture shakes more, open Options, tick <b>Invert direction</b> (or Invert pitch) and import again.</li>
+      <li>Set the clip's node back from Tracking view when you are done.</li>
+      <li><b>360° plate without IgelkottFisheye:</b> import the curve onto the same parameter the keys came from (for example Pan 360 → Yaw), in place of the keys Stabilize wrote.</li>
+    </ol>
+  </section>
+
+  <footer>IgelkottFisheye Stabilizer <span id="ver"></span> · Igelkott Film AB · Works best when the camera points straight up, the shake is mostly pan and the road is fairly straight.</footer>
+</main>
+
+<script id="core">
+// The calculation. No browser APIs in this block: tools/test-stabilizer.mjs runs it in Node against the reference curves.
+const VERSION = "3.0";
+
+// Live FX curve CSV: blocks starting with "#ANIM <name>", then "#COND …" and one key per line. Two columns (frame, value)
+// or six (left tangent, key, right tangent); "," or ";"; spreadsheets write minus as "−".
+function parseCurves(text) {
+  const out = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim().replace(/−/g, "-");
+    if (!line) continue;
+    if (line.startsWith("#ANIM")) { out.push({ name: line.slice(5).replace(/^[\s,;]+|[\s,;]+$/g, ""), keys: [] }); continue; }
+    if (line.startsWith("#")) continue;
+    const f = line.split(/[,;]/).map(s => parseFloat(s)).filter(v => !Number.isNaN(v));
+    if (f.length < 2) continue;
+    if (!out.length) out.push({ name: "", keys: [] });
+    out[out.length - 1].keys.push(f.length >= 4 ? [f[2], f[3]] : [f[0], f[1]]);
+  }
+  return out.filter(c => c.keys.length);
+}
+
+// Reads the dropped exports. Two kinds of keys come out of Live FX's Stabilize:
+//  - pixels: Framing Offset X / Offset Y (a picture marked Normal — the Tracking view, or an equirect picture);
+//  - degrees: Pan 360 Yaw / Pitch / Roll (a clip marked Equirectangular 360), or any other Yaw / Pitch / Roll curve.
+// Throws an Error whose message tells the user what to do.
+function readTrack(files) {
+  const found = {};
+  for (const file of files) {
+    const curves = parseCurves(file.text);
+    if (!curves.length) throw new Error(`"${file.name}" has no keys in it. Export the curve again from the Curve Editor.`);
+    for (const c of curves) {
+      const n = (c.name || file.name.replace(/\.[^.]+$/, "")).trim().toLowerCase();
+      const kind = /yaw$|pan$/.test(n) ? "yaw" : /pitch$|tilt$/.test(n) ? "pitch" : /roll$/.test(n) ? "roll" : n.endsWith("x") ? "x" : n.endsWith("y") ? "y" : null;
+      if (kind) found[kind] = c;
+    }
+  }
+  const degrees = !!(found.yaw || found.pitch || found.roll);
+  const first = degrees ? found.yaw : found.x, second = degrees ? found.pitch : found.y;
+  if (!degrees && !found.x && !found.y) throw new Error("These are not tracker keys. Export Framing → Offset X and Offset Y (or Pan 360 → Yaw and Pitch) from the Curve Editor.");
+  if (!degrees && !found.x) throw new Error("Found Offset Y only. Export Offset X too and drop both.");
+  if (degrees && !found.yaw) throw new Error("Found no Yaw curve. Export Pan 360 → Yaw too and drop it with the others.");
+  const all = [first, second, degrees ? found.roll : null].filter(Boolean);
+  const n = Math.min(...all.map(c => c.keys.length));
+  if (n < 10) throw new Error("The curves have fewer than 10 keys. Track the whole clip before exporting.");
+  const v = c => c ? c.keys.slice(0, n).map(k => k[1]) : null;
+  return { kind: degrees ? "degrees" : "pixels", frames: first.keys.slice(0, n).map(k => k[0]),
+           a: v(first), b: v(second), roll: degrees ? v(found.roll) : null, names: all.map(c => c.name.split("\\").pop() || "curve"),
+           note: all.some(c => c.keys.length !== n) ? `The curves have different numbers of keys; using the first ${n}.` : "" };
+}
+
+// A track → angles relative to the first key. Pixels are minus the point's movement (Y up) times the scale of the
+// picture in degrees per pixel; degrees are used as they are.
+function anglesOf(track, degPerPixel) {
+  const rel = (v, k) => v ? v.map(x => (x - v[0]) * k) : null;
+  return track.kind === "degrees" ? { yaw: rel(track.a, 1), pitch: rel(track.b, 1), roll: rel(track.roll, 1) }
+                                  : { yaw: rel(track.a, -degPerPixel), pitch: rel(track.b, -degPerPixel), roll: null };
+}
+
+// Mode: Tracking view in the IgelkottFisheye node draws this many degrees per pixel, everywhere in the picture
+// (TRACK_SCALE in matchbox/IgelkottFisheye2D.glsl — the two must be the same).
+const DEG_PER_PIXEL = 0.02;
+
+// Offset X/Y (minus the point's movement, in pixels of the Tracking view, Y up) → the point's angles relative to the
+// first key. The scale is the same everywhere, so neither the size of the view nor where the point started matters.
+function trackingAngles(ox, oy) {
+  return { yaw: ox.map(v => -(v - ox[0]) * DEG_PER_PIXEL), pitch: oy.map(v => -(v - oy[0]) * DEG_PER_PIXEL) };
+}
+
+// Gaussian smoothing in both directions, edges repeated.
+function gauss(v, sigma) {
+  const r = Math.floor(3 * sigma), n = v.length, w = [];
+  for (let i = -r; i <= r; i++) w.push(Math.exp(-0.5 * (i / sigma) ** 2));
+  return v.map((_, i) => {
+    let acc = 0, sum = 0;
+    for (let j = 0; j < w.length; j++) { acc += v[Math.min(Math.max(i + j - r, 0), n - 1)] * w[j]; sum += w[j]; }
+    return acc / sum;
+  });
+}
+
+// Road = the smoothed angle (sigma in frames), shake = the rest.
+function split(angles, frames) {
+  const road = gauss(angles, Math.max(1, Math.floor(frames)));
+  return { road, shake: angles.map((a, i) => a - road[i]) };
+}
+
+// Keys where the shake jumps away from its neighbours: the tracker caught something in the foreground.
+function spikes(shake) {
+  const med = a => { const s = [...a].sort((p, q) => p - q); return s[s.length >> 1]; };
+  const resid = shake.map((v, i) => Math.abs(v - med(shake.slice(Math.max(0, i - 3), i + 4))));
+  const limit = Math.max(0.25, 8 * med(resid));
+  // Not the first and last keys: the smoothing has less to go on there, and the shake leans away by itself
+  return resid.map((r, i) => r > limit && i >= 3 && i < shake.length - 3 ? i : -1).filter(i => i >= 0);
+}
+
+// Repairs the places where the tracker slipped onto something in the foreground. A slip shows as the pan jumping
+// between two frames far more than it does anywhere else. Jumps close together are one stretch (out and back again);
+// the stretch is bridged with a straight line. A jump that never comes back (the tracker stayed on the new spot) is
+// taken out of everything after it. `manual` = stretches [first, last] the user marked by hand, bridged the same way.
+// Returns the repaired pan and the stretches [first, last] that were changed.
+function fixSlips(pan, auto, manual) {
+  const n = pan.length, med = a => { const s = [...a].sort((p, q) => p - q); return s[s.length >> 1]; };
+  const out = [...pan], done = [];
+  if (auto && n > 30) {
+    const v = pan.map((p, i) => i ? p - pan[i - 1] : 0);
+    const dev = v.map((x, i) => i ? x - med(v.slice(Math.max(1, i - 12), i + 13)) : 0);
+    const limit = Math.max(0.12, 6 * 1.4826 * med(dev.slice(1).map(Math.abs)));
+    const runs = [];
+    for (let i = 1; i < n; i++) {
+      if (Math.abs(dev[i]) <= limit) continue;
+      let b = i; while (b + 1 < n && Math.abs(dev[b + 1]) > limit) b++;
+      if (runs.length && i - runs[runs.length - 1][1] <= 8) runs[runs.length - 1][1] = b; else runs.push([i, b]);
+      i = b;
+    }
+    for (const [a, b] of runs) {
+      const jump = dev.slice(a, b + 1).reduce((p, c) => p + c, 0);
+      if (Math.abs(jump) > limit) for (let i = b; i < n; i++) out[i] -= jump;
+      for (let i = a; i < b; i++) out[i] = out[a - 1] + (out[b] - out[a - 1]) * (i - a + 1) / (b - a + 1);
+      done.push([a, b]);
+    }
+  }
+  for (const [a0, b0] of manual || []) {
+    const a = Math.max(1, Math.min(a0, b0)), b = Math.min(n - 2, Math.max(a0, b0));
+    if (b < a) continue;
+    for (let i = a; i <= b; i++) out[i] = out[a - 1] + (out[b + 1] - out[a - 1]) * (i - a + 1) / (b - a + 2);
+    done.push([a, b]);
+  }
+  return { pan: out, fixed: done.sort((p, q) => p[0] - q[0]) };
+}
+
+// Six columns, the form Live FX exports a Matchbox parameter in and imports again.
+function curveCSV(name, frames, values) {
+  let s = `#ANIM Stab\\${name}\n#COND CC\n`;
+  for (let i = 0; i < values.length; i++) { const p = `${frames[i].toFixed(6)},${values[i].toFixed(6)}`; s += `${p},${p},${p}\n`; }
+  return s;
+}
+
+if (typeof module !== "undefined") module.exports = { VERSION, DEG_PER_PIXEL, parseCurves, readTrack, anglesOf, trackingAngles, gauss, split, spikes, fixSlips, curveCSV };
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+let track = null, result = null, manual = [], drag = null, names = { yaw: "Stab Yaw", pitch: "Stab Pitch", roll: "Stab Roll" };
+$("ver").textContent = VERSION;
+
+async function take(fileList) {
+  const csv = [...fileList];
+  if (!csv.length) return;
+  try {
+    track = readTrack(await Promise.all(csv.map(async f => ({ name: f.name, text: await f.text() }))));
+    manual = [];
+    $("files").innerHTML = `<span class="ok">✓ ${track.frames.length} frames tracked</span> — ${track.names.join(", ")} in ${track.kind === "degrees" ? "degrees" : "pixels"}` +
+      ` (${csv.map(f => f.name).join(", ")})${track.note ? `<br>${track.note}` : ""}`;
+  } catch (e) { track = null; $("files").innerHTML = `<span class="err">${e.message}</span>`; }
+  update();
+}
+
+function update() {
+  const frames = +$("smooth").value;
+  $("smv").textContent = `${frames} frames (${(frames / 25).toFixed(2)} s at 25 fps)`;
+  const pixels = track && track.kind === "pixels", equirect = pixels && $("src").value === "equirect";
+  const scale = equirect ? 360 / +$("width").value : DEG_PER_PIXEL;
+  $("source").hidden = !pixels; $("widthBox").hidden = !equirect;
+  // The fisheye node has its own parameters; any other 360 clip gets the curve back on the parameter the keys came from
+  names = pixels && !equirect ? { yaw: "Stab Yaw", pitch: "Stab Pitch", roll: "Stab Roll" } : { yaw: "Yaw shake", pitch: "Pitch shake", roll: "Roll shake" };
+  $("saveYaw").textContent = `Save ${names.yaw}.csv`; $("savePitch").textContent = `Save ${names.pitch}.csv`; $("saveRoll").textContent = `Save ${names.roll}.csv`;
+  $("savePitch").hidden = $("pitchBox").hidden = !$("pitch").checked || !(track && track.b);
+  $("saveRoll").hidden = !$("pitch").checked || !(track && track.roll);
+  $("undo").hidden = !manual.length;
+  result = null;
+  if (track) {
+    const a = anglesOf(track, scale), gain = $("invert").checked ? -1 : 1;
+    if (!a.pitch) a.pitch = a.yaw.map(() => 0);
+    const fix = fixSlips(a.yaw, $("autofix").checked, manual);
+    // The tracker slips in both directions at once: the stretches found in the pan are bridged in the pitch too
+    const fixP = fixSlips(a.pitch, $("autofix").checked, fix.fixed), gainP = $("invertPitch").checked ? -1 : 1;
+    const yaw = split(fix.pan, frames), before = split(a.yaw, frames), pitch = split(fixP.pan, frames), left = spikes(yaw.shake);
+    result = { pan: a.yaw, road: yaw.road, fixed: fix.fixed, left, yaw: yaw.shake.map(x => x * gain), pitch: pitch.shake.map(x => x * gainP),
+               before: fix.fixed.length ? before.shake.map(x => x * gain) : null,
+               pitchBefore: fixP.fixed.length ? split(a.pitch, frames).shake.map(x => x * gainP) : null,
+               roll: a.roll ? split(fixSlips(a.roll, $("autofix").checked, fix.fixed).pan, frames).shake : null };
+    const lo = Math.min(...result.yaw), hi = Math.max(...result.yaw), f = track.frames;
+    const list = fix.fixed.slice(0, 6).map(([p, q]) => p === q ? `${f[p]}` : `${f[p]}–${f[q]}`).join(", ") + (fix.fixed.length > 6 ? " …" : "");
+    $("stats").innerHTML = `Whole pan ${Math.min(...a.yaw).toFixed(1)}° … ${Math.max(...a.yaw).toFixed(1)}° (the road). ` +
+      `Shake ${lo.toFixed(2)}° … ${hi.toFixed(2)}°. ` +
+      (fix.fixed.length ? `<span class="ok">${fix.fixed.length} spike${fix.fixed.length > 1 ? "s" : ""} fixed</span> (frames ${list}). ` : "") +
+      ($("pitch").checked && track.b ? `Up and down ${Math.min(...result.pitch).toFixed(2)}° … ${Math.max(...result.pitch).toFixed(2)}°. ` : "") +
+      (left.length ? `<span class="err">${left.length} spike key${left.length > 1 ? "s" : ""} left</span> around frame ${f[left[0]]} — drag across it in the lower chart.`
+                   : fix.fixed.length ? "" : "No spikes found.") +
+      (pixels && !equirect && Math.max(...a.yaw) - Math.min(...a.yaw) > 70 ? ` <span class="err">The pan is wider than a Tracking view usually shows — was the point tracked in Mode: Tracking view?</span>` : "");
+  } else { $("stats").textContent = "Drop the tracker files to see the curve."; }
+  $("saveYaw").disabled = $("savePitch").disabled = !result;
+  draw();
+}
+
+function plot(canvas, series, extra) {
+  const css = getComputedStyle(document.documentElement), dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const g = canvas.getContext("2d"); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+  const all = series.filter(s => !s.quiet).flatMap(s => s.values);
+  if (!all.length) return;
+  let lo = Math.min(...all, 0), hi = Math.max(...all, 0); if (hi - lo < 0.2) { hi += 0.1; lo -= 0.1; }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const L = 46, n = series[0].values.length, X = i => L + (W - L - 6) * i / Math.max(1, n - 1), Y = v => 8 + (H - 26) * (hi - v) / (hi - lo);
+  canvas.frameAt = x => Math.round(Math.min(1, Math.max(0, (x - L) / (W - L - 6))) * (n - 1));
+  g.globalAlpha = 0.16; g.fillStyle = css.getPropertyValue("--warn");
+  for (const [a, b] of (extra && extra.bands) || []) g.fillRect(X(a) - 2, 8, Math.max(4, X(b) - X(a) + 4), H - 26);
+  g.globalAlpha = 1;
+  g.font = "11px -apple-system, Segoe UI, sans-serif"; g.fillStyle = css.getPropertyValue("--muted"); g.strokeStyle = css.getPropertyValue("--grid"); g.lineWidth = 1;
+  for (const v of [hi - pad, 0, lo + pad]) { g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(W - 6, Y(v)); g.stroke(); g.fillText(`${v.toFixed(Math.abs(v) < 10 ? 2 : 1)}°`, 2, Y(v) + 4); }
+  g.fillText("frame 0", L, H - 4); g.textAlign = "right"; g.fillText(`frame ${n - 1}`, W - 6, H - 4); g.textAlign = "left";
+  for (const s of series) {
+    g.save(); g.beginPath(); g.rect(L - 2, 0, W, H - 16); g.clip();
+    g.globalAlpha = s.quiet ? 0.4 : 1; g.strokeStyle = css.getPropertyValue(s.color); g.lineWidth = s.width || 1.3; g.beginPath();
+    s.values.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.stroke(); g.restore();
+  }
+  if (extra && extra.dots) { g.fillStyle = css.getPropertyValue("--warn"); for (const i of extra.dots) { g.beginPath(); g.arc(X(i), Y(series[series.length - 1].values[i]), 3.2, 0, 7); g.fill(); } }
+}
+function draw() {
+  if (!result) { for (const c of ["c1", "c2", "c3"]) plot($(c), [{ values: [] }]); return; }
+  const bands = result.fixed.concat(drag ? [[Math.min(drag[0], drag[1]), Math.max(drag[0], drag[1])]] : []);
+  plot($("c1"), [{ values: result.pan, color: "--ink" }, { values: result.road, color: "--road", width: 2 }], { bands });
+  plot($("c2"), (result.before ? [{ values: result.before, color: "--muted", quiet: true }] : []).concat([{ values: result.yaw, color: "--accent" }]),
+       { bands, dots: result.left });
+  if (!$("pitchBox").hidden) plot($("c3"), (result.pitchBefore ? [{ values: result.pitchBefore, color: "--muted", quiet: true }] : []).concat([{ values: result.pitch, color: "--accent" }]), { bands });
+}
+
+async function save(name, values) {
+  const text = curveCSV(name, track.frames, values), file = `${name}.csv`;
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await showSaveFilePicker({ suggestedName: file, types: [{ description: "Live FX curve", accept: { "text/csv": [".csv"] } }] });
+      const w = await h.createWritable(); await w.write(text); await w.close(); return;
+    } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "text/csv" })); a.download = file; a.click();
+}
+
+const drop = $("drop");
+drop.onclick = () => $("pick").click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") $("pick").click(); };
+$("pick").onchange = e => take(e.target.files);
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); take(e.dataTransfer.files); };
+window.ondragover = e => e.preventDefault(); window.ondrop = e => e.preventDefault();
+for (const id of ["smooth", "invert", "invertPitch", "autofix", "pitch", "src", "width"]) $(id).oninput = update;
+// Drag across a spike in the lower chart to bridge it by hand
+const c2 = $("c2"), at = e => c2.frameAt(e.clientX - c2.getBoundingClientRect().left);
+c2.onpointerdown = e => { if (!result) return; c2.setPointerCapture(e.pointerId); drag = [at(e), at(e)]; draw(); };
+c2.onpointermove = e => { if (drag) { drag[1] = at(e); draw(); } };
+c2.onpointerup = () => { if (!drag) return; const [a, b] = drag; drag = null; if (Math.abs(a - b) >= 1) manual.push([Math.min(a, b), Math.max(a, b)]); update(); };
+$("undo").onclick = () => { manual = []; update(); };
+$("saveYaw").onclick = () => save(names.yaw, result.yaw);
+$("savePitch").onclick = () => save(names.pitch, result.pitch);
+$("saveRoll").onclick = () => save(names.roll, result.roll);
+window.onresize = draw;
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+update();
+</script>
+</body>
+</html>

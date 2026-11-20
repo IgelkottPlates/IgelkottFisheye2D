@@ -1,0 +1,52 @@
+IgelkottFisheye for PIXERA
+==========================
+
+IgelkottFisheye is a GLSL effect for PIXERA (AV Stumpfl). It plays the square
+fisheye clip (PYXIS 12K or Sony Venice 2 + Entaniya HAL 250, lens pointing up
+or down, any size) directly through the lens model. It is the same effect as
+the IgelkottFisheye node for Assimilate Live FX.
+
+
+Install
+-------
+1. In PIXERA, open the Effects library and select the Custom folder.
+2. Drag "IgelkottFisheye.glsl" onto the Custom folder (or press + and choose
+   the file). Keep the file name: PIXERA matches it to the effect's name.
+3. The effect is then under Effects > Custom > IgelkottFisheye.
+
+
+Using the effect
+----------------
+Plate Auto (default): the camera and whether the lens pointed up (zenith) or
+down (nadir) are read from the small black and white tag that IgelkottDarkroom
+and Fisheye to Equi write next to the QR codes in the corners. With no tag, a
+small yellow warning sign shows in the top left corner and the Manual choice
+below is used: switch to Manual, or use a plate with the tag.
+
+Plate Manual: Camera (PYXIS 12K, Sony Venice 2, Z-Cam E2 S6) and Pointing
+(Zenith, Nadir). Z-Cam E2 S6 has no lens model yet: the picture stays black.
+
+Lens Offset X / Y move the lens centre, in source pixels at 8040 whatever the
+clip's size. 0 for centred plates.
+
+Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
+height, and the layer's Aspect (width / height).
+
+Mode Equirect gives the whole sphere, 2:1, straight ahead in the middle. Put
+PIXERA's own Equirectangular effect after it for curved screens and domes.
+
+Split: two walls side by side from the same plate, with a sharp edge at Split
+Position (% of the width). The left wall uses Yaw / Pitch / Roll / FOV, the
+right one Right Yaw / Pitch / Roll / FOV.
+
+
+Checked
+-------
+The effect is drawn on a graphics card (OpenGL 4.5 on Windows) and compared
+pixel by pixel with the lens model: within 0.03 source pixels. In Mode
+Equirect followed by PIXERA's own Equirectangular effect, every pixel lands
+within 0.4 source pixels of where the lens model puts it.
+Not yet checked inside PIXERA itself.
+
+
+Igelkott Film AB
