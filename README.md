@@ -41,7 +41,8 @@ Put one node on the fisheye clip for each wall.
   Fisheye to Equi). Or choose them by hand. With Auto and no tag, a yellow warning sign shows in the top left corner.
 - **Offset X / Y** move the finished picture, in output pixels (PIXERA: % of the height). The plate must be centred.
 - **Yaw, Pitch, Roll, FOV**: the wall's view. FOV is the vertical angle over the node's height.
-- **Mode**: Wall (a flat view) or Equirect (the whole sphere, 2:1).
+- **Mode**: Wall (a flat view) or Equirect: 360° over the width with square degrees, so the whole sphere at 2:1 and
+  cropped top and bottom on wider canvases such as 32:9.
 - **Split**: two walls side by side from one plate, with a sharp edge at Split Position; the right wall has its own
   Right Yaw / Pitch / Roll / FOV.
 

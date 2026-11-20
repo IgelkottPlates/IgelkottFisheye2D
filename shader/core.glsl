@@ -59,6 +59,13 @@ vec3 igkWallDirection(vec2 c, float h, float yaw, float pitch, float roll, float
 }
 
 // The whole sphere, 2:1: uv in fractions, y up; u = lon / 2pi + 0.5, the middle is yaw 0 (FisheyetoEqui's equirect)
+// Mode Equirect on any canvas (Eric 2026-11-20, "crop to 360 wide"): 360 degrees over the width, the same degrees per
+// pixel up and down, centred on the horizon. 2:1 is the whole sphere; wider canvases are cropped top and bottom (32:9:
+// 101 degrees); narrower ones reach past the poles, and that part is black (igkEquirectUV gives v outside 0..1).
+vec2 igkEquirectUV(vec2 s, float w, float h) {
+    return vec2(s.x / w, 0.5 + (s.y - 0.5 * h) * 2.0 / w);
+}
+
 vec3 igkEquirectDirection(vec2 uv) {
     float lon = (uv.x - 0.5) * 2.0 * IGK_PI;
     float lat = (uv.y - 0.5) * IGK_PI;

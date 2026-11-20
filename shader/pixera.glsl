@@ -47,15 +47,18 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 		vec2 o = q - vec2(s.offsetX, s.offsetY) * 0.01;
 		float splitX = s.split ? clamp(s.splitPos, 0.0, 100.0) * 0.01 * w : w;
 		vec3 d;
+		bool past = false;
 		if (s.mode == 1) {
-			d = igkEquirectDirection(vec2(o.x / w, o.y));
+			vec2 e = igkEquirectUV(o, w, 1.0);
+			past = e.y < 0.0 || e.y > 1.0;                              // past a pole: black
+			d = igkEquirectDirection(e);
 		} else if (q.x < splitX) {
 			d = igkWallDirection(o - vec2(0.5 * splitX, 0.5), 1.0, s.yaw, s.pitch, s.roll, s.fov);
 		} else {
 			d = igkWallDirection(o - vec2(0.5 * (splitX + w), 0.5), 1.0, s.yawR, s.pitchR, s.rollR, s.fovR);
 		}
 		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
-		if (igkInside(p)) color = igkFetch(s.sampler, p).rgb;
+		if (!past && igkInside(p)) color = igkFetch(s.sampler, p).rgb;
 	}
 	if (pl.z > 0.5) {
 		float mark = igkWarning(vec2(tex_coords.x * max(s.aspect, 0.01), 1.0 - tex_coords.y), 0.05);

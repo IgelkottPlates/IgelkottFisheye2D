@@ -50,7 +50,9 @@ to Equi make it).
 Yaw, Pitch, Roll and FOV work as on Eq->2D Transformer. FOV is the vertical
 angle over the node's height.
 
-Mode: Wall (a flat view) or Equirect (the whole sphere, 2:1).
+Mode: Wall (a flat view) or Equirect: 360 degrees over the width, with the
+same degrees per pixel up and down (the whole sphere at 2:1, cropped top and
+bottom on wider canvases such as 32:9).
 
 Split puts two walls side by side from the same plate, with a sharp edge at
 Split Position; the right wall has its own Right Yaw / Pitch / Roll / FOV.

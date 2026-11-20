@@ -32,8 +32,11 @@ and Fisheye to Equi make it).
 Mode Wall is a flat view: Yaw, Pitch, Roll, a vertical FOV over the layer's
 height, and the layer's Aspect (width / height).
 
-Mode Equirect gives the whole sphere, 2:1, straight ahead in the middle. Put
-PIXERA's own Equirectangular effect after it for curved screens and domes.
+Mode Equirect gives 360 degrees over the layer's width, straight ahead in the
+middle, with the same degrees per pixel up and down: the whole sphere at Aspect
+2, cropped top and bottom on wider layers (32:9: 101 degrees high), black past
+the poles on narrower ones. Put PIXERA's own Equirectangular effect after it
+(at Aspect 2) for curved screens and domes.
 
 Split: two walls side by side from the same plate, with a sharp edge at Split
 Position (% of the width). The left wall uses Yaw / Pitch / Roll / FOV, the

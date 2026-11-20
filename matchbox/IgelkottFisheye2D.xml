@@ -3,7 +3,7 @@
 
 Camera and Pointing on Auto (tag): the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. Choose a camera or a pointing to set it by hand. With Auto and no tag (PYXIS 12K / Zenith is used), or a camera without a lens model (black), a small warning sign shows in the top left corner.
 Offset X/Y: moves the finished picture, after the projection, in output pixels (+X right, +Y up).
-Mode: Wall (a flat view like Eq-&gt;2D: Yaw, Pitch, Roll and FOV, the vertical angle over the node's height) or Equirect (the whole sphere, 2:1, yaw 0 in the middle).
+Mode: Wall (a flat view like Eq-&gt;2D: Yaw, Pitch, Roll and FOV, the vertical angle over the node's height) or Equirect (360 degrees over the width, yaw 0 in the middle, the same degrees per pixel up and down: the whole sphere at 2:1, cropped top and bottom on wider canvases, black past the poles on narrower ones).
 Split: two walls side by side from the same plate, split at Split Position (% of the width, a sharp edge). The left wall uses Yaw/Pitch/Roll/FOV, the right one Right Yaw/Pitch/Roll/FOV.
 
 Igelkott Film AB"
@@ -19,7 +19,7 @@ Igelkott Film AB"
     SoftwareVersion="2017.0.0"
     TimelineUseBack="False"
     SupportsTimeline="False"
-    Version="0.15">
+    Version="0.16">
     <Shader
         Index="1"
         OutputBitDepth="Float16">
@@ -159,7 +159,7 @@ Igelkott Film AB"
         </Uniform>
         <Uniform
             Type="int"
-            Tooltip="Wall: a flat view. Equirect: the whole sphere, 2:1 (Yaw, Pitch, Roll, FOV and Split are not used)"
+            Tooltip="Wall: a flat view. Equirect: 360 degrees over the width, square degrees, centred on the horizon (Yaw, Pitch, Roll, FOV and Split are not used)"
             DisplayName="Mode"
             ChannelName="mode"
             Name="mode"

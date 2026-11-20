@@ -81,7 +81,8 @@ def direction(c, qx, qy_up, w, h, ox=0.0, oy=0.0):
     Offset X/Y i samma enheter: bilden flyttas efter projektionen, Split-gränsen står kvar."""
     sx, sy = qx - ox, qy_up - oy
     if c["mode"] == 1:
-        return equi_direction(sx / w, sy / h)
+        v = 0.5 + (sy - h / 2) * 2 / w                    # 360 grader över bredden, samma grader per pixel på höjden
+        return None if v < 0 or v > 1 else equi_direction(sx / w, v)
     split_x = c["pos"] / 100 * w if c["split"] else w
     if qx < split_x:
         return wall_direction(sx - split_x / 2, sy - h / 2, h, c["R"], c["fov"])
@@ -423,6 +424,8 @@ cases = [
          pixera=True),
     case("PYXIS, Equirect 512x256", 512, 256, mode=1, pixera=True),
     case("PYXIS, Equirect, Offset (40, 10) px", 512, 256, mode=1, offset=(40.0, 10.0)),
+    case("PYXIS, Equirect 32:9 768x216: 360 wide, cropped top and bottom", 768, 216, mode=1, pixera=True),
+    case("Venice nadir, Equirect 16:9 384x216: past the poles black", 384, 216, cam=2, pointing=2, mode=1, pixera=True),
     case("Sony Venice 2, Back", 384, 216, cam=2, pitch=15, fov=58.5),
     case("Sony Venice 2, Ref TV yaw 180, Offset", 192, 108, cam=2, yaw=180, pitch=2, roll=-3, fov=20, offset=O),
     case("PYXIS Nadir, yaw 30, pitch -20", 384, 216, pointing=2, yaw=30, pitch=-20, fov=70, pixera=True),
@@ -504,7 +507,7 @@ def check(c, px, n, host):
                     d = direction(c, qx, qy_up, w, h, *c["offset"])
                 else:
                     d = direction(c, qx, qy_up, w / h, 1.0, c["offset"][0] / h, c["offset"][1] / h)
-                if cam not in CAMS:
+                if cam not in CAMS or d is None:
                     continue
                 p = point(d, cam, nadir)
                 if min(abs(p[0]), abs(p[0] - 1), abs(p[1]), abs(p[1] - 1)) < 1e-4:

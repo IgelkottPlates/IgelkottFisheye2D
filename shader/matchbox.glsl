@@ -41,7 +41,9 @@ void main() {
                 vec2 s = q - offset;                                            // where the picture came from
                 vec3 d;
                 if (mode == 1) {
-                    d = igkEquirectDirection(s / vec2(w, h));
+                    vec2 e = igkEquirectUV(s, w, h);
+                    if (e.y < 0.0 || e.y > 1.0) continue;                       // past a pole: black
+                    d = igkEquirectDirection(e);
                 } else if (q.x < splitX) {
                     d = igkWallDirection(s - vec2(0.5 * splitX, 0.5 * h), h, yaw, pitch, roll, fov);
                 } else {

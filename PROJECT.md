@@ -527,6 +527,11 @@ och hit (bygg shaders och prova i Live FX).
   0,016 källpixlar. Pixlar exakt på varningstecknets eller källbildens kant hoppas över (float32 mot double).
 - **32:9 med Equirect (Eric 2026-11-20):** 7680 × 2160, A001C016 (nadir), Mode Equirect: hela sfären över hela duken,
   alltså 1,78 × utdragen på bredden mot en 2:1-equirect; plåtens hörn (QR och pixeltagg) syns i himlen överst.
+- **0.16 (2026-11-20): Equirect 360° på bredden** (Eric: "Crop to 360° wide"). Mode Equirect lägger 360° över dukens
+  bredd och samma grader per pixel på höjden, centrerat på horisonten (`igkEquirectUV` i `core.glsl`): 2:1 är hela sfären
+  som förut, 32:9 visar 101° på höjden (beskuret upptill och nertill), smalare dukar än 2:1 når förbi polerna och det blir
+  svart. PIXERA: samma över lagrets Aspect (kedjan med PIXERA:s Equirectangular förutsätter Aspect 2). Provet: nya fall
+  32:9 och 16:9, allt PASS. Installerad i Live FX men **inte sedd** (Live FX måste startas om).
 - **Färg i Store-projektet (Eric 2026-11-20):** alla nio klipp Media → Data Format Color ACEScg (AP1), EOTF ACEScct;
   Settings → Monitors → Interface Colorspace Rec709, EOTF Gamma 2.4 (bilden får normal kontrast). Split View orörd.
 
