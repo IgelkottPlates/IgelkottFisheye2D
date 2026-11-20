@@ -618,6 +618,9 @@ och hit (bygg shaders och prova i Live FX).
     `IgelkottStage/Resources/OutputTransforms/…(Resolve).cube`, prövad som Display LUT med Interface ACEScg/ACEScct).
     Klippets egen nod-miniatyr (utan Matchbox) är lika blek som noden: shadern ändrar inte färgen. Inställningen är
     tillbaka på Rec709 / Gamma 2.4, LUT:en ligger laddad men av.
+    **Ett nyimporterat klipp får Data Format Rec709 / Gamma 2.4** (Live FX standard), inte ACEScct: det ser då mjölkigt
+    och blekt ut. Med Media → Data Format ACEScg (AP1) / ACEScct ser tågklippet ut som i IgelkottStage (Eric:s
+    jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp, eller i Project Settings → Media Defaults.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
