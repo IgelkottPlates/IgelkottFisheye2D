@@ -26,6 +26,10 @@ källan samplas genom objektivets modell i stället för en equirect från Fishe
   (skapat 2026-11-20 på ERIC-DESKTOP, gren `main`). `.git/` ligger i Drive-mappen: committa från en maskin i taget.
   `Ref-Eric/` (PIXERA:s egna filer) och `pixera.zip` är utanför via `.gitignore`. Målet (Eric 2026-11-20): IgelkottFisheye
   i alla stora spelare — Live FX, PIXERA, Nuke med flera — och med hjälp från andra användare (då publikt repo, inte beslutat).
+  Förberett för publikt 2026-11-20: `README.md`, `CONTRIBUTING.md` (engelska), kamerornas tal som kopia i
+  `shader/cameras.json` (skrivs av `build_shaders.py` ur `_shared`; utan `_shared` läser bygget och provet kopian),
+  PIXERA-kedjan i provet hoppas över utan `Ref-Eric/`. Inte gjort: licens (Erics val), GitHub Actions (gh-inloggningen
+  saknar scope `workflow`), repot fortfarande privat.
 
 ## Grundbeslut (Eric 2026-10-05)
 

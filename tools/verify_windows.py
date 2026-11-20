@@ -531,9 +531,11 @@ for n in (1024, 1008):
 # PIXERA-kedjan: vår effekt i Mode Equirect ger en equirect, PIXERA:s egen Equirectangular (Ref-Eric) läser den genom en
 # Screen Pixel Position-karta (en plan skärm framför ögat). Varje pixel ska hamna på källpunkten för den riktning PIXERA:s
 # effekt räknar fram; deras mitt är +X i världen, FisheyetoEquis är d.z: d = (n.z, n.y, n.x).
-ref_src = read_file("Ref-Eric", "Equirectangular.glsl.txt")
+# Ref-Eric ligger inte i GitHub-repot (PIXERA:s fil, inte vår att lägga ut): utan den hoppas kedjan över.
+has_ref = os.path.exists(os.path.join(root, "Ref-Eric", "Equirectangular.glsl.txt"))
+ref_src = read_file("Ref-Eric", "Equirectangular.glsl.txt") if has_ref else "#endif"
 ref_body = ref_src[ref_src.index("#endif") + len("#endif"):].replace("radians(", "radiansEq(")   # deras egen radians()
-equirect_ref = link("#version 450 compatibility\nvoid main() { gl_Position = gl_Vertex; }\n",
+equirect_ref = None if not has_ref else link("#version 450 compatibility\nvoid main() { gl_Position = gl_Vertex; }\n",
                     "#version 450\n"
                     "vec4 texture_(sampler2D s, vec2 tc) { return texture(s, tc); }\n"
                     "vec4 texture_(sampler3D s, vec3 tc) { return texture(s, tc); }\n"
@@ -564,8 +566,9 @@ def render_texture(prog, w, h, setup):
     return out, px
 
 
-print("PIXERA chain: IgelkottFisheye Mode Equirect -> PIXERA's own Equirectangular (Ref-Eric), source 1024 x 1024:")
-for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice 2 nadir")):
+print("PIXERA chain: IgelkottFisheye Mode Equirect -> PIXERA's own Equirectangular (Ref-Eric), source 1024 x 1024:"
+      if has_ref else "PIXERA chain: SKIPPED, Ref-Eric/Equirectangular.glsl.txt (PIXERA's own effect) is not here")
+for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice 2 nadir")) if has_ref else ():
     upload(1024, None, False)
     EW, EH = 4096, 2048
     ce = case("chain", EW, EH, cam=cam, pointing=2 if nadir else 1, mode=1)
@@ -622,18 +625,25 @@ for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice
 # Kamerornas tal ska vara desamma som i _shared/IgelkottFisheyeLens
 shared_path = os.path.join(os.path.dirname(os.path.abspath(root)), "_shared", "IgelkottFisheyeLens", "Sources",
                            "IgelkottFisheyeLens", "FisheyeLens.swift")
-with open(shared_path, encoding="utf-8") as fh:
-    shared = fh.read()
+# Utan _shared (en klon av GitHub-repot): kopian shader/cameras.json, som build_shaders skriver ur _shared
+if os.path.exists(shared_path):
+    with open(shared_path, encoding="utf-8") as fh:
+        shared = fh.read()
+    source = "_shared/IgelkottFisheyeLens"
+else:
+    with open(os.path.join(root, "shader", "cameras.json"), encoding="utf-8") as fh:
+        shared = fh.read()
+    source = "shader/cameras.json (no _shared here)"
 same = True
 for name, nums in (("pyxis12K", CENTER + K), ("sonyVenice2", VCENTER + VK)):
-    at = shared.find("static let " + name)
+    at = shared.find("static let " + name) if source.startswith("_shared") else shared.find('"%s"' % name)
     block = shared[at:at + 600] if at >= 0 else ""
     for v in nums:
         if repr(v) not in block or repr(v) not in matchbox_src or repr(v) not in pixera_src:
             same = False; print("  differs: %s %r" % (name, v))
 all_good &= same
-print("  %s PYXIS 12K and Sony Venice 2: both shaders and this test use the numbers in _shared/IgelkottFisheyeLens"
-      % ("PASS" if same else "FAIL"))
+print("  %s PYXIS 12K and Sony Venice 2: both shaders and this test use the numbers in %s"
+      % ("PASS" if same else "FAIL", source))
 
 print("All cases match IgelkottStage." if all_good else "Some cases differ from IgelkottStage.")
 sys.exit(0 if all_good else 1)

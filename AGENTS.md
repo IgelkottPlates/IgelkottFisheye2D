@@ -16,6 +16,9 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `matchbox/` och `pixera/IgelkottFisheye.glsl` — gjorda av `tools/build_shaders.py` (kamerornas tal ur
   `_shared/IgelkottFisheyeLens`, versionen ur `VERSION`). `pixera/README.txt` skrivs för hand.
 - `stabilizer/` — den publika stabiliseringssidan (en HTML-fil, engelska). Noden har inga Stab-reglage sedan 0.14.
+- `README.md` och `CONTRIBUTING.md` — repots framsida och regler för bidrag (engelska, GitHub).
+- `shader/cameras.json` — kamerornas tal, kopierade ur `_shared` av `build_shaders.py` så att en klon kan bygga; aldrig
+  för hand.
 - `docs/PLAYERS.md` — kartan över andra spelare (Nuke, Unreal, disguise, ISF med flera) och hur en ny port läggs till
   (engelska, för bidragsgivare).
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).

@@ -1,0 +1,31 @@
+{
+  "note": "Copied from _shared/IgelkottFisheyeLens (FisheyeLens.swift) by tools/build_shaders.py. Reference width, lens centre and r(theta) = k1*t + k2*t^3 + k3*t^5 + k4*t^7, in source pixels. Do not edit by hand.",
+  "cameras": {
+    "pyxis12K": {
+      "reference": "8040.0",
+      "center": [
+        "4019.9389914282037",
+        "4019.9389463189077"
+      ],
+      "k": [
+        "2068.8673345215607",
+        "-31.032060077989637",
+        "0.1394366394877631",
+        "-0.00029359255648059773"
+      ]
+    },
+    "sonyVenice2": {
+      "reference": "5760.0",
+      "center": [
+        "2848.031459694644",
+        "2854.3896750742356"
+      ],
+      "k": [
+        "1440.3464186123263",
+        "-21.606695057429874",
+        "0.09789618777410111",
+        "-0.0002943394610105899"
+      ]
+    }
+  }
+}

@@ -113,8 +113,9 @@ same way as Live FX and PIXERA before it goes to Nuke Stage.
 
 ## Before others can help
 
-- `tools/build_shaders.py` and `tools/verify_windows.py` read the camera numbers and the tag test vectors from
-  `../_shared/IgelkottFisheyeLens`, which is **not in this repository**. A contributor can use the built files in
-  `matchbox/` and `pixera/` but cannot rebuild or test. The lens numbers and the tag rules need to be published with the
-  repository (a data file the tools read), or the package needs its own repository.
-- The repository is private and has no README or licence yet.
+- The camera numbers are published in `shader/cameras.json`, copied from Igelkott's lens package by
+  `tools/build_shaders.py`. A clone can rebuild and run `tools/verify_windows.py` without the package. The tag test
+  vectors are inside the test itself.
+- The PIXERA chain test needs PIXERA's own `Equirectangular` effect, which is not ours to publish. Without it, that test
+  is skipped.
+- No licence has been chosen yet.
