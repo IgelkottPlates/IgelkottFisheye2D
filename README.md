@@ -64,4 +64,5 @@ a source pixel from where the lens model puts it, at 8040 px.
 
 ## Licence
 
-No licence has been chosen yet, so for now all rights are reserved by Igelkott Studios AB.
+GNU General Public License v3.0, see [LICENSE](LICENSE). You may use, change and share it, also commercially. If you
+share a changed version, you must share its source under the same licence.

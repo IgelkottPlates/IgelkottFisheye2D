@@ -118,4 +118,4 @@ same way as Live FX and PIXERA before it goes to Nuke Stage.
   vectors are inside the test itself.
 - The PIXERA chain test needs PIXERA's own `Equirectangular` effect, which is not ours to publish. Without it, that test
   is skipped.
-- No licence has been chosen yet.
+- Licence: GNU GPL v3.0 (`LICENSE`).
