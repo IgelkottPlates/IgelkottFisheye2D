@@ -607,6 +607,17 @@ och hit (bygg shaders och prova i Live FX).
     varje halva 960 px bred visar 90° på bredden; Camera Z-Cam ritar en bild utan varningstecken. Projektets värden
     (Equirect, Yaw 5, Offset Y −200, Right Yaw −124) låg kvar och är återställda efter provet.
     Release v0.18 på GitHub (Windows-zippen) samma natt.
+  - **Prestanda och färg på Windows (2026-11-20 natt, i9-9900KS, Radeon RX 9070 XT, Live FX 9.9):** tågklippet
+    A007C001 (ProRes 4444 5760², 25 bilder/s, 19,4 MB per bild). Från NAS:en (`W:`) ~16 bilder/s; kopierat till `D:`
+    (`D:\IgelkottFisheye-Test`, Intel 660p) 20 bilder/s utan noden och 22,5 med den (läshastigheten från Live FX
+    delad med bildstorleken). Live FX använder 65 % av processorn och disken har 718 MB/s över under uppspelningen:
+    **gränsen är avkodningen av ProRes 4444 i 5760² på processorn, inte disken och inte noden.** Klippet ligger som
+    slot 9 i projektet `IgelkottFisheye Store`, med noden.
+    Färgen: projektet har Color Management på, ACES 1.1, ACEScct. Monitors → Interface Rec709 / Gamma 2.4 utan LUT
+    ger nästan exakt samma bild som Resolves egen ACEScct → Rec709 Gamma 2.4 (Stages LUT
+    `IgelkottStage/Resources/OutputTransforms/…(Resolve).cube`, prövad som Display LUT med Interface ACEScg/ACEScct).
+    Klippets egen nod-miniatyr (utan Matchbox) är lika blek som noden: shadern ändrar inte färgen. Inställningen är
+    tillbaka på Rec709 / Gamma 2.4, LUT:en ligger laddad men av.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
