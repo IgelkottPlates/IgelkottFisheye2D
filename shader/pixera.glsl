@@ -43,7 +43,9 @@ struct IgelkottFisheye {
 // Offset X/Y move the finished picture (after the projection), in % of the height: PIXERA gives the effect no pixel size.
 // With Split on, Offset X/Y are the left wall's and Right Offset X/Y the right wall's.
 vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
-	vec3 pl = igkPlate(igkTag(s.sampler, 0.0), s.camera, s.pointing);
+	float tag = -1.0;                                           // both chosen by hand: the tag is not used
+	if (s.camera == 0 || s.pointing == 0) tag = igkTag(s.sampler, 0.0);
+	vec3 pl = igkPlate(tag, s.camera, s.pointing);
 	int cam = int(pl.x + 0.5);
 	vec3 color = vec3(0.0);
 	if (igkHasModel(cam)) {

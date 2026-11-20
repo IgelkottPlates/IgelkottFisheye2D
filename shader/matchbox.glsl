@@ -24,7 +24,9 @@ uniform float roll_r;
 uniform float fov_r;
 
 void main() {
-    vec3 pl = igkPlate(igkTag(0.0), camera, pointing);
+    float tag = -1.0;                                                   // both chosen by hand: the tag is not used
+    if (camera == 0 || pointing == 0) tag = igkTag(0.0);
+    vec3 pl = igkPlate(tag, camera, pointing);
     int cam = int(pl.x + 0.5);
     bool nadir = pl.y > 0.5;
     // Offset X/Y move the finished picture, after the projection (Eric 2026-11-20): output pixels, +X right, +Y up; the

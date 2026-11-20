@@ -102,14 +102,13 @@ float igkLuma(vec3 c) {
     return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }
 
-// a XOR b for 0..63
-float igkXor6(float a, float b) {
-    float r = 0.0;
-    float p = 1.0;
-    for (int i = 0; i < 6; i++) {
-        r += p * abs(mod(floor(a / p), 2.0) - mod(floor(b / p), 2.0));
-        p *= 2.0;
-    }
+// c XOR 39 (binary 100111) for c in 0..63, without integer bit operations: each set bit of 39 flips that bit of c.
+float igkXor39(float c) {
+    float r = c;
+    r += mod(c, 2.0) > 0.5 ? -1.0 : 1.0;
+    r += mod(floor(c / 2.0), 2.0) > 0.5 ? -2.0 : 2.0;
+    r += mod(floor(c / 4.0), 2.0) > 0.5 ? -4.0 : 4.0;
+    r += c >= 32.0 ? -32.0 : 32.0;
     return r;
 }
 
@@ -117,10 +116,11 @@ float igkXor6(float a, float b) {
 float igkCrcStep(float crc, float bit) {
     float top = crc >= 32.0 ? 1.0 : 0.0;
     crc = mod(crc * 2.0, 64.0);
-    return top != bit ? igkXor6(crc, 39.0) : crc;
+    return top != bit ? igkXor39(crc) : crc;
 }
 
-// The tag in corner k: camera * 2 + nadir, or -1 (no contrast, wrong version or wrong CRC)
+// The tag in corner k: camera * 2 + nadir, or -1 (no contrast, wrong version or wrong CRC). Its 20 texture reads are what
+// the tag costs (measured 2026-11-21 on a Radeon RX 9070 XT: the CRC maths is not the cost).
 float igkTagCorner(SRC_PARAM int k) {
     float white = igkLuma(FETCH(igkTagCell(k, 0)).rgb);
     float black = igkLuma(FETCH(igkTagCell(k, 1)).rgb);
@@ -150,6 +150,9 @@ float igkVotes(float t, float a, float b, float c, float d) {
 float igkTag(SRC_PARAM float unused) {
     float a = igkTagCorner(SRC_ARG 0);
     float b = igkTagCorner(SRC_ARG 1);
+    // Two agreeing corners decide it: no other value can get more than two votes, and a tie goes to corner 0. Saves half
+    // the reads for an ordinary tagged plate (2026-11-21: the tag was ~84 % of the shader's time at 15360 x 2160).
+    if (a >= 0.0 && a == b) return a;
     float c = igkTagCorner(SRC_ARG 2);
     float d = igkTagCorner(SRC_ARG 3);
     float best = a;

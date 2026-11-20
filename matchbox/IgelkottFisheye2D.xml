@@ -19,7 +19,7 @@ Igelkott Film AB"
     SoftwareVersion="2017.0.0"
     TimelineUseBack="False"
     SupportsTimeline="False"
-    Version="0.18">
+    Version="0.19">
     <Shader
         Index="1"
         OutputBitDepth="Float16">

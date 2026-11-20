@@ -621,6 +621,19 @@ och hit (bygg shaders och prova i Live FX).
     **Ett nyimporterat klipp får Data Format Rec709 / Gamma 2.4** (Live FX standard), inte ACEScct: det ser då mjölkigt
     och blekt ut. Med Media → Data Format ACEScg (AP1) / ACEScct ser tågklippet ut som i IgelkottStage (Eric:s
     jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp: Project Settings → Media Defaults har bara kamerornas RAW-format (ARRI, BRAW, R3D, ProRes RAW m.fl.), inget för ProRes/QuickTime (sett 2026-11-20). Live FX läser annars färgrymden ur filens taggar.
+- **0.19 (2026-11-21, Windows): pixeltaggen kostar mindre.** Shaderns tid mätt på grafikkortet (`tools/bench_windows.py`,
+  Radeon RX 9070 XT): taggen lästes i varje pixel, 4 hörn × 20 texturläsningar, och var ~84 % av tiden (15360 × 2160:
+  7,2 ms per bild med tagg, 1,2 utan). Nu: (1) hörn 0 och 1 som ger samma giltiga tagg avgör (ingen annan tagg kan få
+  fler än två röster och lika röster går till hörn 0, så svaret är detsamma), (2) Camera och Pointing båda valda för hand
+  läser inte taggen alls, (3) CRC:ns XOR med 39 i fyra steg. 15360 × 2160: 3,9 ms med tagg, 1,2 med handval; 4K 1,2 ms.
+  Kostnaden som är kvar är texturläsningarna (en linjär CRC med vektorer provades och gav inget). Ett eget pass för
+  taggen hjälper inte: Matchbox-passen har utbildens storlek. `verify_windows.py` och `--canvas` PASS.
+  Prestanda i Live FX (tågklippet, se ovan) begränsas av ProRes-avkodningen, inte av noden.
+  Färgen: Live FX visar tågklippet ljusare än filens värden (ffmpeg-avkodad ruta 361 som jämförelse): med klipp och
+  Interface båda Rec709 / Gamma 2.4 är skärmens värden ≈ filens^0,455 i hela tonskalan; med ACEScct → Rec709 / Gamma
+  2.4 lyfta skuggor och mellantoner (median 0,60 mot förväntat 0,43). Windows HDR är av (dxdiag G22 P709). Klippets
+  `colr` är `nclc` 12-17-2 (P3-D65, ST 428, matris ospecificerad), ingen `gama`-atom. Om det är Apples ProRes-avkodare på
+  Windows eller Live FX:s visning är inte avgjort; nästa prov är att rendera en ruta ur Live FX till fil.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.

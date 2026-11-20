@@ -25,7 +25,7 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).
 - `app/` — installationsappen (Mac), som också kör Direction Lock. `windows/` — installeraren för Windows (`.cmd` +
   PowerShell, `README.txt`) och `build-package.ps1` → `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip`.
-- `tools/` — `build_shaders.py`, proven `verify_windows.py` (Windows, båda utgåvorna), `verify_mac.py` (Mac, samma fall för Live FX-utgåvan,
+- `tools/` — `build_shaders.py`, proven `verify_windows.py` (Windows, båda utgåvorna), `bench_windows.py` (Windows, shaderns tid på grafikkortet), `verify_mac.py` (Mac, samma fall för Live FX-utgåvan,
   läser och kör `verify_windows.py` med CGL), `verify.swift` och
   `verify_pixera.swift` (Mac, före 0.14), `make_testplates.py` (provplåtar med och utan tagg), `autoyaw/` (Swift-paket:
   klippet → Stab Yaw), `directionlock.swift` (tracker-CSV → Stab-kurvor), `fixtures/` (facit för Direction Lock).
@@ -72,6 +72,7 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `python tools/build_shaders.py --check` — de gjorda filerna stämmer med `shader/`
 - `python tools/verify_windows.py` (Windows) — båda utgåvorna mot linsmodellen och pixeltaggen
 - `python tools/verify_windows.py . --canvas` (Windows) — LED-dukarna 4K, 8K och 16K × 2160 i full storlek
+- `python tools/bench_windows.py` (Windows) — shaderns tid per bild vid 4K, 8K och 15360 × 2160, med och utan tagg
 - `python3 tools/verify_mac.py` (Mac) — Live FX-utgåvan mot linsmodellen och pixeltaggen; `. --canvas` för dukarna
 - `swift tools/verify.swift` och `swift tools/verify_pixera.swift` (Mac) — provar reglagen före 0.14; används inte längre
 - `swift tools/directionlock.swift --test tools/fixtures`
