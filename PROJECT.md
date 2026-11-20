@@ -518,6 +518,17 @@ och hit (bygg shaders och prova i Live FX).
   0,026 källpixlar), nya fall för blandat Auto/handval och offset i Split och Equirect. **Följd:** plåtar med förskjuten
   bildcirkel (Offroad-plåten ovan, Lens Offset ≈ −24, −39) kan inte längre rättas i noden. Noden installerad i Live FX 13:22
   men **inte sedd i Live FX**: programmet var öppet hos Eric och kör den gamla panelen tills det startas om.
+  **Sedd i Live FX 2026-11-20 (efter omstart, Store-projektet):** panelen visar Camera: Auto (tag), Pointing: Auto (tag),
+  Offset X/Y; A013C004 spelar utan varningstecken. Release v0.15 på GitHub med Windows-zippen (nu med `LICENSE.txt`).
+- **Dukstorlekar (Eric 2026-11-20: "4k kanvas och 8k och 16kx2160"):** i Live FX (Media → Image Format; egna mått via
+  Custom och sifferfönstret, tangentbordet går till kortkommandon) spelar A013C004 rätt på 4K UHD 3840 × 2160, 8K UHD
+  7680 × 4320 och 15360 × 2160, även med Split. `python tools/verify_windows.py . --canvas` ritar 4K UHD, DCI 4K, 8K UHD,
+  15360 × 2160 och 16384 × 2160 i full storlek (Live FX och PIXERA; var 7:e/13:e pixel kontrolleras): största fel
+  0,016 källpixlar. Pixlar exakt på varningstecknets eller källbildens kant hoppas över (float32 mot double).
+- **32:9 med Equirect (Eric 2026-11-20):** 7680 × 2160, A001C016 (nadir), Mode Equirect: hela sfären över hela duken,
+  alltså 1,78 × utdragen på bredden mot en 2:1-equirect; plåtens hörn (QR och pixeltagg) syns i himlen överst.
+- **Färg i Store-projektet (Eric 2026-11-20):** alla nio klipp Media → Data Format Color ACEScg (AP1), EOTF ACEScct;
+  Settings → Monitors → Interface Colorspace Rec709, EOTF Gamma 2.4 (bilden får normal kontrast). Split View orörd.
 
 - **Loadern (2026-10-06):** IgelkottLiveFXLoader bygger projekt där varje vägg i en slot med ett 8040 × 8040-klipp
   är IgelkottFisheye2D med mallens vinklar och storlek (se loaderns PROJECT.md). Inte öppnat i Live FX än.

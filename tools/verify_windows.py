@@ -344,8 +344,17 @@ def render(prog, c, setup):
     for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
         gl.glVertex2f(GLfloat(x), GLfloat(y))
     gl.glEnd()
-    px = (GLfloat * (w * h * 4))()
-    gl.glReadPixels(0, 0, w, h, GL_RGBA, GL_FLOAT, px)
+    step = c.get("step", 1)
+    if step == 1:
+        px = (GLfloat * (w * h * 4))()
+        gl.glReadPixels(0, 0, w, h, GL_RGBA, GL_FLOAT, px)
+    else:
+        # Stora dukar: bara var step:e rad läses tillbaka (raden på sin plats, resten nollor som check() hoppar över)
+        px = {}
+        line = (GLfloat * (w * 4))()
+        for row in range(step // 2, h, step):
+            gl.glReadPixels(0, row, w, 1, GL_RGBA, GL_FLOAT, line)
+            px[row] = list(line)
     glDeleteFramebuffers(1, ctypes.byref(fbo)); gl.glDeleteTextures(1, ctypes.byref(out))
     return px
 
@@ -387,11 +396,11 @@ glUniform2f = ext("glUniform2f", None, GLint, GLfloat, GLfloat)
 
 
 def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
-         split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag=None, expect=None, pixera=False):
+         split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag=None, expect=None, pixera=False, step=1):
     """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (panelens värden).
     offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, varning) som noden ska välja; utan = handvalet."""
     c = dict(name=name, w=w, h=h, cam=cam, pointing=pointing, offset=offset, mode=mode, yaw=yaw, pitch=pitch,
-             roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, pixera=pixera,
+             roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, pixera=pixera, step=step,
              expect=expect or (cam, pointing == 2, cam not in CAMS))
     c["R"] = rotation(yaw, pitch, roll); c["RR"] = rotation(*right[:3])
     return c
@@ -461,19 +470,29 @@ def check(c, px, n, host):
     lo, hi = 0.5 / n, 1 - 0.5 / n
     samples = ((0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)) if host == "livefx" else ((0.5, 0.5),)
     worst, checked, black, bad, sign_px = 0.0, 0, 0, 0, 0
-    for row in range(h):
-        for x in range(w):
-            k = (row * w + x) * 4
-            got = (px[k], px[k + 1], px[k + 2])
-            if host == "livefx":
-                mark = warning(x + 0.5, row + 0.5, max(16.0, 0.05 * h)) if warn else 0
+    step = c.get("step", 1)
+    for row in range(step // 2 if step > 1 else 0, h, step):
+        line = px[row] if step > 1 else None
+        for x in range(step // 2 if step > 1 else 0, w, step):
+            if line is None:
+                k = (row * w + x) * 4
+                got = (px[k], px[k + 1], px[k + 2])
             else:
-                mark = warning((x + 0.5) / w * (w / h), 1 - (row + 0.5) / h, 0.05) if warn else 0
+                got = (line[4 * x], line[4 * x + 1], line[4 * x + 2])
+            if host == "livefx":
+                mk = lambda e: warning(x + 0.5 + e, row + 0.5 + e, max(16.0, 0.05 * h))
+            else:
+                mk = lambda e: warning((x + 0.5 + e) / h, 1 - (row + 0.5 + e) / h, 0.05)
+            mark = mk(0.0) if warn else 0
+            if warn and (mk(-0.01) != mark or mk(0.01) != mark):
+                continue                    # exakt på tecknets kant: grafikkortets float kan hamna på andra sidan
             if mark:
                 sign_px += 1
                 want = YELLOW if mark == 1 else (0.0, 0.0, 0.0)
                 if max(abs(a - b) for a, b in zip(got, want)) > 1e-3:
                     bad += 1
+                    if os.environ.get("IGK_DEBUG"):
+                        print("    sign px x %d row %d: mark %d got %r" % (x, row, mark, got))
                 continue
             sx = sy = 0.0; inside = 0; skip = False
             for ox, oy in samples:
@@ -488,14 +507,20 @@ def check(c, px, n, host):
                 if cam not in CAMS:
                     continue
                 p = point(d, cam, nadir)
+                if min(abs(p[0]), abs(p[0] - 1), abs(p[1]), abs(p[1] - 1)) < 1e-4:
+                    skip = True                             # exakt på källbildens kant: float kan hamna på andra sidan
                 if 0 <= p[0] <= 1 and 0 <= p[1] <= 1:
                     if c["tag"] and in_tag_zone(p):
                         skip = True
                     sx += min(max(p[0], lo), hi); sy += min(max(p[1], lo), hi); inside += 1
+            if inside == 0 and skip:
+                continue
             if inside == 0:
                 black += 1
                 if got[0] != 0 or got[1] != 0:
                     bad += 1
+                    if os.environ.get("IGK_DEBUG"):
+                        print("    black px x %d row %d: got %r" % (x, row, got))
                 continue
             if skip or inside != len(samples):
                 continue                                                    # bildramens kant, eller taggen
@@ -509,6 +534,42 @@ def check(c, px, n, host):
 
 
 all_good = True
+
+# --canvas: LED-dukarnas storlekar (Eric 2026-11-20: "4k kanvas och 8k och 16kx2160"), ritade i full storlek, var
+# step:e pixel kontrollerad. Källan är 2048 × 2048 (felet räknas ändå i källpixlar vid 8040).
+if "--canvas" in sys.argv:
+    mx = GLint(0); gl.glGetIntegerv(0x0D33, ctypes.byref(mx))                                  # GL_MAX_TEXTURE_SIZE
+    vp = (GLint * 2)(); gl.glGetIntegerv(0x0D3A, vp)                                          # GL_MAX_VIEWPORT_DIMS
+    print("Graphics card: largest texture %d px, largest viewport %d x %d" % (mx.value, vp[0], vp[1]))
+    big = []
+    for W, H, st, label in ((3840, 2160, 7, "4K UHD"), (4096, 2160, 7, "DCI 4K"), (7680, 4320, 13, "8K UHD"),
+                            (15360, 2160, 13, "16K x 2160"), (16384, 2160, 13, "16384 x 2160")):
+        if W > min(mx.value, vp[0]) or H > min(mx.value, vp[1]):
+            print("  SKIP %s %d x %d: larger than this graphics card allows" % (label, W, H)); continue
+        big += [case("%s %dx%d, PYXIS, yaw 30 pitch 10 FOV 60" % (label, W, H), W, H, yaw=30, pitch=10, fov=60,
+                     pixera=True, step=st),
+                case("%s, Venice nadir, Offset (%d, %d) px, roll 5, FOV 40" % (label, W // 40, -H // 30), W, H, cam=2,
+                     pointing=2, yaw=-70, pitch=-12, roll=5, fov=40, offset=(float(W // 40), float(-H // 30)), pixera=True,
+                     step=st),
+                case("%s, Split 37.5 %%: left yaw -45 FOV 50, right yaw 60 FOV 35" % label, W, H, yaw=-45, fov=50,
+                     split=True, pos=37.5, right=(60, 4, 0, 35), pixera=True, step=st),
+                case("%s, Equirect" % label, W, H, mode=1, pixera=True, step=st),
+                case("%s, Auto, Venice nadir tag: warning-free" % label, W, H, cam=0, pointing=0, yaw=15, pitch=-20,
+                     tag=every(tag_cells(2, True)), expect=(2, True, False), step=st),
+                case("%s, Auto, no tag: PYXIS zenith and the warning sign" % label, W, H, cam=0, pointing=0, yaw=50,
+                     expect=(1, False, True), pixera=True, step=st)]
+    for host, prog, setup, top in (("livefx", None, setup_matchbox, True), ("pixera", None, setup_pixera, False)):
+        print(("Live FX" if host == "livefx" else "PIXERA") + ", source 2048 x 2048:")
+        last = "unset"
+        for c in big:
+            if host == "pixera" and not c["pixera"]:
+                continue
+            if last != repr(c["tag"]):
+                upload(2048, c["tag"], top); last = repr(c["tag"])
+            all_good &= check(c, render(matchbox if host == "livefx" else pixera, c, setup), 2048, host)
+    print("All canvases match IgelkottStage." if all_good else "Some canvases differ from IgelkottStage.")
+    sys.exit(0 if all_good else 1)
+
 # Källans storlek ska inte spela någon roll: andra varvet har en källa på 1008 × 1008 (4032 / 4, inte en tvåpotens).
 for n in (1024, 1008):
     print("Live FX (top row first), source %d x %d:" % (n, n))

@@ -66,6 +66,7 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 
 - `python tools/build_shaders.py --check` — de gjorda filerna stämmer med `shader/`
 - `python tools/verify_windows.py` (Windows) — båda utgåvorna mot linsmodellen och pixeltaggen
+- `python tools/verify_windows.py . --canvas` (Windows) — LED-dukarna 4K, 8K och 16K × 2160 i full storlek
 - `swift tools/verify.swift` och `swift tools/verify_pixera.swift` (Mac) — provar reglagen före 0.14, ska skrivas om
 - `swift tools/directionlock.swift --test tools/fixtures`
 - `autoyaw --selftest` (byggs av `build-app.sh`)
