@@ -601,6 +601,11 @@ och hit (bygg shaders och prova i Live FX).
   - **Sett i Live FX (Mac, efter omstart, Junxion 0.18):** A013C004 4K, FOV 90: smalare vägg än förut; Yaw 45 flyttar bil
     och skylt så som 90° över bredden ger. Camera Z-Cam på ett Venice-klipp ritar (samma Entaniya-objektiv, nästan samma
     bild), ingen varning. Inget riktigt Z-Cam-klipp provat.
+  - **Windows (2026-11-20 natt, Live FX 9.9):** `verify_windows.py` på 0.18: alla fall PASS, båda utgåvorna och
+    Z-Cam-fallen, största fel 0,056 källpixlar; PIXERA-kedjan 0,32. 0.18 installerad med `Install-IgelkottFisheye.ps1`;
+    `--canvas` (4K–16384 × 2160, båda utgåvorna): allt PASS, största fel 0,015. Efter omstart ritar noden i projektet `IgelkottFisheye Store` (natt, Tower Bridge, Split 50 %). Wall med FOV 90:
+    varje halva 960 px bred visar 90° på bredden; Camera Z-Cam ritar en bild utan varningstecken. Projektets värden
+    (Equirect, Yaw 5, Offset Y −200, Right Yaw −124) låg kvar och är återställda efter provet.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
