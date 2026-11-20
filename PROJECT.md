@@ -22,14 +22,14 @@ källan samplas genom objektivets modell i stället för en equirect från Fishe
 - Leveransen: skript-app (`app/IgelkottLiveFXFisheye.sh`) som kopierar shadern till Live FX:s Matchbox-mapp, via
   IgelkottSuit — samma mönster som [IgelkottPlateDCTL](../IgelkottPlateDCTL/PROJECT.md).
 - Kör på: Macarna med Live FX (m3ultra i dag). Hemmamaskin: central (Drive).
-- **Git:** privat repo [IgelkottPlates/IgelkottFisheye2D](https://github.com/IgelkottPlates/IgelkottFisheye2D)
+- **Git:** publikt repo (sedan 2026-11-20, Erics beslut) [IgelkottPlates/IgelkottFisheye2D](https://github.com/IgelkottPlates/IgelkottFisheye2D)
   (skapat 2026-11-20 på ERIC-DESKTOP, gren `main`). `.git/` ligger i Drive-mappen: committa från en maskin i taget.
   `Ref-Eric/` (PIXERA:s egna filer) och `pixera.zip` är utanför via `.gitignore`. Målet (Eric 2026-11-20): IgelkottFisheye
-  i alla stora spelare — Live FX, PIXERA, Nuke med flera — och med hjälp från andra användare (då publikt repo, inte beslutat).
+  i alla stora spelare — Live FX, PIXERA, Nuke med flera — och med hjälp från andra användare. Issues och Discussions på.
   Förberett för publikt 2026-11-20: `README.md`, `CONTRIBUTING.md` (engelska), kamerornas tal som kopia i
   `shader/cameras.json` (skrivs av `build_shaders.py` ur `_shared`; utan `_shared` läser bygget och provet kopian),
   PIXERA-kedjan i provet hoppas över utan `Ref-Eric/`. Licens: egen, `LICENSE` (Eric 2026-11-20: "får använda koden för att spela upp igelkottplates kommerciellt, inget annat"; ej granskad av jurist). Inte gjort: GitHub Actions (gh-inloggningen
-  saknar scope `workflow`), repot fortfarande privat.
+  saknar scope `workflow`), ingen Release ännu (README pekar på Releases för Windows-zippen).
 
 ## Grundbeslut (Eric 2026-10-05)
 
