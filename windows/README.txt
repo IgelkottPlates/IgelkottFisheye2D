@@ -75,5 +75,6 @@ Files
   IgelkottFisheye2D.glsl / .xml     the node
   PIXERA\                           the same effect for PIXERA
   VERSION                           version of this package
+  LICENSE.txt                       may be used only to play back Igelkott plates
 
 Igelkott Film AB

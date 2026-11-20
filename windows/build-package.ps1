@@ -29,6 +29,7 @@ $Files = [ordered]@{
     'matchbox\IgelkottFisheye2D.glsl'       = 'IgelkottFisheye2D.glsl'
     'matchbox\IgelkottFisheye2D.xml'        = 'IgelkottFisheye2D.xml'
     'VERSION'                               = 'VERSION'
+    'LICENSE'                               = 'LICENSE.txt'
     'pixera\IgelkottFisheye.glsl'           = 'PIXERA\IgelkottFisheye.glsl'
     'pixera\README.txt'                     = 'PIXERA\README.txt'
 }
