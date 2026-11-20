@@ -531,7 +531,11 @@ och hit (bygg shaders och prova i Live FX).
   bredd och samma grader per pixel på höjden, centrerat på horisonten (`igkEquirectUV` i `core.glsl`): 2:1 är hela sfären
   som förut, 32:9 visar 101° på höjden (beskuret upptill och nertill), smalare dukar än 2:1 når förbi polerna och det blir
   svart. PIXERA: samma över lagrets Aspect (kedjan med PIXERA:s Equirectangular förutsätter Aspect 2). Provet: nya fall
-  32:9 och 16:9, allt PASS. Installerad i Live FX men **inte sedd** (Live FX måste startas om).
+  32:9 och 16:9, allt PASS. **Sedd i Live FX samma dag** (omstart): A001C016 på 7680 × 2160 visar 360° utan utdragning,
+  QR-hörnen bortskurna så när som på spetsarna överst.
+- **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
+  det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
+  ny öppning låg allt kvar.
 - **Färg i Store-projektet (Eric 2026-11-20):** alla nio klipp Media → Data Format Color ACEScg (AP1), EOTF ACEScct;
   Settings → Monitors → Interface Colorspace Rec709, EOTF Gamma 2.4 (bilden får normal kontrast). Split View orörd.
 
