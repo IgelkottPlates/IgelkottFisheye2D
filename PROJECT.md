@@ -544,7 +544,8 @@ och hit (bygg shaders och prova i Live FX).
   kontrollera nodens värden efter en uppdatering som lägger till reglage.
   Granskning före release (2026-11-20): rotationen byggs en gång per pixel (`igkWallDirection`/`igkEquirectDirection` tar
   en `mat3`); PIXERA-README: Equirectangular-kedjan kräver Split av, noggrannheten "inom 0,1 källpixlar" (riktad
-  Equirect mäter 0,069). Inte prövat: 0.15–0.17 på Mac (Metal-översättningen).
+  Equirect mäter 0,069). Inte prövat: 0.14–0.17 på Mac (Metal-översättningen); testlista i `docs/MAC-TEST.md`.
+  Release v0.17 på GitHub (Windows-zippen) samma dag.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.

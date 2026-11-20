@@ -19,6 +19,7 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `README.md` och `CONTRIBUTING.md` — repots framsida och regler för bidrag (engelska, GitHub).
 - `shader/cameras.json` — kamerornas tal, kopierade ur `_shared` av `build_shaders.py` så att en klon kan bygga; aldrig
   för hand.
+- `docs/MAC-TEST.md` — testlistan för Live FX på Mac (engelska); resultaten skrivs i `PROJECT.md`.
 - `docs/PLAYERS.md` — kartan över andra spelare (Nuke, Unreal, disguise, ISF med flera) och hur en ny port läggs till
   (engelska, för bidragsgivare).
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).
