@@ -640,8 +640,7 @@ och hit (bygg shaders och prova i Live FX).
   och Windows sRGB-kodar den, så Gamma 2.4 kodar två gånger. **Monitors → Interface: Rec709 / Scene Linear** ger rätt
   gråskala och tågklippet ser ut som i IgelkottStage på Mac. Inställt så på Windows-datorn. Atlas:
   [livefx-windows-interface-eotf](../_atlas/knowledge/assimilate/livefx-windows-interface-eotf.md). Provklippen
-  (`D:\IgelkottFisheye-Test
-amp\`) ligger som slot 11–13 i `IgelkottFisheye Store`.
+  (`D:\IgelkottFisheye-Test\ramp\`) ligger som slot 11–13 i `IgelkottFisheye Store`.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
