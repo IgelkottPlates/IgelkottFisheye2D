@@ -641,6 +641,8 @@ och hit (bygg shaders och prova i Live FX).
   gråskala och tågklippet ser ut som i IgelkottStage på Mac. Inställt så på Windows-datorn. Atlas:
   [livefx-windows-interface-eotf](../_atlas/knowledge/assimilate/livefx-windows-interface-eotf.md). Provklippen
   (`D:\IgelkottFisheye-Test\ramp\`) ligger som slot 11–13 i `IgelkottFisheye Store`.
+- **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
+  efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
   det som inte hunnit autosparas (klippens färg, dukens storlek, Mode och Monitors → Interface). Efter Close Project och
   ny öppning låg allt kvar.
