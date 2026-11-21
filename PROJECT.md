@@ -650,6 +650,8 @@ och hit (bygg shaders och prova i Live FX).
   **Filen heter fel:** `Store/_NotchLC/A004C002_220515TV_…mov` innehåller tågklippet A007C001 (25 bilder/s, 2245 rutor),
   inte A004C002 (natt i stad, 24 bilder/s, 2164 rutor). Ingen tidkod i NotchLC-filen. Pixeltaggen läses (Auto/Auto, inget
   varningstecken) och väggen står rätt.
+  Omdöpt 2026-11-21 (Eric: "döp om"; Media Encoder på M3Ultra hade fått fel utnamn) till
+  `Store/_NotchLC/A007C001_220127SK_fisheye_Gamma-ACEScct_AP1.mov`. Den lokala provkopian på `D:` har kvar det gamla namnet.
   **Färgen NotchLC mot ProRes (A007C001, ruta 0):** i filerna (ffmpeg) korrelation 1,000 och medelskillnad 0,1–0,3 %
   (NotchLC ≤ 0,5 % ljusare i R/G). I Live FX med rätt inställning (Data Format ACEScg (AP1) / ACEScct, Interface
   Rec709 / Scene Linear, utan nod, slot 10 mot slot 15): korrelation 1,000, medelskillnad 0,1–0,2 % = skärmbildens brus.
