@@ -647,6 +647,13 @@ och hit (bygg shaders och prova i Live FX).
   och med noden i 5760² ut (≈ samma pixelantal som 15360 × 2160), räknat på bildräknaren (257–258 rutor per ~10,3 s)
   och på läshastigheten (726–767 MB/s). Live FX använder 4 % av processorn: NotchLC avkodas på grafikkortet. Samma
   plåt som ProRes 4444 nådde 20–22 bilder/s (processorbunden). Disken (Intel 660p) räckte; NotchLC kräver ~790 MB/s.
+  **Filen heter fel:** `Store/_NotchLC/A004C002_220515TV_…mov` innehåller tågklippet A007C001 (25 bilder/s, 2245 rutor),
+  inte A004C002 (natt i stad, 24 bilder/s, 2164 rutor). Ingen tidkod i NotchLC-filen. Pixeltaggen läses (Auto/Auto, inget
+  varningstecken) och väggen står rätt.
+  **Färgen NotchLC mot ProRes (A007C001, ruta 0):** i filerna (ffmpeg) korrelation 1,000 och medelskillnad 0,1–0,3 %
+  (NotchLC ≤ 0,5 % ljusare i R/G). I Live FX med rätt inställning (Data Format ACEScg (AP1) / ACEScct, Interface
+  Rec709 / Scene Linear, utan nod, slot 10 mot slot 15): korrelation 1,000, medelskillnad 0,1–0,2 % = skärmbildens brus.
+  NotchLC ger alltså samma bild som ProRes i Live FX. Inte jämfört: fina detaljer (NotchLC är förstörande).
 - **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
   efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
