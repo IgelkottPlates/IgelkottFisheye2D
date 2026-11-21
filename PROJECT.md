@@ -641,6 +641,12 @@ och hit (bygg shaders och prova i Live FX).
   gråskala och tågklippet ser ut som i IgelkottStage på Mac. Inställt så på Windows-datorn. Atlas:
   [livefx-windows-interface-eotf](../_atlas/knowledge/assimilate/livefx-windows-interface-eotf.md). Provklippen
   (`D:\IgelkottFisheye-Test\ramp\`) ligger som slot 11–13 i `IgelkottFisheye Store`.
+- **NotchLC spelar i realtid (2026-11-21, Windows, i9-9900KS, Radeon RX 9070 XT, Live FX 9.9, 0.19):**
+  A004C002 som NotchLC (`Store/_NotchLC/`, 5760², 25 bilder/s, 6,3 Gbit/s, ~30 MB per bild), kopierad till
+  `D:\IgelkottFisheye-Test\NotchLC\` och spelad lokalt (slot 14 i `IgelkottFisheye Store`): 25 bilder/s både utan noden
+  och med noden i 5760² ut (≈ samma pixelantal som 15360 × 2160), räknat på bildräknaren (257–258 rutor per ~10,3 s)
+  och på läshastigheten (726–767 MB/s). Live FX använder 4 % av processorn: NotchLC avkodas på grafikkortet. Samma
+  plåt som ProRes 4444 nådde 20–22 bilder/s (processorbunden). Disken (Intel 660p) räckte; NotchLC kräver ~790 MB/s.
 - **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
   efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
