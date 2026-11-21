@@ -656,6 +656,10 @@ och hit (bygg shaders och prova i Live FX).
   (NotchLC ≤ 0,5 % ljusare i R/G). I Live FX med rätt inställning (Data Format ACEScg (AP1) / ACEScct, Interface
   Rec709 / Scene Linear, utan nod, slot 10 mot slot 15): korrelation 1,000, medelskillnad 0,1–0,2 % = skärmbildens brus.
   NotchLC ger alltså samma bild som ProRes i Live FX. Inte jämfört: fina detaljer (NotchLC är förstörande).
+- **Provprojekt `IgelkottFisheye 4K Test` (Windows, 2026-11-21):** 4K UHD-1, 25 bilder/s, ACES på (1.1, ACEScct). Slot 0:
+  NotchLC A007C001 från `D:\IgelkottFisheye-Test\NotchLC\A007C001_…mov` (hårdlänk till samma fil som det gamla
+  A004C002-namnet, som Live FX höll öppet), Data Format ACEScg (AP1) / ACEScct, noden 0.19 med 3840 × 2160 och 25
+  bilder/s ut, standardvärden (Auto/Auto, Wall, FOV 90). Spelar i realtid, inget varningstecken.
 - **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
   efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
