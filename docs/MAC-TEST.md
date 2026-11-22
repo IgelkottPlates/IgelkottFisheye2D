@@ -111,6 +111,60 @@ For each size, play the clip and write down whether it plays in real time.
       Rec709, Gamma 2.4. **Look:** normal contrast. (On Windows the Interface needs Scene Linear instead of Gamma 2.4,
       because Windows encodes the viewer itself; write down which one looks right on the Mac.)
 
+## 11. Store in NotchLC: file weight and max fps (8K canvas)
+
+The same test as on Windows (2026-11-22, `PROJECT.md`, "Store i NotchLC: storlek och tyngd"), but the Mac has a faster
+disk and Live FX's **Free Run** plays as fast as it can instead of at the clip's rate, so the real maximum shows. On
+Windows the fisheye with the node stopped at 25 fps only because that is the clip's rate, and the 16K equirect was
+limited by the disk (1.3–1.5 GB/s).
+
+The files: `Store/_NotchLC/`. The fisheye NotchLC files carry the wrong name `*_ProRes4444_1.mov` (plus
+`A007C001_220127SK_fisheye_Gamma-ACEScct_AP1.mov`). The 16K equirects from FisheyetoEqui are named
+`*_16K360_ProRes422HQ_1.mov` but are NotchLC. A fisheye needs 0.57–0.79 GB/s, an equirect 1.4–2.1 GB/s.
+
+### 11a. The files (Terminal)
+
+- [ ] `brew install ffmpeg` if `ffmpeg -decoders | grep notchlc` shows nothing.
+- [ ] Measure all 18 files on the fast disk. Each file is copied there, measured and deleted, one at a time (an equirect
+      is up to 193 GB):
+
+      python3 tools/bench_notchlc.py --store "/Volumes/igelkottstore.com/2025/Free Demo 2025/Store" \
+          --work "/Volumes/<fast disk>/IgelkottBench" --out ~/IgelkottBench/bench.jsonl
+
+      It can be stopped and started again; finished files are skipped. Each line has the size, MB per frame, the read
+      rate needed, the disk's read rate past the file cache, the max fps from the disk, and ffmpeg's CPU decode rate.
+      Copying from the NAS takes most of the time (hours).
+
+### 11b. Live FX, max fps with Free Run (look)
+
+- [ ] Copy A007C001 to the fast disk in both forms (fisheye NotchLC and equirect NotchLC). Use `--only` and `--keep`
+      with the script above, or copy them by hand.
+- [ ] New project, 7680 × 2160, 25 fps, ACES on (ACEScct). Both clips: Media → Data Format Color ACEScg (AP1), EOTF
+      ACEScct.
+- [ ] Fisheye: the node with defaults (Auto/Auto, Wall, Yaw 0, FOV 90), 7680 × 2160 out.
+- [ ] Equirect: **Plug-ins → Assimilate Inc → Effects VR → Eq->2D Transformer**, FOV **31.42** (Eq->2D's FOV is
+      vertical; 31.42 on 7680 × 2160 is 90° horizontal, the same as the node), 7680 × 2160 out.
+- [ ] Set playback to **Free Run**. Write down where the setting is in Live FX 9.9 on the Mac, because it is not yet in
+      `PROJECT.md` and was not found in Assimilate's documentation.
+- [ ] Play each clip for 10 seconds or more and write down:
+      - fps: Live FX's own fps display, if it has one, or the frame counter over a timed stretch (frames ÷ seconds);
+      - disk read: `iostat -d -w 1 <disk>` in Terminal, or Activity Monitor → Disk;
+      - GPU and CPU: Activity Monitor → Window → GPU History, plus Live FX's CPU %.
+- [ ] Do the same for the fisheye **without** the node, so the decode alone and the node's cost can be told apart.
+- [ ] If there is time: the node at 15360 × 2160 out (Custom), Free Run.
+- [ ] **Look:** the picture is right in Free Run too (no tears, no frames repeated on the canvas).
+
+For comparison (Windows, Intel 660p, Radeon RX 9070 XT, not Free Run): the fisheye with the node played at 25 fps (real
+time) at 784 MB/s, 3 % CPU and about 8 % GPU. The equirect with Eq->2D played at 10–11 fps at 984 MB/s and 42 % GPU
+compute.
+
+### 11c. The picture differences (optional)
+
+`python3 tools/compare_eq2d.py <Store> <clip without .mov> <out folder>` measures the shift, sharpness, colour and
+edge differences between the node and FisheyetoEqui → Eq->2D on the ProRes files (`Store/*.mov`, `Store/_Equi/`). It
+compares the files, not Live FX, so it gives the same numbers on any machine. Run it on the Mac only to check that, or
+for new clips. It needs `pip3 install numpy opencv-python`. Put the out folder outside the project.
+
 ## Afterwards
 
 - Write the results into `PROJECT.md` under the version, with the date, the Mac and the Live FX version, plus anything
