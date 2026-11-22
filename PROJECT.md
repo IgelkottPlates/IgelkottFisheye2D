@@ -660,6 +660,28 @@ och hit (bygg shaders och prova i Live FX).
   NotchLC A007C001 från `D:\IgelkottFisheye-Test\NotchLC\A007C001_…mov` (hårdlänk till samma fil som det gamla
   A004C002-namnet, som Live FX höll öppet), Data Format ACEScg (AP1) / ACEScct, noden 0.19 med 3840 × 2160 och 25
   bilder/s ut, standardvärden (Auto/Auto, Wall, FOV 90). Spelar i realtid, inget varningstecken.
+- **Store i NotchLC: storlek och tyngd (Windows, 2026-11-22, Eric: "mät bara notch filerna"):** alla 9 klipp som fisheye
+  (`Store/_NotchLC/*_ProRes4444_1.mov` + A007C001, 5760², yuva444p12) och som 16K-equirect från FisheyetoEqui
+  (`*_16K360_ProRes422HQ_1.mov`, 15360 × 7680; namnen säger ProRes men filerna är NotchLC). Kopierade en i taget till
+  `D:` (Intel 660p QLC), läsning förbi filcachen (4 läsare × 32 MB), sedan raderade.
+  - Fisheye: 51–71 GB per klipp (575 GB totalt), 22–31 MB per bild, behöver 0,57–0,79 GB/s (4,5–6,3 Gbit/s). `D:` läser
+    ~1,7 GB/s → 54–75 bilder/s från disken: realtid med marginal.
+  - Equirect: 125–193 GB per klipp (1 484 GB totalt, 2,3–2,7 × fisheyen), 55–87 MB per bild, behöver 1,4–2,1 GB/s
+    (11–17 Gbit/s). `D:` läser 1,3–1,5 GB/s → 15–24 bilder/s; bara A001C016 (31) hinner i realtid.
+  - ffmpeg avkodar på processorn fisheye 15–18 och equirect 3–5 bilder/s (bara som mått på tyngden; Live FX avkodar
+    NotchLC på grafikkortet).
+  - I Live FX (8K-duk 7680 × 2160, A007C001): fisheye med noden 0.19 25 bilder/s (realtid, 784 MB/s, 3 % processor,
+    ~8 % grafikkort); equirect med Eq->2D (FOV 31,42 = 90° vågrätt) 10–11 bilder/s (984 MB/s, 42 % grafikkortets compute).
+- **Equirect + Eq->2D mot noden (2026-11-22, alla 9 Store-klipp, samma ruta):**
+  - Geometri: FisheyetoEquis equirect är bara lodrätt förskjuten mot linsmodellen, 0 i zenit, ~0,014° vid horisonten,
+    ~0,023° vid −30° (radiell skala ~0,016 % olika, omvänt tecken på nadir). På väggen (FOV 90) 1,1–1,4 px, högst ~0,05°.
+  - Skärpa: Eq->2D är mjukare (en bilinjär sampling av equirecten efter FisheyetoEquis egen omsampling): Laplace-varians
+    61–77 % av nodens vid FOV 90, mellanfrekvenserna 64–84 %; ~90 % vid FOV 150.
+  - Färg: medel +0,1…+0,5 av 1023, p99 3–11 kodvärden.
+  - Equirect-filerna har "Demo courtesy of IgelkottPlates.com" inbränt vid yaw 0 och 180 (~390 000 px per vägg);
+    fisheye-plåtarna inte.
+  - Bildcirkeln: FisheyetoEqui maskar utanför cirkeln, noden läser till bildkanten: 1 000–100 000 px innehåll där Eq->2D
+    är svart vid pitch −20/FOV 150, 170 000–530 000 px på nadirklippen vid pitch +30 (hörn, QR-koder, pixeltaggen).
 - **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
   efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
