@@ -706,6 +706,22 @@ och hit (bygg shaders och prova i Live FX).
       - `build_shaders.py` läser `IgelkottDesign/tokens/tokens.json` och skriver av färgerna till `shader/tokens.json`,
         så att en klon kan bygga.
       - `verify_windows.py` läser kopian och provar varje färg.
+  - **Sett i Live FX (2026-11-23 natt, THREADRIPPER, Live FX 9.9.1214, Radeon RX 9070 XT drivrutin 32.0.32029.2010 /
+    Adrenalin 26.11.2, datorstyrt av Claude):** 0.21 kopierad från `matchbox/` till
+    `C:\ProgramData\Assimilator\plugin64\Matchbox\shaders` (xml Version 0.21), Live FX omstartad.
+    - `verify_windows.py`: 129 PASS, 0 FAIL, också PIXERA:s MTF50 (samma drivrutin gav 9 FAIL med 0.20).
+      `--canvas`: 55 PASS, 0 FAIL.
+    - **Klipp utan tagg** (`make_testplates.py` → `pyxis_zenith_notag.png`, gjord till ProRes 4444 `.mov`, 1536²):
+      svart, NOT AN IGELKOTT CLIP i varningsgult, under den IGELKOTTPLATES vitt och .COM cyan, båda raderna
+      centrerade (mitt på 727/728 px av 728 i skärmbilden), varningstecknet uppe till vänster. Som det ska.
+    - **A007C001 från E:** (Auto/Auto, Wall, FOV 90, 15360 × 2160 sedan 11b): väggen som i 11b, ingen text, inget
+      varningstecken.
+    - **Beskrivningen och hjälplänken syns ingenstans** i det som prövades: Plug-in Browser (ikonen visar bara
+      filnamnet IgelkottFisheye2D, ingen text vid hovring), Matchbox-panelen (fliken IgelkottFisheye och etiketten
+      IgelkottFisheye2D), högerklick på fliken (bara Live FX:s allmänna meny) och ?-knappen (Live FX:s egna
+      kortkommandon och "Assimilate – Online Support"). Märkningen i Live FX är alltså i praktiken vägranstexten.
+    - Skärmbilderna: `%USERPROFILE%\IgelkottBench\021-skarmbilder\` på THREADRIPPER (`notag-viewer.jpg`,
+      `notag-text-zoom.jpg`, `a007-vagg-15360.jpg`).
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av

@@ -5,7 +5,7 @@ date: 2026-11-23
 deadline: asap (pushen väntar på det här)
 urgency: high
 topic: Se 0.21 i Live FX: vägranstexten med IGELKOTTPLATES.COM, beskrivningen och hjälplänken, och att väggen ritar som förut
-status: pending
+status: done
 ---
 
 # Från ERIC-DESKTOP till THREADRIPPER: se 0.21 i Live FX
@@ -54,3 +54,7 @@ Vad 0.21 ändrar (PROJECT.md, "0.21"):
 - Commits: `79ca605` (PIXERA 2 × 2) och den efter (märkningen och tokens). Det är `main` på ERIC-DESKTOP, inte pushad.
 - Bild av vägranstexten, ritad med provets kopia av shaderns räkning och inte i Live FX: Eric har fått den i chatten.
 - PIXERA-utgåvan är inte provad i PIXERA. Den är inte heller en del av det här steget.
+
+## Anteckning (THREADRIPPER, 2026-11-23)
+
+Gjort. Svaret ligger i `HANDOFF/2026-11-23-from-THREADRIPPER-021-sedd-i-live-fx.md`, och detaljerna står i PROJECT.md under 0.21, "Sett i Live FX".
