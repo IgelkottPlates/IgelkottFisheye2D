@@ -26,7 +26,9 @@ By hand: copy `matchbox/IgelkottFisheye2D.glsl` and `matchbox/IgelkottFisheye2D.
 
 ### Live FX on Mac
 
-Copy the same two files to `/Library/Application Support/Assimilator/Plugins/Matchbox/shaders` and restart Live FX.
+Download `IgelkottFisheye-Mac.zip` from [Releases](../../releases), unpack it and copy `IgelkottFisheye2D.glsl` and
+`IgelkottFisheye2D.xml` to `/Library/Application Support/Assimilator/Plugins/Matchbox/shaders` (Finder: Go → Go to
+Folder…). Restart Live FX. The zip's `README.txt` has the steps and a one-line Terminal command.
 
 ### PIXERA
 

@@ -722,6 +722,13 @@ och hit (bygg shaders och prova i Live FX).
       kortkommandon och "Assimilate – Online Support"). Märkningen i Live FX är alltså i praktiken vägranstexten.
     - Skärmbilderna: `%USERPROFILE%\IgelkottBench\021-skarmbilder\` på THREADRIPPER (`notag-viewer.jpg`,
       `notag-text-zoom.jpg`, `a007-vagg-15360.jpg`).
+  - **Pushad och Release v0.21 på GitHub (2026-11-23 natt, ERIC-DESKTOP).** Releasen har två filer:
+    - `IgelkottFisheye-Windows.zip`: `build-package.ps1`, som körde provet först.
+    - **`IgelkottFisheye-Mac.zip`, ny** (Eric: "Ja, enkel Mac-zip"):
+      - innehåller noden, `mac/README.txt` (Finder: Gå till mapp, eller en rad `sudo cp`), VERSION och LICENSE;
+      - görs av `tools/build_mac_package.py`;
+      - inget program, så inget behöver signeras.
+      - Zippen är byggd på Windows och inte uppackad och installerad på en Mac än.
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av

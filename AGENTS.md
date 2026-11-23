@@ -27,6 +27,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - `docs/PLAYERS.md` — kartan över andra spelare (Nuke, Unreal, disguise, ISF med flera) och hur en ny port läggs till
   (engelska, för bidragsgivare).
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).
+- `mac/README.txt` och `tools/build_mac_package.py` → `_releases/IgelkottFisheye/IgelkottFisheye-Mac.zip`: Mac-zippen för
+  GitHub Release (noden, README, VERSION, LICENSE; inget program, Eric 2026-11-23).
 - `app/` — installationsappen (Mac), som också kör Direction Lock. `windows/` — installeraren för Windows (`.cmd` +
   PowerShell, `README.txt`) och `build-package.ps1` → `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip`.
 - `tools/` — `build_shaders.py`, proven `verify_windows.py` (Windows, båda utgåvorna), `bench_windows.py` (Windows, shaderns tid på grafikkortet), `bench_notchlc.py` (Mac och Windows, Store-klippen i NotchLC: storlek, läsning, max bild/s från disken), `compare_eq2d.py` (noden mot FisheyetoEqui + Eq->2D på 8K-duk), `verify_mac.py` (Mac, samma fall för Live FX-utgåvan,
@@ -68,7 +70,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   (Igelkott Film AB). Ingen öppen licens. Bolaget i allt utåt är Igelkott Film AB.
 - Erics DL-formel finns kvar oförändrad: `ut[n] = (t[n] − t[n−1]) + k · ut[n−1]`.
 - Program: rapporterar till IgelkottSuit och höjer version vid deploy (atlas regel 12 och 13).
-- Artefakt: `_applaunchers/IgelkottLiveFXFisheye.app.zip` (Mac); `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip` (Windows).
+- Artefakt: `_applaunchers/IgelkottLiveFXFisheye.app.zip` (Mac, Suit); `_releases/IgelkottFisheye/IgelkottFisheye-Windows.zip`
+  och `IgelkottFisheye-Mac.zip` (GitHub Release).
 - Inga byggresultat i projektmappen: Mac bygger i `~/Library/Caches/Igelkott/IgelkottLiveFXFisheye`, Windows-paketet
   sätts ihop i `%TEMP%` och läggs direkt i `_releases/`. Provplåtar läggs utanför projektmappen.
 
