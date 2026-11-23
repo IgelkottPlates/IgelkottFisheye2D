@@ -132,6 +132,7 @@ The files: `Store/_NotchLC/`. The fisheye NotchLC files carry the wrong name `*_
       python3 tools/bench_notchlc.py --store "/Volumes/igelkottstore.com/2025/Free Demo 2025/Store" \
           --work "/Volumes/<fast disk>/IgelkottBench" --out ~/IgelkottBench/bench.jsonl
 
+      If the files already lie on the fast disk, use `--in-place` instead of `--work` (no copy, nothing deleted).
       It can be stopped and started again; finished files are skipped. Each line has the size, MB per frame, the read
       rate needed, the disk's read rate past the file cache, the max fps from the disk, and ffmpeg's CPU decode rate.
       Copying from the NAS takes most of the time (hours).
@@ -145,8 +146,9 @@ The files: `Store/_NotchLC/`. The fisheye NotchLC files carry the wrong name `*_
 - [ ] Fisheye: the node with defaults (Auto/Auto, Wall, Yaw 0, FOV 90), 7680 × 2160 out.
 - [ ] Equirect: **Plug-ins → Assimilate Inc → Effects VR → Eq->2D Transformer**, FOV **31.42** (Eq->2D's FOV is
       vertical; 31.42 on 7680 × 2160 is 90° horizontal, the same as the node), 7680 × 2160 out.
-- [ ] Set playback to **Free Run**. Write down where the setting is in Live FX 9.9 on the Mac, because it is not yet in
-      `PROJECT.md` and was not found in Assimilate's documentation.
+- [ ] Set playback to **Free Run**: Settings → General → Play Options → Framerate → Free Run (found on the Mac
+      2026-11-22). A video output that is on (Video IO → DeckLink, Out On) still clocks the player at its own rate
+      (24–25 fps), so turn it Off for the test and On again afterwards.
 - [ ] Play each clip for 10 seconds or more and write down:
       - fps: Live FX's own fps display, if it has one, or the frame counter over a timed stretch (frames ÷ seconds);
       - disk read: `iostat -d -w 1 <disk>` in Terminal, or Activity Monitor → Disk;

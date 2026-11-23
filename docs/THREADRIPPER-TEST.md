@@ -12,9 +12,10 @@ Write each result into `PROJECT.md` with the date, the machine and the Live FX v
 
 ## Before you start
 
-- [ ] **The disk is exFAT, not APFS, formatted on Windows.** Eric 2026-11-23: the latest macOS does not make a good
-      exFAT format. Copy everything off the 8 TB disk first, because formatting erases it (6.3 TB on 2026-11-23). On
-      the Threadripper, in an administrator command prompt, `diskpart`:
+- [x] **The disk is NTFS (64 KB clusters), formatted on Windows** (Eric 2026-11-23, Threadripper: "behåll ntfs").
+      NTFS is Windows' own file system and costs nothing when reading. The Mac can read NTFS but not write it. To use
+      the disk read-write on the Mac as well, format it exFAT instead; erase it only after copying everything off
+      (6.3 TB on 2026-11-23). The exFAT recipe, in an administrator command prompt, `diskpart`:
 
       list disk
       select disk <N>          (the 8 TB Corsair MP600 PRO NH, about 7452 GB; check it twice)
@@ -24,8 +25,8 @@ Write each result into `PROJECT.md` with the date, the machine and the Live FX v
       format fs=exfat unit=1M quick label=8TB
       assign letter=E
 
-      Then copy `_NotchLC` onto it. The Mac reads and writes the disk with its own exFAT driver; only the formatting is
-      done on Windows. exFAT at 6 GB/s is not proven on either machine yet: 11a measures it.
+      Then copy `_NotchLC` onto it. The Mac reads and writes exFAT with its own driver; only the formatting is done on
+      Windows. Neither file system is proven at 6 GB/s on this disk yet: 11a measures it.
 - [ ] The disk sits in an M.2 or PCIe slot that runs at **Gen 4 x4 or faster**. Check in PowerShell:
 
       Get-PnpDevice -Class SCSIAdapter -PresentOnly | Where-Object FriendlyName -match 'NVM' | ForEach-Object {
