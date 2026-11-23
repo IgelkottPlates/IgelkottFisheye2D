@@ -768,6 +768,180 @@ for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice
     gl.glDeleteTextures(1, ctypes.byref(equi_tex)); gl.glDeleteTextures(1, ctypes.byref(map_tex))
     gl.glDeleteTextures(1, ctypes.byref(out_tex))
 
+# MARK: - MTF50 (Eric 2026-11-23: "lägg in det här i provet det windows kör också")
+# Nodens skärpa vid FOV 90 på 4K-duken (3840 × 2160), Venice 2 (5760²) zenit. En sned kant (5° från lodrät = vågrät
+# upplösning H, 85° = lodrät V) ritas analytiskt i fisheyen (8 × 8 delprov i pixlarna kanten går genom, sensorns
+# lådapertur), shadern ritar väggen på grafikkortet och kanten mäts som ISO 12233 (kantlinjen passad rad för rad, ESF i
+# ¼ px, Hamming, derivatan rättad). Gränsen är numpy-modellen av nodens räkning (~/IgelkottCompare/mtf/mtf50.py,
+# PROJECT.md "MTF50") ± 0,02, åt båda hållen: skarpare är också en ändring (färre prov per pixel viker bilden); Live FX
+# och PIXERA ska ge samma tal. På Mac 2026-11-23 gav grafikkortet modellens tal på tredje decimalen. Eq->2D (FisheyetoEquis 16K-equi, samma vy,
+# 2026-11-23) skrivs ut som jämförelse. Prov på metoden: en kant med Gauss 1 px ger 0,187 (teorin 0,187).
+MTF_W, MTF_H, MTF_T = 3840, 2160, 200
+MTF_CASES = (  # namn, yaw, pitch, riktning, kantens vinkel, modellen, Eq->2D
+    ("horizon (yaw 0)", 0, 0, "H", 5.0, 0.355, 0.299), ("horizon (yaw 0)", 0, 0, "V", 85.0, 0.236, 0.220),
+    ("pitch +30", 0, 30, "H", 5.0, 0.296, 0.260), ("pitch +30", 0, 30, "V", 85.0, 0.245, 0.225),
+    ("yaw 45 pitch -20", 45, -20, "H", 5.0, 0.420, 0.308), ("yaw 45 pitch -20", 45, -20, "V", 85.0, 0.223, 0.207))
+
+
+def mtf_theta(r, k):
+    """Linsmodellens r(θ) baklänges (Newton): vinkeln från axeln för r källpixlar från mitten."""
+    th = r / k[0]
+    for _ in range(6):
+        t2 = th * th
+        f = th * (k[0] + t2 * (k[1] + t2 * (k[2] + t2 * k[3]))) - r
+        df = k[0] + t2 * (3 * k[1] + t2 * (5 * k[2] + t2 * 7 * k[3]))
+        th -= f / df
+    return th
+
+
+def mtf_patch(yaw, pitch, angle, half=220, lo=0.25, hi=0.75, ss=8):
+    """Fisheyens ruta kring vyns mitt med kanten: (x0, y0, storlek, värden uppifrån)."""
+    ref, c, k = CAMS[2]
+    R = rotation(yaw, pitch, 0.0)
+    a = math.radians(angle)
+    nrm = apply(R, (math.cos(a), math.sin(a), 0.0))
+    p = point(apply(R, (0.0, 0.0, 1.0)), 2, False)
+    x0, y0, s = int(p[0] * ref) - half, int(p[1] * ref) - half, 2 * half
+
+    def side(x, y):
+        dx, dy = x - c[0], y - c[1]
+        r = math.hypot(dx, dy); th = mtf_theta(r, k); q = math.sin(th) / max(r, 1e-12)
+        return nrm[0] * dx * q + nrm[1] * math.cos(th) + nrm[2] * dy * q > 0
+    corner = [[side(x0 + i, y0 + j) for i in range(s + 1)] for j in range(s + 1)]
+    vals = []
+    for j in range(s):
+        for i in range(s):
+            cs = (corner[j][i], corner[j][i + 1], corner[j + 1][i], corner[j + 1][i + 1])
+            if all(cs) or not any(cs):
+                f = 1.0 if cs[0] else 0.0
+            else:
+                f = sum(side(x0 + i + (u + 0.5) / ss, y0 + j + (v + 0.5) / ss) for v in range(ss) for u in range(ss)) / ss ** 2
+            vals.append(lo + (hi - lo) * f)
+    return x0, y0, s, vals
+
+
+def mtf_upload(patch, top_row_first, lo=0.25):
+    """Venice-källan 5760² i grått lo, kantens ruta och Venice-zenittaggen ovanpå."""
+    n = int(VREF)
+    gl.glBindTexture(GL_TEXTURE_2D, src_tex)
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, n, n, 0, GL_RGBA, GL_FLOAT, None)
+    fbo = GLuint(0); glGenFramebuffers(1, ctypes.byref(fbo)); glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, src_tex, 0)
+    gl.glViewport(0, 0, n, n)
+    gl.glClearColor(GLfloat(lo), GLfloat(lo), GLfloat(lo), GLfloat(1)); gl.glClear(GL_COLOR_BUFFER_BIT)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); glDeleteFramebuffers(1, ctypes.byref(fbo))
+    gl.glBindTexture(GL_TEXTURE_2D, src_tex)
+
+    def put(x0, y0, w, h, rows):            # rows uppifrån, w × h värden
+        if not top_row_first:
+            y0 = n - y0 - h; rows = rows[::-1]
+        buf = array.array("f")
+        for row in rows:
+            for v in row:
+                buf.extend((v, v, v, 1.0))
+        gl.glTexSubImage2D(GL_TEXTURE_2D, 0, x0, y0, w, h, GL_RGBA, GL_FLOAT, (GLfloat * len(buf)).from_buffer(buf))
+    x0, y0, s, vals = patch
+    put(x0, y0, s, s, [vals[j * s:(j + 1) * s] for j in range(s)])
+    for corner, (cells, white, black) in enumerate(every(tag_cells(2, False))):
+        for i, on in enumerate(cells):
+            a0, b0, a1, b1 = tag_rect(i, corner, n)
+            put(a0, b0, a1 - a0, b1 - b0, [[white if on else black] * (a1 - a0)] * (b1 - b0))
+
+
+def mtf_render(prog, c, setup):
+    """Väggen 3840 × 2160 på grafikkortet; bara rutan MTF_T² i mitten läses tillbaka (rad 0 nederst)."""
+    w, h = c["w"], c["h"]
+    out, fbo = GLuint(0), GLuint(0)
+    gl.glGenTextures(1, ctypes.byref(out)); gl.glBindTexture(GL_TEXTURE_2D, out)
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, None)
+    glGenFramebuffers(1, ctypes.byref(fbo)); glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out, 0)
+    gl.glBindTexture(GL_TEXTURE_2D, src_tex)
+    gl.glViewport(0, 0, w, h)
+    glUseProgram(prog); setup(prog, c)
+    gl.glClearColor(GLfloat(0), GLfloat(0), GLfloat(0), GLfloat(0)); gl.glClear(GL_COLOR_BUFFER_BIT)
+    gl.glBegin(GL_QUADS)
+    for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        gl.glVertex2f(GLfloat(x), GLfloat(y))
+    gl.glEnd()
+    px = (GLfloat * (MTF_T * MTF_T * 4))()
+    gl.glReadPixels((w - MTF_T) // 2, (h - MTF_T) // 2, MTF_T, MTF_T, GL_RGBA, GL_FLOAT, px)
+    glDeleteFramebuffers(1, ctypes.byref(fbo)); gl.glDeleteTextures(1, ctypes.byref(out))
+    return [[px[(r * MTF_T + x) * 4] for x in range(MTF_T)] for r in range(MTF_T)]
+
+
+def mtf50(tile, vertical_edge):
+    """ISO 12233 sned kant: MTF50 i cykler per utpixel, och MTF vid 0,1/0,2/0,3 (för utskriften)."""
+    t = tile if vertical_edge else [list(col) for col in zip(*tile)]       # kanten nästan lodrät i t
+    h, w = len(t), len(t[0])
+    ys, cs = [], []
+    for r, row in enumerate(t):
+        g = [abs(row[x + 1] - row[x]) for x in range(w - 1)]
+        sg = sum(g)
+        if sg > 1e-9:
+            ys.append(r + 0.5); cs.append(sum(gi * (x + 1.0) for x, gi in enumerate(g)) / sg)
+    my, mc = sum(ys) / len(ys), sum(cs) / len(cs)
+    p1 = sum((y - my) * (cc - mc) for y, cc in zip(ys, cs)) / sum((y - my) ** 2 for y in ys)
+    p0 = mc - p1 * my
+    cosa = 1 / math.sqrt(1 + p1 * p1)
+    nb = 320; tot = [0.0] * nb; cnt = [0] * nb
+    for r, row in enumerate(t):
+        edge = p0 + p1 * (r + 0.5)
+        for x, v in enumerate(row):
+            b = math.floor((x + 0.5 - edge) * cosa * 4) + nb // 2
+            if 0 <= b < nb:
+                tot[b] += v; cnt[b] += 1
+    have = [i for i in range(nb) if cnt[i]]
+    esf = []
+    for i in range(nb):
+        if cnt[i]:
+            esf.append(tot[i] / cnt[i]); continue
+        lo_i = max([j for j in have if j < i], default=None); hi_i = min([j for j in have if j > i], default=None)
+        if lo_i is None or hi_i is None:
+            esf.append(tot[(lo_i if hi_i is None else hi_i)] / cnt[(lo_i if hi_i is None else hi_i)])
+        else:
+            u = (i - lo_i) / (hi_i - lo_i)
+            esf.append((1 - u) * tot[lo_i] / cnt[lo_i] + u * tot[hi_i] / cnt[hi_i])
+    lsf = [(esf[min(i + 1, nb - 1)] - esf[max(i - 1, 0)]) / (2 if 0 < i < nb - 1 else 1) for i in range(nb)]
+    lsf = [v * (0.54 - 0.46 * math.cos(2 * math.pi * i / (nb - 1))) for i, v in enumerate(lsf)]
+
+    def mtf(kk):
+        re = sum(v * math.cos(2 * math.pi * kk * i / nb) for i, v in enumerate(lsf))
+        im = sum(v * math.sin(2 * math.pi * kk * i / nb) for i, v in enumerate(lsf))
+        f = kk / (nb * 0.25); x = 2 * f * 0.25
+        corr = math.sin(math.pi * x) / (math.pi * x) if x else 1.0
+        return math.hypot(re, im) / corr
+    m0 = mtf(0)
+    curve = [(kk / (nb * 0.25), mtf(kk) / m0) for kk in range(0, nb // 2)]
+    m50 = None
+    for (fa, ma), (fb, mb) in zip(curve, curve[1:]):
+        if ma >= 0.5 > mb:
+            m50 = fa + (0.5 - ma) * (fb - fa) / (mb - ma); break
+    at = lambda f: next(m for ff, m in curve if ff >= f - 1e-9)
+    return m50, (at(0.1), at(0.2), at(0.3))
+
+
+print("MTF50 at FOV 90 on the 4K canvas %d x %d, Sony Venice 2 source %d x %d (cycles per output pixel; Eq->2D for "
+      "comparison):" % (MTF_W, MTF_H, int(VREF), int(VREF)))
+mtf_hosts = [("Live FX", matchbox, setup_matchbox, True)] + ([("PIXERA", pixera, setup_pixera, False)] if pixera else [])
+for name, yaw, pitch, d, ang, model, eq2d in MTF_CASES:
+    patch = mtf_patch(yaw, pitch, ang)
+    cm = case("MTF", MTF_W, MTF_H, cam=2, pointing=1, yaw=yaw, pitch=pitch, fov=90.0, tag=None)
+    got = []
+    for host, prog, setup, top in mtf_hosts:
+        mtf_upload(patch, top)
+        m50, pts = mtf50(mtf_render(prog, cm, setup), d == "H")
+        got.append(m50)
+        ok = m50 is not None and abs(m50 - model) <= 0.02
+        all_good &= ok
+        print("  %s %s %s %s: MTF50 %.3f (model %.3f, Eq->2D %.3f), MTF %.2f / %.2f / %.2f at 0.1 / 0.2 / 0.3"
+              % ("PASS" if ok else "FAIL", host, name, d, m50 or float("nan"), model, eq2d, *pts))
+    if len(got) == 2:
+        same = None not in got and abs(got[0] - got[1]) < 0.005
+        all_good &= same
+        print("  %s Live FX and PIXERA give the same MTF50 (%s %s, difference %.4f)"
+              % ("PASS" if same else "FAIL", name, d, abs(got[0] - got[1]) if None not in got else float("nan")))
+
 # Kamerornas tal ska vara desamma som i _shared/IgelkottFisheyeLens
 shared_path = os.path.join(os.path.dirname(os.path.abspath(root)), "_shared", "IgelkottFisheyeLens", "Sources",
                            "IgelkottFisheyeLens", "FisheyeLens.swift")

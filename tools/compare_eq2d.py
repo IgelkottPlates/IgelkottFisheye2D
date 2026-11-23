@@ -4,6 +4,13 @@ Compares the files, not Live FX, so the numbers are the same on Mac and Windows.
 
     python3 tools/compare_eq2d.py "/Volumes/igelkottstore.com/2025/Free Demo 2025/Store" A013C004_220516BG_fisheye_Gamma-ACEScct_AP1 ~/IgelkottCompare
 
+    python3 tools/compare_eq2d.py /Volumes/8TB A007C001_220127SK_fisheye_Gamma-ACEScct_AP1 ~/IgelkottCompare --notchlc
+
+--notchlc: the NotchLC files in <Store>/_NotchLC (fisheye <clip>_ProRes4444[_1].mov, equirect
+<clip without _fisheye>_16K360_ProRes4444[_1].mov or the older <clip>_16K360_ProRes422HQ_1.mov), decoded with the file's own tags (full range; forcing BT.709 limited as for ProRes
+gives a p99 error of 46 of 1023 against the ProRes original, the file's tags 9). Tiles with the burnt-in watermark or
+other content only one of them has are left out of the shift and sharpness numbers too, not only the colour.
+
 Ours: core.glsl/matchbox.glsl in numpy (2 x 2 bilinear samples per pixel, lens model from shader/cameras.json, tag ->
 camera/nadir). Eq->2D: the atlas formula (eq2d-fov-framing.md): f = (h/2)/tan(FOVv/2), yaw/pitch/roll as ours, one
 bilinear sample in the 15360 x 7680 equirect (u = lon/2pi + 0.5, top row = up). The FOV is set so both are the same
@@ -11,6 +18,9 @@ horizontal angle. Windows results 2026-11-22: PROJECT.md, "Equirect + Eq->2D mot
 """
 import json, math, subprocess, sys, os
 import numpy as np, cv2
+
+NOTCHLC = "--notchlc" in sys.argv
+sys.argv = [a for a in sys.argv if a != "--notchlc"]
 
 FFMPEG = os.environ.get("FFMPEG", "ffmpeg")
 FFPROBE = os.environ.get("FFPROBE", "ffprobe")
@@ -26,8 +36,10 @@ OUT = sys.argv[3] if len(sys.argv) > 3 else "out"
 
 
 def frame(path, n, fps, w, h):
+    vf = ("scale=out_range=full:flags=accurate_rnd+full_chroma_int" if NOTCHLC else
+          "scale=in_color_matrix=bt709:in_range=limited:out_range=full:flags=accurate_rnd+full_chroma_int")
     cmd = [FFMPEG, "-v", "error", "-ss", "%.6f" % ((n + 0.25) / fps), "-i", path, "-frames:v", "1",
-           "-vf", "scale=in_color_matrix=bt709:in_range=limited:out_range=full:flags=accurate_rnd+full_chroma_int",
+           "-vf", vf,
            "-f", "rawvideo", "-pix_fmt", "rgb48le", "-"]
     raw = subprocess.run(cmd, capture_output=True, check=True).stdout
     return (np.frombuffer(raw, np.uint16).reshape(h, w, 3).astype(np.float32) / 65535.0)
@@ -119,11 +131,14 @@ def measure(a, b, fov):
     degpx = fov / W
     la, lb = luma(a), luma(b)
     valid = (la > 0.004) & (lb > 0.004)
+    ba, bb = cv2.GaussianBlur(a, (0, 0), 12), cv2.GaussianBlur(b, (0, 0), 12)
+    big = np.abs(luma(bb - ba)) > 40 / 1023.0          # burnt-in watermark and other content that is not in both
     T = 256; win = cv2.createHanningWindow((T, T), cv2.CV_32F)
     shifts, sharp, hf = [], [], []
     for y in range(0, H - T + 1, T):
         for x in range(0, W - T + 1, T // 1):
             if not valid[y:y + T, x:x + T].all(): continue
+            if big[y:y + T, x:x + T].mean() > 0.001: continue   # watermark: not a technical difference
             ta, tb = la[y:y + T, x:x + T], lb[y:y + T, x:x + T]
             if ta.std() < 0.01: continue
             (dx, dy), resp = cv2.phaseCorrelate(ta.astype(np.float64), tb.astype(np.float64), win.astype(np.float64))
@@ -137,9 +152,7 @@ def measure(a, b, fov):
     sh = np.array(shifts) if shifts else np.zeros((0, 5))
     mag = np.hypot(sh[:, 2], sh[:, 3]) if len(sh) else np.zeros(0)
     # colour: low-passed so geometry and sharpness do not count
-    ba, bb = cv2.GaussianBlur(a, (0, 0), 12), cv2.GaussianBlur(b, (0, 0), 12)
     m = valid & (cv2.erode(valid.astype(np.uint8), np.ones((51, 51))) > 0)
-    big = np.abs(luma(bb - ba)) > 40 / 1023.0          # burnt-in watermark and other content that is not in both
     wm = int((big & m).sum())
     diff = (bb - ba)[m & ~big]  # in 0..1 of the ACEScct code range
     only_a = int(((la > 0.004) & (lb <= 0.004)).sum()); only_b = int(((lb > 0.004) & (la <= 0.004)).sum())
@@ -192,13 +205,24 @@ def equimap(f, e, cam, nadir):
 def main():
     clip = sys.argv[2]
     os.makedirs(OUT, exist_ok=True)
-    fish = os.path.join(STORE, clip + ".mov")
-    equi = os.path.join(STORE, "_Equi", clip + "_16K360_ProRes422HQ.mov")
+    if NOTCHLC:
+        d = os.path.join(STORE, "_NotchLC")
+        fsuf, esuf = ["_ProRes4444_1", "_ProRes4444", ""], ["_ProRes4444_1", "_ProRes4444", "_ProRes422HQ_1"]
+    else:
+        d = STORE
+        fsuf, esuf = [""], ["_ProRes4444", "_ProRes422HQ"]
+    # AME adds "_1" only when writing next to its source; FisheyetoEqui 2.09+ names the equi without "_fisheye" and
+    # the store's equi is ProRes 4444 since 2026-11-22 (422 HQ before). Take the first name that exists.
+    first = lambda c: next((x for x in c if os.path.exists(x)), c[0])
+    fish = first([os.path.join(d, clip + s + ".mov") for s in fsuf])
+    ed = d if NOTCHLC else os.path.join(STORE, "_Equi")
+    equi = first([os.path.join(ed, stem + "_16K360" + s + ".mov")
+                  for stem in (clip.replace("_fisheye_", "_", 1), clip) for s in esuf])
     st = json.loads(subprocess.run([FFPROBE, "-v", "error", "-select_streams", "v:0", "-show_entries",
                                     "stream=nb_frames,r_frame_rate", "-of", "json", fish],
                                    capture_output=True, text=True, check=True).stdout)["streams"][0]
     num, den = st["r_frame_rate"].split("/"); fps = float(num) / float(den); nfr = int(st["nb_frames"])
-    res = {"clip": clip, "frames": []}
+    res = {"clip": clip, "notchlc": NOTCHLC, "fisheye": fish, "equirect": equi, "frames": []}
     for n in [nfr // 4, nfr // 2, 3 * nfr // 4]:
         f = frame(fish, n, fps, 5760, 5760)
         t, votes = tag(f)

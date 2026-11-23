@@ -5,7 +5,8 @@ on the GPU). Runs on Mac and Windows.
     python3 tools/bench_notchlc.py --store "/Volumes/igelkottstore.com/2025/Free Demo 2025/Store" \
         --work ~/IgelkottBench --out ~/IgelkottBench/bench.jsonl
 
-Each file is copied to --work, measured and deleted again (--keep keeps it). Files already in --out are skipped, so
+Each file is copied to --work, measured and deleted again (--keep keeps it); --in-place measures the files where they
+lie (already on the disk to test; nothing is copied or deleted). Files already in --out are skipped, so
 the run can be stopped and started again. --only fisheye|equi measures one kind. --ffmpeg/--ffprobe default to the
 ones on PATH (Homebrew ffmpeg has the NotchLC decoder). The disk is read past the system's file cache
 (F_NOCACHE on the Mac, FILE_FLAG_NO_BUFFERING on Windows), 4 readers x 32 MB like a player reading ahead.
@@ -22,11 +23,12 @@ def files(store, only):
     out = []
     if only in (None, "fisheye"):
         # the fisheye NotchLC files carry the ProRes name (Media Encoder on M3Ultra); A007C001 was renamed 2026-11-21
-        fish = sorted(glob.glob(os.path.join(n, "*_ProRes4444_1.mov")))
+        # since 2026-11-23 the equirects are ProRes 4444 too, so the fisheye pattern needs "_fisheye_"
+        fish = sorted(f for f in glob.glob(os.path.join(n, "*_fisheye_*ProRes4444*.mov")) if "_16K360_" not in f)
         a7 = os.path.join(n, "A007C001_220127SK_fisheye_Gamma-ACEScct_AP1.mov")
         out += [(f, "fisheye NotchLC") for f in fish + ([a7] if os.path.exists(a7) else [])]
     if only in (None, "equi"):
-        out += [(f, "equi NotchLC") for f in sorted(glob.glob(os.path.join(n, "*_16K360_ProRes422HQ_1.mov")))]
+        out += [(f, "equi NotchLC") for f in sorted(glob.glob(os.path.join(n, "*_16K360_ProRes4*.mov")))]
     return out
 
 
@@ -117,13 +119,17 @@ def copy(src, work):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--store", required=True, help="the Store folder (with _NotchLC inside)")
-    ap.add_argument("--work", required=True, help="folder on the disk to test (outside the project folder)")
+    ap.add_argument("--work", help="folder on the disk to test (outside the project folder)")
+    ap.add_argument("--in-place", action="store_true", help="measure the files where they lie, no copy")
     ap.add_argument("--out", required=True, help="results, one JSON line per file")
     ap.add_argument("--only", choices=["fisheye", "equi"])
     ap.add_argument("--keep", action="store_true", help="keep the copies in --work")
     ap.add_argument("--ffmpeg", default="ffmpeg"); ap.add_argument("--ffprobe", default="ffprobe")
     a = ap.parse_args()
-    os.makedirs(a.work, exist_ok=True)
+    if not a.in_place and not a.work:
+        ap.error("--work is needed unless --in-place")
+    if not a.in_place:
+        os.makedirs(a.work, exist_ok=True)
     done = set()
     if os.path.exists(a.out):
         done = {json.loads(l)["key"] for l in open(a.out, encoding="utf-8") if l.strip()}
@@ -131,9 +137,12 @@ def main():
         key = os.path.basename(src) + "|" + kind
         if key in done: continue
         size = os.path.getsize(src)
-        if shutil.disk_usage(a.work).free < size + (20 << 30):
+        if a.in_place:
+            local, copy_s = src, None
+        elif shutil.disk_usage(a.work).free < size + (20 << 30):
             print("skip (no room)", key, flush=True); continue
-        local, copy_s = copy(src, a.work)
+        else:
+            local, copy_s = copy(src, a.work)
         s, fps, nfr = probe(a.ffprobe, local)
         mbf = size / max(nfr, 1) / 1e6
         rs = read_speed(local)
@@ -143,11 +152,11 @@ def main():
                "seconds": round(nfr / fps, 1), "GB": round(size / 1e9, 2), "MB_per_frame": round(mbf, 2),
                "MBps_needed": round(mbf * fps, 1), "Mbitps": round(mbf * fps * 8, 0), "disk_read_GBps": round(rs, 2),
                "max_fps_from_disk": round(rs * 1000 / mbf, 1), "cpu_decode_fps_ffmpeg": round(dfps, 2),
-               "decode_rc": rc, "decode_err": err if rc else "", "copy_MBps": round(size / copy_s / 1e6, 0),
+               "decode_rc": rc, "decode_err": err if rc else "", "copy_MBps": round(size / copy_s / 1e6, 0) if copy_s else None,
                "platform": sys.platform}
         print(json.dumps(rec), flush=True)
         with open(a.out, "a", encoding="utf-8") as h: h.write(json.dumps(rec) + "\n")
-        if not a.keep: os.remove(local)
+        if not a.keep and not a.in_place: os.remove(local)
 
 
 if __name__ == "__main__":

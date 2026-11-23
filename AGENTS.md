@@ -74,7 +74,7 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 ## Verifiering
 
 - `python tools/build_shaders.py --check` — de gjorda filerna stämmer med `shader/`
-- `python tools/verify_windows.py` (Windows) — båda utgåvorna mot linsmodellen och pixeltaggen
+- `python tools/verify_windows.py` (Windows) — båda utgåvorna mot linsmodellen och pixeltaggen, plus MTF50 vid FOV 90 på 4K-duken (sned kant, ±0,02 mot modellen)
 - `python tools/verify_windows.py . --canvas` (Windows) — LED-dukarna 4K, 8K och 16K × 2160 i full storlek
 - `python tools/bench_windows.py` (Windows) — shaderns tid per bild vid 4K, 8K och 15360 × 2160, med och utan tagg
 - `python3 tools/bench_notchlc.py --store … --work … --out …` — NotchLC-filernas tyngd; Live FX-delen (Free Run) i `docs/MAC-TEST.md` avsnitt 11
