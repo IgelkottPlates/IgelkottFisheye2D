@@ -23,7 +23,10 @@ källan samplas genom objektivets modell i stället för en equirect från Fishe
   IgelkottSuit — samma mönster som [IgelkottPlateDCTL](../IgelkottPlateDCTL/PROJECT.md).
 - Kör på: Macarna med Live FX (m3ultra i dag). Hemmamaskin: central (Drive).
 - **Git:** publikt repo (sedan 2026-11-20, Erics beslut) [IgelkottPlates/IgelkottFisheye2D](https://github.com/IgelkottPlates/IgelkottFisheye2D)
-  (skapat 2026-11-20 på ERIC-DESKTOP, gren `main`). `.git/` ligger i Drive-mappen: committa från en maskin i taget.
+  (skapat 2026-11-20 på ERIC-DESKTOP, gren `main`). **`.git/` och `.gitignore` finns bara på ERIC-DESKTOP:** Synology
+  Drive Client synkar inga namn som börjar med punkt (`black_prefix = "."` i sessionens `blacklist.filter`, läst
+  2026-11-23). Andra maskiner ser filerna men inget repo; de committar inte, utan lämnar det till ERIC-DESKTOP (eller
+  klonar från GitHub). Committa bara här.
   `Ref-Eric/` (PIXERA:s egna filer) och `pixera.zip` är utanför via `.gitignore`. Målet (Eric 2026-11-20): IgelkottFisheye
   i alla stora spelare — Live FX, PIXERA, Nuke med flera — och med hjälp från andra användare. Issues och Discussions på.
   Förberett för publikt 2026-11-20: `README.md`, `CONTRIBUTING.md` (engelska), kamerornas tal som kopia i
@@ -630,6 +633,46 @@ och hit (bygg shaders och prova i Live FX).
   och equirect heter `*_Gamma-ACEScct_AP1_16K360_ProRes4444_1.mov`. A004C002 har nu 2164 rutor (rätt klipp).
   Live FX-licensen på datorn hade gått ut, så 0.20 är inte sedd i Live FX. 4K-provprojektets filer låg på
   den utbytta D:. Atlas: [apfs-och-nvme-hastighet](../_atlas/knowledge/windows/apfs-och-nvme-hastighet.md).
+- **Threadripper (2026-11-23 kväll, THREADRIPPER: Threadripper 3960X, Radeon RX 9070 XT, drivrutin 26.11.2):**
+  Corsair-disken E: går i PCIe Gen 4 x4 (Samsung 970 EVO i samma dator Gen 3 x4). E: är **NTFS** med 64 KB block, inte
+  exFAT som testlistan sa (Eric: "behåll ntfs"; Macen kan bara läsa NTFS). `_NotchLC` kopieras dit från Store (~520 MB/s,
+  NAS:en). Noden 0.20 installerad med `Install-IgelkottFisheye.ps1`, samma filer som `matchbox/`. `verify_windows.py`:
+  Live FX-utgåvan PASS i alla fall; **9 FAIL, bara PIXERA-utgåvans MTF50** (skarpare än modellen, t.ex. yaw 45 pitch −20 H
+  0,513 mot 0,420). Geometrin är PASS i båda. ERIC-DESKTOP (drivrutin 26.10.1) ger samma 9 FAIL med samma tal
+  (2026-11-23 kväll, med MTF-provet). Där gick 0.20 igenom tidigare bara för att MTF-provet inte fanns än. Det är alltså
+  PIXERA-utgåvan, inte drivrutinen. Inte utrett. PIXERA används inte i uppspelningstestet.
+  - **11a, filerna på E: (NTFS, `bench_notchlc.py --in-place`, `%USERPROFILE%\IgelkottBench\bench-threadripper.jsonl`):**
+    fisheye 0,55–0,81 GB/s behövs; disken 5,7–6,2 GB/s → **175–270 bilder/s** från disken. Equirect 1,33–2,08 GB/s
+    behövs; disken 5,3–6,2 GB/s → **64–110 bilder/s**. Alltså samma nivå som APFS på M3Ultra (6,0–7,0 / 5,1–7,0):
+    NTFS kostar inget. ffmpeg på processorn (Threadripper 3960X): fisheye 16–23 bilder/s, equirect 6–7 (M3Ultra 35–41
+    och 11–12, ERIC-DESKTOP 15–18 och 3–5). Tre filer, de sista i varje grupp, gav i första körningen 1,2–3,2 GB/s
+    (A014C006 fisheye och equi, A014C001 equi); omedelbart ommätta gav de 5,8–6,3 GB/s. Troligen var disken upptagen
+    efter kopian på 1,9 TB, eller varm (MP600 PRO NH saknar kylfläns); temperaturen kräver admin och är inte läst.
+  - **11b, Live FX med Free Run (2026-11-23 kväll, Live FX 9.9.1214, licensen giltig igen, noden 0.20, datorstyrt av
+    Claude):** projekt `IgelkottFisheye 11b`, Timeline 2 i 7680 × 2160, 25 bilder/s, ACES 1.1 ACEScct. A007C001 från E:
+    i NotchLC, fisheye (31,45 MB per bild) i slot 0 och 16K-equirect (83,24 MB per bild) i slot 1, båda med Data Format
+    ACEScg (AP1) / ACEScct. Bilder/s räknat två sätt som stämmer inom ±3: bildräknaren över ~4 s och
+    läshastigheten delad med bildstorleken. Mätt med `measure_livefx.ps1` (20 s, median; resultaten i
+    `%USERPROFILE%\IgelkottBench\11b-*.txt`).
+
+    | Fall | Bilder/s | Läser | GPU (mest belastade motorn) | CPU |
+    |---|---|---|---|---|
+    | Fisheye utan noden (5760² ut, Data Format Rec709) | **~141** | 4,4 GB/s | 24 % | 6 % (2,8 kärnor) |
+    | Fisheye med noden, 7680 × 2160 (Auto/Auto, Wall, FOV 90) | **~108** | 3,4 GB/s | 30 % | 4 % |
+    | Noden, 15360 × 2160 | **~91** | 2,9 GB/s | 44 % | 3,5 % |
+    | Equirect med Eq->2D, FOV 31,42, 7680 × 2160 | **~23** | 1,9 GB/s | 32 % | 3 % |
+    | Equirect utan Eq->2D (15360 × 7680 ut, egen slot) | **~42** | 3,5 GB/s | 61 % | 5 % |
+
+    Fisheyen med noden klarar 4,3 × realtid vid 8K och 3,6 × vid 16K. Disken (6 GB/s) är inte gränsen i något fall.
+    Equirecten med Eq->2D når inte 25 bilder/s ens i Free Run, trots att disken har 3 × marginal och processorn är
+    ledig. **Uppdelningen:** bara avkodningen av 16K-equirecten ger ~42 bilder/s (≈ 24 ms per bild); Eq->2D lägger till
+    ≈ 20 ms och halverar takten till ~23. Med Eq->2D sjunker grafikkortets mest belastade motor från 61 % till 32 %, så
+    Eq->2D tycks vänta (en ruta i taget) snarare än fylla kortet. Båda leden behövs för equirect-vägen; noden slipper
+    båda (5760²-fisheyen avkodas i ~7 ms) och drar ~4,7 × så många bilder som Eq->2D-vägen på samma vägg. Noden ritar och läser taggen (ingen NOT AN IGELKOTT CLIP), så 0.20 är sedd i Live FX på Windows.
+    Att lägga märke till: Free Run hoppar tillbaka till 25 bilder/s när shotens bildformat ändras (Media → Image
+    Format); sätt Free Run igen efteråt. Med 25 bilder/s spelade noden 25,6 bilder/s (806 MB/s, GPU 9 %). Skärmen går i
+    2560 × 1440 / 30 Hz med Vertical Sync på, så viewern visar inte varje ruta i Free Run; ingen Video IO-utgång på.
+    Bilden i viewern såg rätt ut i alla fall (ingen rivning sedd i skärmbilderna, inte granskad ruta för ruta).
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av
@@ -700,6 +743,140 @@ och hit (bygg shaders och prova i Live FX).
     fisheye-plåtarna inte.
   - Bildcirkeln: FisheyetoEqui maskar utanför cirkeln, noden läser till bildkanten: 1 000–100 000 px innehåll där Eq->2D
     är svart vid pitch −20/FOV 150, 170 000–530 000 px på nadirklippen vid pitch +30 (hörn, QR-koder, pixeltaggen).
+- **NotchLC på Mac (2026-11-22, M3Ultra: M3 Ultra 28 kärnor, 96 GB, Live FX 9.9.1212, noden 0.19; `docs/MAC-TEST.md`
+  avsnitt 11; Eric: "det är det tekniska skillnaderna som är intressanta", inte watermark och beskärning).** Filerna
+  ligger redan på `/Volumes/8TB/_NotchLC` (extern PCIe-SSD, APFS), så `bench_notchlc.py --in-place` mätte dem där de ligger
+  (nytt läge: ingen kopia, inget raderas). `A001C016_…_AP1_1.mov` (5,4 GB) följer inte namnmönstret och är inte med.
+  - **Filerna (Mac mot Windows):** fisheye 0,57–0,79 GB/s behövs; 8TB läser 6,0–7,0 GB/s → **192–304 bilder/s** från
+    disken (Windows `D:` 54–75). Equirect 1,38–2,14 GB/s behövs; 8TB 5,1–7,0 GB/s → **61–109 bilder/s** (Windows 15–24).
+    ffmpeg på processorn: fisheye 35–41 bilder/s (Windows 15–18), equirect 11–12 (Windows 3–5).
+    Resultat: `~/IgelkottBench/bench_m3ultra.jsonl`.
+  - **Free Run finns:** Settings → General → Play Options → **Framerate → Free Run** (listan med 23.976 … 120). Men så
+    länge DeckLink-utgången är på (Video IO → DeckLink 8K Pro, Out On, 3840 × 2160 @ 24) klockar den spelaren:
+    24,3 bilder/s med Free Run, med Sync Automatic eller Timer, och med Framerate 200. Med utgången Off spelar Free Run
+    så fort det går. Allt återställt efteråt (Automatic, Vertical Sync på, 25, DeckLink On; DeckLink-inställningarna
+    orörda).
+  - **Live FX, Free Run, utgången av, A007C001, 7680 × 2160** (projekt `IgelkottFisheye NotchLC 8K`; bildräknaren över
+    8 s, disk/CPU/GPU med iostat, ps och ioreg):
+    - Fisheye + noden: **~122 bilder/s** (974 rutor), CPU ~190 %, GPU ~67 %.
+    - Fisheye utan nod: ~121 bilder/s, GPU ~45 % → taket är avkodningen/spelaren, noden kostar inget mätbart i 8K. Filen
+      (70 GB) låg då i Macens filcache, så disken läste nästan inget.
+    - Equirect + Eq->2D (FOV 31,42): **~40 bilder/s** (320 rutor), disken 5,0 GB/s (filens tak ~5,4), CPU ~306 %, GPU ~45 %
+      → begränsas av disken.
+    - Fisheye + noden i 15360 × 2160: ~122 bilder/s, GPU 99 % (här är det grafikkortet som sätter taket).
+    - I 25-läget (utgången på): fisheye + noden 24,3 bilder/s vid 707 MB/s, CPU 51 %, GPU 28 %.
+    - Windows (inte Free Run): fisheye + noden 25 bilder/s (klippets takt), equirect + Eq->2D 10–11 bilder/s.
+    - Bilden i Free Run: rätt, inga revor.
+  - **Noden mot FisheyetoEqui + Eq->2D på NotchLC-filerna** (`tools/compare_eq2d.py … --notchlc`, 9 klipp × 3 rutor
+    × 8 vyer; rutor med watermark räknas bort också ur förskjutning och skärpa, pixlar som bara den ena visar redovisas
+    inte; resultat i `~/IgelkottCompare/notchlc/`):
+    - Geometri som Windows (ProRes): median 1,0–1,4 px vid FOV 90 (0,012–0,016°), pitch −20 2,4 px, tele 30° 0,35 px.
+      På A007C001 stadigt 1,1–1,2 px lodrätt. På de andra 8 sprider det sig (p95 5–19 px, max ~110 px): deras
+      fisheye-NotchLC ligger en ruta fel (se nedan), och det som rör sig flyttar sig.
+    - Skärpa som Windows: Laplace-varians Eq->2D/noden 0,67–0,70 i median vid FOV 90 (0,54–0,93), mellanfrekvenserna
+      0,63–0,97; FOV 150 0,89; pitch +30 0,86.
+    - Färg: ±1 av 1023 på 8 klipp. A007C001: Eq->2D 12–28 mörkare, för att bara den fisheye-filen saknar tonändringen nedan.
+  - **NotchLC-kodningen (mot ProRes-originalen i Store, ffmpeg):**
+    - NotchLC ska läsas med filens egen märkning (full range, `gbr`); BT.709 limited som för ProRes ger p99-fel 46 av 1023.
+    - **Batchen** (de 8 fisheye `*_ProRes4444_1.mov` och alla 9 equirect `*_16K360_ProRes422HQ_1.mov`, kodade
+      2026-11-21 20:12–23:00) har en tonkurva mot ProRes: −14…−20 av 1023 i skuggor och mellantoner (ProRes 100–400),
+      −7 vid 500, 0 vid 600, +3…+6 vid 700 (≈ 1,025–1,067 × ProRes − 0,02…0,04). `A007C001_…_AP1.mov` (fisheye, kodad
+      separat 08:31) har den inte (±0,7). Windows slutsats "NotchLC ger samma bild som ProRes" gäller alltså bara den filen.
+    - **Batchens fisheye-filer har ruta 0 dubblerad:** NotchLC-ruta 0 och 1 = ProRes-ruta 0, sedan ligger allt en ruta
+      efter, och sista ProRes-rutan saknas (samma antal rutor). Equirect-filerna och A007C001 ligger rätt.
+    - **Orsakerna (Eric: "det är adobe media encoder som gör notch"; AME 26:s `AMEEncodingLog.txt`):** alla jobb, morgon
+      och kväll, använde presetet BEST MAX (oförändrat sedan 2026-03-26). Kvällens fisheye-jobb läste inte Store-originalen
+      utan `Store/_Demo-watermark/…_ProRes4444.mov`, gjorda av IgelkottFisheyetoEqui 11:04–12:16 (passet "Fisheye till
+      fisheye" med 3D-LUT, `cameraProfile: pyxis12K` på Venice-klipp, enligt `.…render.json`). Equirect-jobben läste
+      `Store/_Equi/…ProRes422HQ.mov`. Jämfört med just den fil AME läste:
+      - **Den dubblerade rutan finns redan i watermark-filerna** (ruta 0 = ruta 1); AME kopierar den. Den kommer alltså
+        från FisheyetoEquis "Fisheye till fisheye", inte från AME. Equirect-filerna har den inte.
+      - **Tonkurvan kommer från AME** och bara på källor med QuickTime-`colr` `nclc` 12-17-**1** (P3-D65, ST 428, matris
+        BT.709): watermark- och equirect-filerna från FisheyetoEqui. Store-originalen har 12-17-**2** (matris ospecificerad)
+        och kommer ut orörda (A007C001: korrelation 1,00000, ±0,7 av 1023). ffprobe visar `bt709` för båda; skillnaden syns
+        bara i atomen. Troligen färghanterar AME 26 en giltig märkning från P3/ST 428 till NotchLC-filens sRGB/BT.709;
+        inte provat genom att märka om en fil och koda den igen.
+      - Handoff till IgelkottFisheyetoEqui 2026-11-22 (`colr`-märkningen, den dubblerade rutan, `pyxis12K` på Venice).
+    - **Omgång 2 (2026-11-22–23, M3Ultra, AME 2026, BEST MAX, utmapp `/Volumes/8TB/_NotchLC`, inga `_1` i namnen):**
+      - **A/B-provet** från FisheyetoEqui har samma pixlar, bara colr skiljer. A (12-17-1) ger tonkurvan (−18 i skuggorna,
+        upp till +23 i högdagrarna). B (12-17-2) ligger på +0,7…+2,5. **Märkningen är orsaken.**
+      - **Nya filer från FisheyetoEqui 2.09–2.10:**
+        - Fisheye i `_Demo-watermark`, equirect i `_Equi`, nu ProRes 4444 och utan `_fisheye` i namnet.
+        - Rutan stämmer: samma antal rutor, och NotchLC-ruta n liknar ruta n mer än n−1.
+        - **Tonkurvan finns kvar** (−17…−20). FisheyetoEquis rättning skriver 12-17-2 i kopian av provbeskrivningen inuti
+          `glbl`, men `ap4h`:s egen `colr` är kvar på 12-17-1. Darkroom-mastern och B har ingen egen `colr`, bara den i
+          `glbl`.
+        - Handoff 2026-11-23 (`colr-fel-atom`).
+      - **Mätningen av NotchLC väntar på rättade filer** (Eric). De 18 NotchLC-filerna från i natt har tonkurvan.
+      - **Rättningen provad (2026-11-23):**
+        - FisheyetoEqui 2.12 skriver 12-17-2 både i den egna `colr` och i `glbl`.
+        - Provfil C (båda 12-17-2) ger exakt samma ton som B.
+        - 10 s ur den rättade A007C001-watermarkfilen: +1,2…+2,3 mot källan, ingen tonkurva.
+        - De övriga 17 rättas av FisheyetoEqui, sedan kodas och mäts allt om.
+        - Lösningen dokumenterad i atlas: `_atlas/knowledge/video/prores-colr-egen-atom-och-glbl.md`.
+      - `tools/compare_eq2d.py` hittar de nya namnen: equirect utan `_fisheye`, ProRes 4444, med eller utan `_1`.
+    - **Omgång 3 (2026-11-23, M3Ultra, AME 2026, BEST MAX, FisheyetoEqui 2.12-rättade källor, alla 18 i
+      `/Volumes/8TB/_NotchLC/*_ProRes4444_1.mov`, kodade 08:37–10:34):**
+      - **Ton och rutor (alla 18, ffmpeg, ruta 0, 1, N/2, N−2, N−1 mot källan i Store; `~/IgelkottCompare/colrprov/all18.py`,
+        resultat `all18_2026-11-23.txt`):**
+        - Samma antal rutor som källan i alla 18.
+        - Alla 90 rutor ligger rätt: |d| 0,9–1,8 av 1023 mot samma ruta, 2–44 mot grannarna. Minst marginal har
+          A001C016 equirect (1,5 mot 2,0–2,7; långsam rörelse), men den klarar alla fem.
+        - **Tonkurvan är borta:** +0…+3,7 av 1023 på alla nivåer i alla 18 (före rättningen −14…−20 i skuggorna). Det
+          som är kvar är NotchLC:s eget kodningsfel.
+      - **Noden mot FisheyetoEqui + Eq->2D (`compare_eq2d.py --notchlc`, 9 klipp × 3 rutor × 8 vyer,
+        `~/IgelkottCompare/notchlc2/`):**
+        - Geometrin är nu som A007C001 i förra omgången på alla 9: median 0,9–1,2 px vid FOV 90 (0,011–0,014°), p95
+          ≤ 1,75 px, max ≤ 2,9 px. Pitch −20 p95 ≤ 1,9 px, FOV 150 p95 ≤ 1,2 px, pitch +30 p95 ≤ 2,0 px.
+        - Ingen spridning längre (förra omgången p95 5–19 px, max ~110 px, av den förskjutna rutan).
+        - Tele 30°: median 0,13–0,89 px men p95 ~5–6,5 px (max 21 px). Det är ungefär en pixel i 16K-equin
+          (42,7 px/° mot 256 px/° ut, ×6), samma som i förra omgången. Det är equins upplösning, inte noden.
+        - Skärpa: Laplace Eq->2D/noden 0,64–0,66 i median vid FOV 90, 0,82 vid FOV 150, 0,79 vid pitch +30.
+        - Färg: medel ≤ 0,4 av 1023 i alla vyer och klipp.
+      - **Disken och avkodningen (`bench_notchlc.py --in-place`, `~/IgelkottBench/bench_m3ultra_2026-11-23.jsonl`):**
+        - Fisheye 548–786 MB/s behövs; 8TB läser 4,6–6,9 GB/s → 147–242 bilder/s från disken. ffmpeg på processorn
+          26–38 bilder/s.
+        - Equirect 1,50–2,08 GB/s behövs (53–85 MB per ruta, ProRes 4444-källan gav större filer än 422 HQ:
+          120–187 GB); disken 5,6–6,2 GB/s → 70–105 bilder/s. ffmpeg 8–12 bilder/s.
+        - 8TB-disken försvann helt (inte bara avmonterad) mitt i mätningen kl. 10:39 och kom tillbaka efter en stund;
+          filerna var hela. Orsak okänd (ingenting i loggen).
+      - **Live FX Free Run (DeckLink av, Vertical Sync av, A007C001, projekt `IgelkottFisheye NotchLC 8K`; de gamla
+        namnen pekades om med tillfälliga symlänkar, borttagna efteråt; `~/IgelkottBench/livefx_m3ultra.jsonl`):**
+        - Fisheye + noden 7680 × 2160: **~121 bilder/s**, disken 3,6 GB/s, CPU ~194 %, GPU ~68 %.
+        - Fisheye utan nod: ~121 bilder/s, GPU ~45 %. Samma tak som förut: avkodningen/spelaren, inte noden.
+        - Equirect + Eq->2D (FOV 31,42): **~49 bilder/s** (förut ~40), disken 4,2 GB/s, CPU ~284 %, GPU ~44 %.
+        - Fisheye + noden 15360 × 2160: ~123 bilder/s, GPU 99 %.
+        - Bilden rätt i Free Run, inga revor. Återställt efteråt: Framerate 25, Vertical Sync på, DeckLink på.
+- **MTF50, noden mot FisheyetoEqui + Eq->2D, FOV 90 på 4K-duken 3840 × 2160 (2026-11-23, M3Ultra, Venice 2;
+  `~/IgelkottCompare/mtf/mtf50.py`, resultat `mtf50_4k_fov90.json`).** Cykler per utpixel; H = vågrät upplösning
+  (nästan lodrät kant), V = lodrät.
+
+  | Vy | Noden H | Eq->2D H | Noden V | Eq->2D V |
+  |---|---|---|---|---|
+  | yaw 0/90/180/270 (horisonten) | 0,355–0,363 | 0,299–0,302 (−16 %) | 0,229–0,239 | 0,213–0,221 (−7 %) |
+  | pitch +30 | 0,296 | 0,260 (−12 %) | 0,245 | 0,225 (−8 %) |
+  | yaw 45, pitch −20 | 0,420 | 0,308 (−27 %) | 0,223 | 0,207 (−7 %) |
+
+  - **Noden är skarpare i alla vyer**, mest vågrätt. Mellan klippen skiljer Eq->2D ±0,02 (H) och ±0,005 (V).
+  - **Hur:**
+    - **Nodens MTF är absolut:** en syntetisk sned kant (5°) i en Venice-fisheye 5760², med 8 × 8 delprov per
+      fisheyepixel. Den körs genom nodens räkning (`compare_eq2d.ours`, 2 × 2 bilinjära prov) och mäts som ISO 12233
+      (kantlinjen passad, ESF i ¼ px, derivatan rättad). Självprov: en kant med Gauss 1 px ger MTF50 0,187 mot teorins
+      0,187.
+    - **Eq->2D mäts relativt noden:** amplitudspektrumens kvot på riktiga rutor. Mitten av alla 9 klippen, ProRes-mastern
+      mot `_Equi` 16K ProRes 4444, 594–928 rutor om 256² per vy, vattenmärket bortsorterat. Provat med känd Gauss
+      (σ 0,6 och 1,0): ±0,01 upp till 0,2 c/px.
+    - **Eq->2D:s MTF** = nodens MTF × kvoten.
+  - **Begränsningar:**
+    - Kameran (optik, debayer) ingår inte i nodens absoluta tal. Den är densamma för båda vägarna, så skillnaden står sig.
+    - Eq->2D är modellen i `compare_eq2d.py` (ett bilinjärt prov i 16K-equin), inte Live FX:s egen sampling på grafikkortet.
+  - **I provet sedan 2026-11-23:** `verify_windows.py` (och `verify_mac.py`) ritar kanten genom de riktiga shadrarna och
+    mäter nodens MTF50 i de tre vyerna, H och V. Gränsen är modellen ± 0,02. Live FX och PIXERA ska ge samma tal (inom
+    0,005). På Mac (CGL, Live FX-utgåvan) gav grafikkortet modellens tal på tredje decimalen. Windows (båda utgåvorna)
+    är inte kört än.
+  - **Lodrätt sätter fisheyen gränsen för båda vägarna.** Vid horisonten ger Venice-objektivet ~22 fisheyepixlar per
+    grad radiellt och ~38 i sidled, mot 42,7 utpixlar per grad (3840 / 90). Därför ligger V kring 0,22–0,24 i båda.
+
 - **Ingen CAS-skärpning i shadern** (Eric 2026-11-21: "vi gör inte det"). Övervägt: AMD CAS som ett andra Matchbox-pass
   efter projektionen, som Fisheye to Equis 16K-filter Film.
 - **Spara Live FX-projektet med Close Project** innan programmet stängs (2026-11-20): en omstart med Stop-Process tappade
