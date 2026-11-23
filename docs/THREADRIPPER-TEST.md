@@ -12,10 +12,20 @@ Write each result into `PROJECT.md` with the date, the machine and the Live FX v
 
 ## Before you start
 
-- [ ] **The disk is exFAT, not APFS.** Copy everything off the 8 TB disk first; formatting erases it (6.3 TB on
-      2026-11-23). Format it on the Mac: Disk Utility → Erase → ExFAT, GUID Partition Map. Then copy `_NotchLC` back.
-      The Mac and Windows both read and write exFAT with their own drivers. exFAT at 6 GB/s is not proven on either
-      machine yet: 11a measures it.
+- [ ] **The disk is exFAT, not APFS, formatted on Windows.** Eric 2026-11-23: the latest macOS does not make a good
+      exFAT format. Copy everything off the 8 TB disk first, because formatting erases it (6.3 TB on 2026-11-23). On
+      the Threadripper, in an administrator command prompt, `diskpart`:
+
+      list disk
+      select disk <N>          (the 8 TB Corsair MP600 PRO NH, about 7452 GB; check it twice)
+      clean
+      convert gpt
+      create partition primary
+      format fs=exfat unit=1M quick label=8TB
+      assign letter=E
+
+      Then copy `_NotchLC` onto it. The Mac reads and writes the disk with its own exFAT driver; only the formatting is
+      done on Windows. exFAT at 6 GB/s is not proven on either machine yet: 11a measures it.
 - [ ] The disk sits in an M.2 or PCIe slot that runs at **Gen 4 x4 or faster**. Check in PowerShell:
 
       Get-PnpDevice -Class SCSIAdapter -PresentOnly | Where-Object FriendlyName -match 'NVM' | ForEach-Object {
