@@ -621,6 +621,15 @@ och hit (bygg shaders och prova i Live FX).
     **Ett nyimporterat klipp får Data Format Rec709 / Gamma 2.4** (Live FX standard), inte ACEScct: det ser då mjölkigt
     och blekt ut. Med Media → Data Format ACEScg (AP1) / ACEScct ser tågklippet ut som i IgelkottStage (Eric:s
     jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp: Project Settings → Media Defaults har bara kamerornas RAW-format (ARRI, BRAW, R3D, ProRes RAW m.fl.), inget för ProRes/QuickTime (sett 2026-11-20). Live FX läser annars färgrymden ur filens taggar.
+- **Windows-datorn 2026-11-23 (Z390-A, i9-9900KS): testet flyttas till Threadripper.** Intel 660p (D:) är utbytt mot
+  Mac-disken Corsair MP600 PRO NH 8 TB (APFS). Paragon macOS File Systems for Windows 18.30 (provperiod) monterade den
+  bara läsbar: 1,13 GB/s förbi filcachen, lika med 1–16 läsare (Dokan, user mode). Platsen kör den i PCIe Gen 3 x4
+  (~3,5 GB/s tak). Eric: disken ska gå i 6 GB/s, så testet görs på Threadripper-datorn, med disken exFAT formaterad i
+  Windows ("senaste macos kan inte göra en bra exfat formattering"): `docs/THREADRIPPER-TEST.md`. På disken låg alla 18
+  nya NotchLC-filer (2026-11-23, rättad colr) i `_NotchLC/`. Fisheye heter `*_fisheye_Gamma-ACEScct_AP1_ProRes4444_1.mov`
+  och equirect heter `*_Gamma-ACEScct_AP1_16K360_ProRes4444_1.mov`. A004C002 har nu 2164 rutor (rätt klipp).
+  Live FX-licensen på datorn hade gått ut, så 0.20 är inte sedd i Live FX. 4K-provprojektets filer låg på
+  den utbytta D:. Atlas: [apfs-och-nvme-hastighet](../_atlas/knowledge/windows/apfs-och-nvme-hastighet.md).
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av
