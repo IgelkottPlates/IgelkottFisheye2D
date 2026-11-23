@@ -685,6 +685,27 @@ och hit (bygg shaders och prova i Live FX).
   - **Live FX-utgåvan är oförändrad,** bortsett från versionen.
   - **Inte provat i PIXERA.** Där återstår att se att `dFdx` kompilerar i effekten, och att `tex_coords` är
     skärmens, så att derivatorna motsvarar en utpixel.
+  - **Märkningen** (Eric: "är det tydligt i gui att shadern kommer från IgelkottPlates.com? branding är viktig").
+    Före 0.21 stod igelkottplates.com ingenstans i programmen. Eric valde tre ställen, men inte fliknamnet:
+    - **Live FX:**
+      - Beskrivningen börjar med "IgelkottFisheye by Igelkott Film AB, igelkottplates.com" och slutar med
+        adressen.
+      - `HelpLink="https://igelkottplates.com"`.
+      - Var Live FX visar beskrivningen och länken är inte sett.
+    - **PIXERA:** etiketten heter "Camera (igelkottplates.com)". PIXERA har ingen beskrivning och ingen länk.
+    - **Vägranstexten** har fått en rad till, IGELKOTTPLATES.COM:
+      - nya bokstäver: S, M och punkt;
+      - 18 tecken, en bokstav in, 4 punkter under första raden;
+      - blocket är 18 punkter högt och centrerat.
+      - `verify_windows.py` provar båda raderna.
+    - **Färgerna kommer ur IgelkottDesigns tokens** (atlas regel 17). Eric: "fixa färgerna på igelkottplates.com så de
+      följer designreglerna", och sedan ".com ska vara i vår cyan".
+      - NOT AN IGELKOTT CLIP och varningstecknet: `warning` #FACC15. Före 0.21 var det #FFC700, skrivet för hand.
+      - IGELKOTTPLATES: `text` #FFFFFF.
+      - .COM: `accent` #00BCDB.
+      - `build_shaders.py` läser `IgelkottDesign/tokens/tokens.json` och skriver av färgerna till `shader/tokens.json`,
+        så att en klon kan bygga.
+      - `verify_windows.py` läser kopian och provar varje färg.
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av

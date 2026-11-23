@@ -1,14 +1,16 @@
 <ShaderNodePreset
-    Description="IgelkottFisheye: walls straight from the square fisheye clip (PYXIS 12K or Sony Venice 2 + Entaniya HAL 250, any size), the way IgelkottStage plays it. One resampling, through the lens model.
+    Description="IgelkottFisheye by Igelkott Film AB, igelkottplates.com
 
-Camera and Pointing on Auto (tag): the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. Choose a camera or a pointing to set it by hand. A plate without the tag is not an Igelkott clip and is not played: the output is black with NOT AN IGELKOTT CLIP and a small warning sign in the top left corner. A camera without a lens model gives black and the warning sign.
+Walls straight from the square fisheye clip (PYXIS 12K or Sony Venice 2 + Entaniya HAL 250, any size), the way IgelkottStage plays it. One resampling, through the lens model.
+
+Camera and Pointing on Auto (tag): the camera and whether the lens pointed up (zenith) or down (nadir) are read from the pixel tag IgelkottDarkroom and Fisheye to Equi write next to the corner QR codes. Choose a camera or a pointing to set it by hand. A plate without the tag is not an Igelkott clip and is not played: the output is black with NOT AN IGELKOTT CLIP / IGELKOTTPLATES.COM and a small warning sign in the top left corner. A camera without a lens model gives black and the warning sign.
 Offset X/Y: moves the finished picture, after the projection, in output pixels (+X right, +Y up); with Split on, the left wall's picture, and Right Offset X/Y the right wall's.
 Mode: Wall (a flat view: Yaw, Pitch, Roll and FOV, the horizontal angle from the wall's left edge to its right edge) or Equirect (360 degrees over the node's whole width, the same degrees per pixel up and down, aimed with Yaw, Pitch and Roll: the whole sphere at 2:1, cropped top and bottom on wider canvases, black past the poles on narrower ones; FOV is not used).
 Split: two walls side by side from the same plate, split at Split Position (% of the width, a sharp edge). The left wall uses Yaw/Pitch/Roll/FOV and Offset, the right one Right Yaw/Pitch/Roll/FOV and Right Offset. In Equirect each wall is a window at the same scale, centred on its own Yaw/Pitch/Roll.
 
-Igelkott Film AB"
+Igelkott Film AB, https://igelkottplates.com"
     Name="IgelkottFisheye2D"
-    HelpLink=""
+    HelpLink="https://igelkottplates.com"
     LimitInputsToTexture="True"
     MatteProvider="False"
     SupportsAction="False"

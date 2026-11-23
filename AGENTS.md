@@ -17,6 +17,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   `_shared/IgelkottFisheyeLens`, versionen ur `VERSION`). `pixera/README.txt` skrivs för hand.
 - `stabilizer/` — den publika stabiliseringssidan (en HTML-fil, engelska). Noden har inga Stab-reglage sedan 0.14.
 - `README.md` och `CONTRIBUTING.md` — repots framsida och regler för bidrag (engelska, GitHub).
+- `shader/tokens.json` — färgerna (warning, text, accent) kopierade ur `IgelkottDesign/tokens` av `build_shaders.py`; aldrig
+  för hand.
 - `shader/cameras.json` — kamerornas tal, kopierade ur `_shared` av `build_shaders.py` så att en klon kan bygga; aldrig
   för hand.
 - `docs/MAC-TEST.md` — testlistan för Live FX på Mac (engelska); resultaten skrivs i `PROJECT.md`.
@@ -39,7 +41,12 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
 - Pixeltaggens regler (plats, bitar, CRC, kontrast) står bara i `PixelTag` i `_shared/IgelkottFisheyeLens`
   (`IgelkottLensMark`); `shader/core.glsl` följer den och `verify_windows.py` provar mot dess provvektorer.
 - En plåt utan giltig pixeltagg spelas aldrig, inte heller med Camera/Pointing valda för hand (Eric 2026-11-23): svart,
-  NOT AN IGELKOTT CLIP och varningstecknet.
+  NOT AN IGELKOTT CLIP / IGELKOTTPLATES.COM och varningstecknet.
+- Märkningen syns i programmen (Eric 2026-11-23: "branding är viktig"). Live FX: beskrivningen börjar med "IgelkottFisheye
+  by Igelkott Film AB, igelkottplates.com", och HelpLink är https://igelkottplates.com. PIXERA: etiketten
+  "Camera (igelkottplates.com)". I vägranstexten: IGELKOTTPLATES vit och .COM i accentcyanen (Eric 2026-11-23).
+- Shaderns färger kommer bara ur `IgelkottDesign/tokens/tokens.json` (warning, text och accent), via
+  `build_shaders.py`. Skriv aldrig en färg för hand i `shader/`.
 - En kamera utan linsmodell (taggkod 4–7; ingen i listan sedan Z-Cam E2 S6 fick sin modell 2026-11-20) spelas aldrig
   med en annan kameras modell: svart och varningstecknet.
 - FOV är den vågräta vinkeln från väggens vänstra till högra kant, med Split varje väggs egen bredd (Eric 2026-11-20:

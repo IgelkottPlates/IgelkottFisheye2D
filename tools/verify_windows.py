@@ -13,7 +13,7 @@
 # och varningstecknet pixel för pixel. Gränsen är 0,5 källpixlar vid 8040.
 #
 # Ger 0 när alla fall håller, annars 1.
-import array, ctypes, ctypes.wintypes as wt, math, os, subprocess, sys
+import array, ctypes, ctypes.wintypes as wt, json, math, os, subprocess, sys
 
 root = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
@@ -33,7 +33,11 @@ ZREF = 3872.0
 ZCENTER = (1936.0, 1936.0)
 ZK = (965.3796533166083, -9.478101051830038, 0.2498244786039206, -0.5051113655662752)
 CAMS = {1: (REF, CENTER, K), 2: (VREF, VCENTER, VK), 3: (ZREF, ZCENTER, ZK)}
-YELLOW = (1.0, 0.78, 0.0)
+# Färgerna ur IgelkottDesigns tokens, som build_shaders.py skriver av till shader/tokens.json (atlas regel 17)
+with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "shader", "tokens.json"),
+          encoding="utf-8") as _fh:
+    _tok = json.load(_fh)["color"]
+YELLOW, WHITE, CYAN = (tuple(int(_tok[k][i:i + 2], 16) / 255.0 for i in (1, 3, 5)) for k in ("warning", "text", "accent"))
 
 
 def mul(a, b):
@@ -115,14 +119,18 @@ def warning(qx, qy_top, size):
 GLYPHS = {0: (583347, 17969), 5: (583347, 17969), 1: (476721, 17966), 12: (476721, 17966), 2: (1020036, 4228),
           13: (1020036, 4228), 14: (1020036, 4228), 4: (476735, 17969), 7: (462980, 4238), 18: (462980, 4238),
           8: (476695, 17967), 9: (1032734, 16927), 10: (541200, 16927), 17: (541200, 16927), 11: (576152, 21073),
-          16: (476688, 16942), 19: (1001022, 16912)}
+          16: (476688, 16942), 19: (1001022, 16912), 20: (462980, 4238), 21: (476695, 17967), 22: (1032734, 16927),
+          23: (541200, 16927), 24: (576152, 21073), 25: (476721, 17966), 26: (1020036, 4228), 27: (1020036, 4228),
+          28: (1001022, 16912), 29: (541200, 16927), 30: (476735, 17969), 31: (1020036, 4228), 32: (1032734, 16927),
+          33: (508430, 1086), 34: (0, 396), 35: (476688, 16942), 36: (476721, 17966), 37: (585397, 17969)}
 FONT = {"N": "10001 11001 10101 10011 10001 10001 10001", "O": "01110 10001 10001 10001 10001 10001 01110",
         "T": "11111 00100 00100 00100 00100 00100 00100", "A": "01110 10001 10001 11111 10001 10001 10001",
         "I": "01110 00100 00100 00100 00100 00100 01110", "G": "01110 10001 10000 10111 10001 10001 01111",
         "E": "11111 10000 10000 11110 10000 10000 11111", "L": "10000 10000 10000 10000 10000 10000 11111",
         "K": "10001 10010 10100 11000 10100 10010 10001", "C": "01110 10001 10000 10000 10000 10001 01110",
-        "P": "11110 10001 10001 11110 10000 10000 10000"}
-for i, ch in enumerate("NOT AN IGELKOTT CLIP"):       # shaderns tal ska vara just dessa bokstäver
+        "P": "11110 10001 10001 11110 10000 10000 10000", "S": "01111 10000 10000 01110 00001 00001 11110",
+        "M": "10001 11011 10101 10101 10001 10001 10001", ".": "00000 00000 00000 00000 00000 01100 01100"}
+for i, ch in enumerate("NOT AN IGELKOTT CLIP" + "IGELKOTTPLATES.COM"):   # shaderns tal ska vara just dessa bokstäver
     r = [int(x, 2) for x in FONT[ch].split()] if ch != " " else [0] * 7
     want = (((r[0] * 32 + r[1]) * 32 + r[2]) * 32 + r[3], (r[4] * 32 + r[5]) * 32 + r[6])
     if GLYPHS.get(i, (0, 0)) != want:
@@ -130,17 +138,23 @@ for i, ch in enumerate("NOT AN IGELKOTT CLIP"):       # shaderns tal ska vara ju
 
 
 def message(qx, qy_top, sw, sh):
-    """Meddelandet (igkMessage): 1 på en punkt i NOT AN IGELKOTT CLIP, annars 0."""
+    """Meddelandet (igkMessage): 1 på en punkt i NOT AN IGELKOTT CLIP, 2 i IGELKOTTPLATES, 3 i .COM, annars 0."""
     unit = min(0.7 * sw / 119.0, 0.15 * sh / 7.0)
-    px, py = (qx - 0.5 * sw) / unit + 59.5, (qy_top - 0.5 * sh) / unit + 3.5
-    if px < 0 or px >= 119 or py < 0 or py >= 7:
+    px, py = (qx - 0.5 * sw) / unit + 59.5, (qy_top - 0.5 * sh) / unit + 9.0
+    if px < 0 or px >= 119 or py < 0 or py >= 18:
         return 0
     letter = math.floor(px / 6); col = math.floor(px - 6 * letter)
     if col > 4.5:
         return 0
-    row = math.floor(py); g = GLYPHS.get(letter, (0, 0))
+    row = math.floor(py)
+    if row > 6:                                       # andra raden: rad 11-17, bokstav 1-18
+        if row < 11 or letter < 1 or letter > 18:
+            return 0
+        row -= 11; letter += 19
+    line = (3 if letter > 33 else 2) if letter > 19 else 1          # .COM är bokstav 34-37
+    g = GLYPHS.get(letter, (0, 0))
     bits = (g[0] >> (5 * (3 - row))) & 31 if row < 4 else (g[1] >> (5 * (6 - row))) & 31
-    return (bits >> (4 - col)) & 1
+    return line * ((bits >> (4 - col)) & 1)
 
 
 # MARK: - Pixeltaggen (PixelTag.swift: reglerna står där)
@@ -560,7 +574,7 @@ def check(c, px, n, host):
                     continue
                 if m:
                     msg_px += 1
-                want = YELLOW if m else (0.0, 0.0, 0.0)
+                want = {0: (0.0, 0.0, 0.0), 1: YELLOW, 2: WHITE, 3: CYAN}[m]
                 if max(abs(a - b) for a, b in zip(got, want)) > 1e-3:
                     bad += 1
                     if os.environ.get("IGK_DEBUG"):

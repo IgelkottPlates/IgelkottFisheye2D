@@ -1,7 +1,7 @@
 //@implements: sampler2D
 struct IgelkottFisheye {
 	sampler2D sampler;
-	//@ label: "Camera", editor: enum, enum_default: 0, values: "Auto_(tag), PYXIS_12K, Sony_Venice_2, Z-Cam_E2_S6"
+	//@ label: "Camera (igelkottplates.com)", editor: enum, enum_default: 0, values: "Auto_(tag), PYXIS_12K, Sony_Venice_2, Z-Cam_E2_S6"
 	int camera;
 	//@ label: "Pointing", editor: enum, enum_default: 0, values: "Auto_(tag), Zenith, Nadir"
 	int pointing;
@@ -79,7 +79,10 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 	}
 	vec3 color = sum * 0.25;
 	float aw = max(s.aspect, 0.01);
-	if (pl.z > 1.5 && igkMessage(vec2(tex_coords.x * aw, 1.0 - tex_coords.y), vec2(aw, 1.0)) > 0.5) color = IGK_WARNING_YELLOW;
+	if (pl.z > 1.5) {
+		float m = igkMessage(vec2(tex_coords.x * aw, 1.0 - tex_coords.y), vec2(aw, 1.0));
+		if (m > 0.5) color = m > 2.5 ? IGK_BRAND_ACCENT : (m > 1.5 ? IGK_BRAND_TEXT : IGK_WARNING_YELLOW);
+	}
 	if (pl.z > 0.5) {
 		float mark = igkWarning(vec2(tex_coords.x * max(s.aspect, 0.01), 1.0 - tex_coords.y), 0.05);
 		if (mark > 1.5) color = vec3(0.0);

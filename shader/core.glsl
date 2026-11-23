@@ -189,26 +189,32 @@ float igkWarning(vec2 q, float size) {
     return 1.0;
 }
 
-const vec3 IGK_WARNING_YELLOW = vec3(1.0, 0.78, 0.0);
+// IGK_WARNING_YELLOW (warning), IGK_BRAND_TEXT (text) and IGK_BRAND_ACCENT (accent) come from IgelkottDesign's tokens, written in by
+// tools/build_shaders.py (atlas rule 17: no colour typed by hand).
 
-// MARK: The refusal message "NOT AN IGELKOTT CLIP" (state 2), in the warning's yellow across the middle of the output.
-// 20 letters of 5 x 7 dots, 6 dots apart, so 119 dots wide. Each letter is two whole numbers: rows 0-3 and rows 4-6, 5
-// bits per row, the left dot highest. Read with floor and mod only (no integer bit operations, no arrays); dividing by a
-// power of two is exact in float, and the largest number (2^20) is well inside float's 24 bits.
+// MARK: The refusal message (state 2), in the warning's yellow across the middle of the output: NOT AN IGELKOTT CLIP and
+// under it IGELKOTTPLATES.COM, where Igelkott plates come from (Eric 2026-11-23: "branding är viktig"). Letters of 5 x 7
+// dots, 6 dots apart: the first line 20 letters (119 dots wide), the second 18 letters one letter in, 4 dots below. Each
+// letter is two whole numbers: rows 0-3 and rows 4-6, 5 bits per row, the left dot highest. Letters 0-19 are the first
+// line, 20-37 the second. Read with floor and mod only (no integer bit operations, no arrays); dividing by a power of
+// two is exact in float, and the largest number (2^20) is well inside float's 24 bits.
 
 vec2 igkMessageGlyph(int i) {
-    if (i == 0 || i == 5) return vec2(583347.0, 17969.0);               // N
-    if (i == 1 || i == 12) return vec2(476721.0, 17966.0);              // O
-    if (i == 2 || i == 13 || i == 14) return vec2(1020036.0, 4228.0);   // T
-    if (i == 4) return vec2(476735.0, 17969.0);                         // A
-    if (i == 7 || i == 18) return vec2(462980.0, 4238.0);               // I
-    if (i == 8) return vec2(476695.0, 17967.0);                         // G
-    if (i == 9) return vec2(1032734.0, 16927.0);                        // E
-    if (i == 10 || i == 17) return vec2(541200.0, 16927.0);             // L
-    if (i == 11) return vec2(576152.0, 21073.0);                        // K
-    if (i == 16) return vec2(476688.0, 16942.0);                        // C
-    if (i == 19) return vec2(1001022.0, 16912.0);                       // P
-    return vec2(0.0);                                                   // the spaces (3, 6, 15)
+    if (i == 0 || i == 5) return vec2(583347.0, 17969.0);                                   // N
+    if (i == 1 || i == 12 || i == 25 || i == 36) return vec2(476721.0, 17966.0);            // O
+    if (i == 2 || i == 13 || i == 14 || i == 26 || i == 27 || i == 31) return vec2(1020036.0, 4228.0);   // T
+    if (i == 4 || i == 30) return vec2(476735.0, 17969.0);                                  // A
+    if (i == 7 || i == 18 || i == 20) return vec2(462980.0, 4238.0);                        // I
+    if (i == 8 || i == 21) return vec2(476695.0, 17967.0);                                  // G
+    if (i == 9 || i == 22 || i == 32) return vec2(1032734.0, 16927.0);                      // E
+    if (i == 10 || i == 17 || i == 23 || i == 29) return vec2(541200.0, 16927.0);           // L
+    if (i == 11 || i == 24) return vec2(576152.0, 21073.0);                                 // K
+    if (i == 16 || i == 35) return vec2(476688.0, 16942.0);                                 // C
+    if (i == 19 || i == 28) return vec2(1001022.0, 16912.0);                                // P
+    if (i == 33) return vec2(508430.0, 1086.0);                                             // S
+    if (i == 34) return vec2(0.0, 396.0);                                                   // .
+    if (i == 37) return vec2(585397.0, 17969.0);                                            // M
+    return vec2(0.0);                                                                       // the spaces (3, 6, 15)
 }
 
 // 32^n and 2^n for n = 0..3 and 0..4, written out so no GPU's pow() can land a hair under a power of two
@@ -221,16 +227,25 @@ float igkPow2(float n) {
 }
 
 // q = the point in the output from its top left corner (y down), size = the output's width and height, same units.
-// 1 on a dot of the message, else 0. The text is 70 % of the width or 15 % of the height, whichever is smaller.
+// 1 on a dot of the first line, 2 on IGELKOTTPLATES (the brand's text colour), 3 on .COM (the brand's cyan, Eric
+// 2026-11-23: ".com ska vara i vår cyan"), else 0. The first line is 70 % of the width or 15 % of the height, whichever is smaller; the
+// two lines (18 dots high) sit centred.
 float igkMessage(vec2 q, vec2 size) {
     float unit = min(0.7 * size.x / 119.0, 0.15 * size.y / 7.0);
-    vec2 p = (q - 0.5 * size) / unit + vec2(59.5, 3.5);                  // dots from the text's top left
-    if (p.x < 0.0 || p.x >= 119.0 || p.y < 0.0 || p.y >= 7.0) return 0.0;
+    vec2 p = (q - 0.5 * size) / unit + vec2(59.5, 9.0);                  // dots from the text's top left
+    if (p.x < 0.0 || p.x >= 119.0 || p.y < 0.0 || p.y >= 18.0) return 0.0;
     float letter = floor(p.x / 6.0);
     float col = floor(p.x - 6.0 * letter);
     if (col > 4.5) return 0.0;
     float row = floor(p.y);
+    float line = 1.0;
+    if (row > 6.5) {                                                    // the second line, rows 11-17, letters 1-18
+        if (row < 10.5 || letter < 0.5 || letter > 18.5) return 0.0;
+        row -= 11.0;
+        letter += 19.0;
+        line = letter > 33.5 ? 3.0 : 2.0;                               // .COM is letters 34-37
+    }
     vec2 g = igkMessageGlyph(int(letter));
     float bits = row < 3.5 ? mod(floor(g.x / igkPow32(3.0 - row)), 32.0) : mod(floor(g.y / igkPow32(6.0 - row)), 32.0);
-    return mod(floor(bits / igkPow2(4.0 - col)), 2.0);
+    return line * mod(floor(bits / igkPow2(4.0 - col)), 2.0);
 }

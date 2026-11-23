@@ -59,7 +59,10 @@ void main() {
         }
     }
     vec3 color = sum * 0.25;
-    if (pl.z > 1.5 && igkMessage(gl_FragCoord.xy, vec2(w, h)) > 0.5) color = IGK_WARNING_YELLOW;
+    if (pl.z > 1.5) {
+        float m = igkMessage(gl_FragCoord.xy, vec2(w, h));
+        if (m > 0.5) color = m > 2.5 ? IGK_BRAND_ACCENT : (m > 1.5 ? IGK_BRAND_TEXT : IGK_WARNING_YELLOW);
+    }
     if (pl.z > 0.5) {
         float mark = igkWarning(gl_FragCoord.xy, max(16.0, 0.05 * h));
         if (mark > 1.5) color = vec3(0.0);
