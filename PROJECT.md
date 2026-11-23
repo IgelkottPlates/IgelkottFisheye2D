@@ -640,7 +640,7 @@ och hit (bygg shaders och prova i Live FX).
   Live FX-utgåvan PASS i alla fall; **9 FAIL, bara PIXERA-utgåvans MTF50** (skarpare än modellen, t.ex. yaw 45 pitch −20 H
   0,513 mot 0,420). Geometrin är PASS i båda. ERIC-DESKTOP (drivrutin 26.10.1) ger samma 9 FAIL med samma tal
   (2026-11-23 kväll, med MTF-provet). Där gick 0.20 igenom tidigare bara för att MTF-provet inte fanns än. Det är alltså
-  PIXERA-utgåvan, inte drivrutinen. Inte utrett. PIXERA används inte i uppspelningstestet.
+  PIXERA-utgåvan, inte drivrutinen. Rättat i 0.21 (nedan). PIXERA används inte i uppspelningstestet.
   - **11a, filerna på E: (NTFS, `bench_notchlc.py --in-place`, `%USERPROFILE%\IgelkottBench\bench-threadripper.jsonl`):**
     fisheye 0,55–0,81 GB/s behövs; disken 5,7–6,2 GB/s → **175–270 bilder/s** från disken. Equirect 1,33–2,08 GB/s
     behövs; disken 5,3–6,2 GB/s → **64–110 bilder/s**. Alltså samma nivå som APFS på M3Ultra (6,0–7,0 / 5,1–7,0):
@@ -673,6 +673,18 @@ och hit (bygg shaders och prova i Live FX).
     Format); sätt Free Run igen efteråt. Med 25 bilder/s spelade noden 25,6 bilder/s (806 MB/s, GPU 9 %). Skärmen går i
     2560 × 1440 / 30 Hz med Vertical Sync på, så viewern visar inte varje ruta i Free Run; ingen Video IO-utgång på.
     Bilden i viewern såg rätt ut i alla fall (ingen rivning sedd i skärmbilderna, inte granskad ruta för ruta).
+- **0.21 (2026-11-23 kväll, ERIC-DESKTOP): PIXERA tar 2 × 2 prov per pixel, som Live FX.** Till och med 0.20 tog
+  PIXERA-utgåvan ett prov per pixel, eftersom effekten inte får någon pixelstorlek. Live FX tog 2 × 2. Det gjorde väggen
+  skarpare än modellen och gav vikning: MTF50 0,396–0,513 mot 0,355–0,420, alltså 9 FAIL i `verify_windows.py`.
+  - **Rättningen:** pixelns storlek tas ur `dFdx`/`dFdy` av `tex_coords`, före alla grenar, och fyra prov tas på
+    ±¼ pixel. Det kräver inga nya reglage.
+  - **Provet:** `verify_windows.py` räknar nu också PIXERA med 2 × 2 prov.
+    - Alla fall och `--canvas` är PASS.
+    - MTF50 är lika i Live FX, PIXERA och modellen. Största skillnaden mellan dem är 0,0001.
+    - PIXERA-kedjan (PIXERA:s egen Equirectangular) har största fel 0,32 källpixlar.
+  - **Live FX-utgåvan är oförändrad,** bortsett från versionen.
+  - **Inte provat i PIXERA.** Där återstår att se att `dFdx` kompilerar i effekten, och att `tex_coords` är
+    skärmens, så att derivatorna motsvarar en utpixel.
 - **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
   att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
   ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av

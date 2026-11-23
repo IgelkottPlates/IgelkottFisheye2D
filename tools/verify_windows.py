@@ -529,12 +529,12 @@ cases = [
 
 
 def check(c, px, n, host):
-    """Jämför utbilden med räkningen. Live FX: 2 × 2 prov, raden räknas uppifrån; PIXERA: ett prov, y uppåt."""
+    """Jämför utbilden med räkningen. 2 × 2 prov per pixel i båda (PIXERA sedan 0.21); Live FX räknar raden uppifrån, PIXERA y uppåt."""
     w, h = c["w"], c["h"]
     cam, nadir, state = c["expect"]
     warn = state > 0
     lo, hi = 0.5 / n, 1 - 0.5 / n
-    samples = ((0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)) if host == "livefx" else ((0.5, 0.5),)
+    samples = ((0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75))
     worst, checked, black, bad, sign_px, msg_px = 0.0, 0, 0, 0, 0, 0
     step = c.get("step", 1)
     for row in range(step // 2 if step > 1 else 0, h, step):
