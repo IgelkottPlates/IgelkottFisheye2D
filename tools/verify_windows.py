@@ -112,6 +112,37 @@ def warning(qx, qy_top, size):
     return 1
 
 
+GLYPHS = {0: (583347, 17969), 5: (583347, 17969), 1: (476721, 17966), 12: (476721, 17966), 2: (1020036, 4228),
+          13: (1020036, 4228), 14: (1020036, 4228), 4: (476735, 17969), 7: (462980, 4238), 18: (462980, 4238),
+          8: (476695, 17967), 9: (1032734, 16927), 10: (541200, 16927), 17: (541200, 16927), 11: (576152, 21073),
+          16: (476688, 16942), 19: (1001022, 16912)}
+FONT = {"N": "10001 11001 10101 10011 10001 10001 10001", "O": "01110 10001 10001 10001 10001 10001 01110",
+        "T": "11111 00100 00100 00100 00100 00100 00100", "A": "01110 10001 10001 11111 10001 10001 10001",
+        "I": "01110 00100 00100 00100 00100 00100 01110", "G": "01110 10001 10000 10111 10001 10001 01111",
+        "E": "11111 10000 10000 11110 10000 10000 11111", "L": "10000 10000 10000 10000 10000 10000 11111",
+        "K": "10001 10010 10100 11000 10100 10010 10001", "C": "01110 10001 10000 10000 10000 10001 01110",
+        "P": "11110 10001 10001 11110 10000 10000 10000"}
+for i, ch in enumerate("NOT AN IGELKOTT CLIP"):       # shaderns tal ska vara just dessa bokstäver
+    r = [int(x, 2) for x in FONT[ch].split()] if ch != " " else [0] * 7
+    want = (((r[0] * 32 + r[1]) * 32 + r[2]) * 32 + r[3], (r[4] * 32 + r[5]) * 32 + r[6])
+    if GLYPHS.get(i, (0, 0)) != want:
+        sys.stderr.write("igkMessageGlyph(%d) is not %r\n" % (i, ch)); sys.exit(1)
+
+
+def message(qx, qy_top, sw, sh):
+    """Meddelandet (igkMessage): 1 på en punkt i NOT AN IGELKOTT CLIP, annars 0."""
+    unit = min(0.7 * sw / 119.0, 0.15 * sh / 7.0)
+    px, py = (qx - 0.5 * sw) / unit + 59.5, (qy_top - 0.5 * sh) / unit + 3.5
+    if px < 0 or px >= 119 or py < 0 or py >= 7:
+        return 0
+    letter = math.floor(px / 6); col = math.floor(px - 6 * letter)
+    if col > 4.5:
+        return 0
+    row = math.floor(py); g = GLYPHS.get(letter, (0, 0))
+    bits = (g[0] >> (5 * (3 - row))) & 31 if row < 4 else (g[1] >> (5 * (6 - row))) & 31
+    return (bits >> (4 - col)) & 1
+
+
 # MARK: - Pixeltaggen (PixelTag.swift: reglerna står där)
 
 def crc6(bits):
@@ -410,12 +441,18 @@ glUniform2f = ext("glUniform2f", None, GLint, GLfloat, GLfloat)
 
 
 def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), roffset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
-         split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag=None, expect=None, pixera=False, step=1):
+         split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag="auto", expect=None, pixera=False, step=1):
     """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (panelens värden).
-    offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, varning) som noden ska välja; utan = handvalet."""
+    offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, läge) som noden ska välja; utan = handvalet.
+    Läge 0 spelar, 1 svart med varningstecknet (kamera utan linsmodell), 2 vägrar (ingen tagg: svart, NOT AN IGELKOTT
+    CLIP och varningstecknet, Eric 2026-11-23). tag "auto" = handvalets egen tagg i alla hörn (en plåt utan tagg spelas
+    aldrig sedan 0.20), None = ingen tagg."""
+    auto = tag == "auto"
+    if auto:
+        tag = every(tag_cells(cam if cam in (1, 2, 3) else 1, pointing == 2))
     c = dict(name=name, w=w, h=h, cam=cam, pointing=pointing, offset=offset, roffset=roffset, mode=mode, yaw=yaw, pitch=pitch,
-             roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, pixera=pixera, step=step,
-             expect=expect or (cam, pointing == 2, cam not in CAMS))
+             roll=roll, fov=fov, split=split, pos=pos, right=right, tag=tag, autotag=auto, pixera=pixera, step=step,
+             expect=expect or (cam, pointing == 2, 0 if cam in CAMS else 1))
     c["R"] = rotation(yaw, pitch, roll); c["RR"] = rotation(*right[:3])
     return c
 
@@ -428,6 +465,7 @@ PYXIS_UP, PYXIS_DOWN = tag_cells(1, False), tag_cells(1, True)
 VENICE_UP, VENICE_DOWN = tag_cells(2, False), tag_cells(2, True)
 broken = list(VENICE_DOWN); broken[7] = not broken[7]                    # ruta 7 (nadir) vänd: fel CRC
 O = (12.5, -7.25)
+REFUSED = (0, False, 2)
 cases = [
     case("PYXIS, Back 384x216, pitch 15, FOV 58.5", 384, 216, pitch=15, fov=58.5, pixera=True),
     case("PYXIS, Side yaw 90, square", 256, 256, yaw=90),
@@ -459,42 +497,45 @@ cases = [
     case("Z-Cam E2 S6, Back", 192, 108, cam=3, pitch=15, fov=58.5, pixera=True),
     case("Z-Cam E2 S6 nadir, Equirect", 512, 256, cam=3, pointing=2, mode=1, pixera=True),
     case("Auto, PYXIS zenith tag in every corner", 384, 216, cam=0, pointing=0,
-         pitch=10, fov=60, tag=every(PYXIS_UP), expect=(1, False, False), pixera=True),
+         pitch=10, fov=60, tag=every(PYXIS_UP), expect=(1, False, 0), pixera=True),
     case("Auto, Venice nadir tag in the bottom right corner only", 384, 216, cam=0, pointing=0, yaw=20, pitch=-15,
-         fov=60, tag=[None, None, None, (VENICE_DOWN, 1.0, 0.0)], expect=(2, True, False), pixera=True),
+         fov=60, tag=[None, None, None, (VENICE_DOWN, 1.0, 0.0)], expect=(2, True, 0), pixera=True),
     case("Auto, Venice tag after a LUT (white 0.62, black 0.38)", 256, 144, cam=0, pointing=0, yaw=-60,
-         tag=every(VENICE_UP, 0.62, 0.38), expect=(2, False, False)),
-    case("Auto, no tag: PYXIS zenith and the warning", 256, 144, cam=0, pointing=0, yaw=60, expect=(1, False, True),
-         pixera=True),
-    case("Auto, broken CRC in every corner: PYXIS zenith and the warning", 256, 144, cam=0, pointing=0, yaw=10,
-         tag=every(broken), expect=(1, False, True)),
+         tag=every(VENICE_UP, 0.62, 0.38), expect=(2, False, 0)),
+    case("Auto, no tag: refused, NOT AN IGELKOTT CLIP and the warning", 256, 144, cam=0, pointing=0, yaw=60, tag=None,
+         expect=REFUSED, pixera=True),
+    case("Auto, broken CRC in every corner: refused", 256, 144, cam=0, pointing=0, yaw=10,
+         tag=every(broken), expect=REFUSED),
     case("Auto, Z-Cam zenith tag: its own model, no warning", 256, 144, cam=0, pointing=0, yaw=30,
-         tag=every(tag_cells(3, False)), expect=(3, False, False), pixera=True),
+         tag=every(tag_cells(3, False)), expect=(3, False, 0), pixera=True),
     case("Auto, tag code 4 (no lens model): never another camera's model, black and the warning", 256, 144, cam=0,
-         pointing=0, tag=every(tag_cells(4, False)), expect=(4, False, True)),
+         pointing=0, tag=every(tag_cells(4, False)), expect=(4, False, 1)),
     case("Auto, three corners PYXIS nadir, one Venice zenith: the majority", 256, 144, cam=0, pointing=0, pitch=-30,
-         tag=[(PYXIS_DOWN, 1.0, 0.0)] * 3 + [(VENICE_UP, 1.0, 0.0)], expect=(1, True, False)),
-    case("Auto, contrast 0.05 (under 0.1): PYXIS zenith and the warning", 256, 144, cam=0, pointing=0,
-         tag=every(PYXIS_DOWN, 0.55, 0.5), expect=(1, False, True)),
+         tag=[(PYXIS_DOWN, 1.0, 0.0)] * 3 + [(VENICE_UP, 1.0, 0.0)], expect=(1, True, 0)),
+    case("Auto, contrast 0.05 (under 0.1): refused", 256, 144, cam=0, pointing=0,
+         tag=every(PYXIS_DOWN, 0.55, 0.5), expect=REFUSED),
     case("Auto, Venice nadir in the top corners, Equirect", 512, 256, cam=0, pointing=0, mode=1,
-         tag=[(VENICE_DOWN, 1.0, 0.0), (VENICE_DOWN, 1.0, 0.0), None, None], expect=(2, True, False), pixera=True),
+         tag=[(VENICE_DOWN, 1.0, 0.0), (VENICE_DOWN, 1.0, 0.0), None, None], expect=(2, True, 0), pixera=True),
     case("Camera Venice chosen, Pointing Auto, PYXIS nadir tag: Venice nadir", 256, 144, cam=2, pointing=0,
-         pitch=-20, tag=every(PYXIS_DOWN), expect=(2, True, False), pixera=True),
+         pitch=-20, tag=every(PYXIS_DOWN), expect=(2, True, 0), pixera=True),
     case("Camera Auto, Pointing Zenith chosen, Venice nadir tag: Venice zenith", 256, 144, cam=0, pointing=1,
-         pitch=20, tag=every(VENICE_DOWN), expect=(2, False, False)),
-    case("Camera PYXIS chosen, Pointing Auto, no tag: PYXIS zenith and the warning", 256, 144, cam=1, pointing=0,
-         expect=(1, False, True)),
-    case("Both chosen, no tag: no warning", 256, 144, cam=2, pointing=2, pitch=-10, expect=(2, True, False)),
+         pitch=20, tag=every(VENICE_DOWN), expect=(2, False, 0)),
+    case("Camera PYXIS chosen, Pointing Auto, no tag: refused", 256, 144, cam=1, pointing=0, tag=None, expect=REFUSED),
+    case("Both chosen, no tag: refused too", 256, 144, cam=2, pointing=2, pitch=-10, tag=None, expect=REFUSED,
+         pixera=True),
+    case("Both chosen, a 1920 x 1080 output: the message fits", 1920, 1080, cam=1, pointing=1, tag=None, expect=REFUSED,
+         step=3, pixera=True),
 ]
 
 
 def check(c, px, n, host):
     """Jämför utbilden med räkningen. Live FX: 2 × 2 prov, raden räknas uppifrån; PIXERA: ett prov, y uppåt."""
     w, h = c["w"], c["h"]
-    cam, nadir, warn = c["expect"]
+    cam, nadir, state = c["expect"]
+    warn = state > 0
     lo, hi = 0.5 / n, 1 - 0.5 / n
     samples = ((0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)) if host == "livefx" else ((0.5, 0.5),)
-    worst, checked, black, bad, sign_px = 0.0, 0, 0, 0, 0
+    worst, checked, black, bad, sign_px, msg_px = 0.0, 0, 0, 0, 0, 0
     step = c.get("step", 1)
     for row in range(step // 2 if step > 1 else 0, h, step):
         line = px[row] if step > 1 else None
@@ -509,7 +550,24 @@ def check(c, px, n, host):
             else:
                 mk = lambda e: warning((x + 0.5 + e) / h, 1 - (row + 0.5 + e) / h, 0.05)
             mark = mk(0.0) if warn else 0
-            if warn and (mk(-0.01) != mark or mk(0.01) != mark):
+            if state == 2 and not mark and mk(-0.05) == 0 and mk(0.05) == 0:   # vägrad: svart, meddelandet i gult
+                if host == "livefx":
+                    mm = lambda e: message(x + 0.5 + e, row + 0.5 + e, w, h)
+                else:
+                    mm = lambda e: message((x + 0.5 + e) / h, 1 - (row + 0.5 + e) / h, w / h, 1.0)
+                m = mm(0.0)
+                if mm(-0.01) != m or mm(0.01) != m:
+                    continue
+                if m:
+                    msg_px += 1
+                want = YELLOW if m else (0.0, 0.0, 0.0)
+                if max(abs(a - b) for a, b in zip(got, want)) > 1e-3:
+                    bad += 1
+                    if os.environ.get("IGK_DEBUG"):
+                        print("    refused px x %d row %d: message %d got %r" % (x, row, m, got))
+                black += 0 if m else 1
+                continue
+            if warn and (mk(-0.05) != mark or mk(0.05) != mark):
                 continue                    # exakt på tecknets kant: grafikkortets float kan hamna på andra sidan
             if mark:
                 sign_px += 1
@@ -551,10 +609,12 @@ def check(c, px, n, host):
                 continue                                                    # bildramens kant, eller taggen
             worst = max(worst, math.hypot(got[0] - sx / inside, got[1] - sy / inside) * REF)
             checked += 1
-    ok = worst < 0.5 and bad == 0 and (checked > 0 or cam not in CAMS) and (sign_px > 0) == warn
-    print("  %s %s: largest error %.3f source px at 8040 (%d px checked, %d black%s%s)"
+    ok = (worst < 0.5 and bad == 0 and (checked > 0 or cam not in CAMS or state == 2) and (sign_px > 0) == warn
+          and (msg_px > 0) == (state == 2))
+    print("  %s %s: largest error %.3f source px at 8040 (%d px checked, %d black%s%s%s)"
           % ("PASS" if ok else "FAIL", c["name"], worst, checked, black,
-             ", warning sign %d px" % sign_px if sign_px else "", ", %d px WRONG" % bad if bad else ""))
+             ", warning sign %d px" % sign_px if sign_px else "", ", message %d px" % msg_px if msg_px else "",
+             ", %d px WRONG" % bad if bad else ""))
     return ok
 
 
@@ -580,9 +640,9 @@ if "--canvas" in sys.argv:
                      split=True, pos=37.5, right=(60, 4, 0, 35), pixera=True, step=st),
                 case("%s, Equirect" % label, W, H, mode=1, pixera=True, step=st),
                 case("%s, Auto, Venice nadir tag: warning-free" % label, W, H, cam=0, pointing=0, yaw=15, pitch=-20,
-                     tag=every(tag_cells(2, True)), expect=(2, True, False), step=st),
-                case("%s, Auto, no tag: PYXIS zenith and the warning sign" % label, W, H, cam=0, pointing=0, yaw=50,
-                     expect=(1, False, True), pixera=True, step=st)]
+                     tag=every(tag_cells(2, True)), expect=(2, True, 0), step=st),
+                case("%s, no tag: refused, NOT AN IGELKOTT CLIP" % label, W, H, cam=0, pointing=0, yaw=50, tag=None,
+                     expect=REFUSED, pixera=True, step=st)]
     for host, prog, setup, top in (("livefx", None, setup_matchbox, True), ("pixera", None, setup_pixera, False)):
         print(("Live FX" if host == "livefx" else "PIXERA") + ", source 2048 x 2048:")
         last = "unset"
@@ -600,7 +660,7 @@ for n in (1024, 1008):
     print("Live FX (top row first), source %d x %d:" % (n, n))
     last = "unset"
     for c in cases:
-        if n == 1008 and not c["tag"] and c["cam"] == 1 and c["pointing"] != 0 and c["name"] != cases[0]["name"]:
+        if n == 1008 and c["autotag"] and c["cam"] == 1 and c["pointing"] != 0 and c["name"] != cases[0]["name"]:
             continue
         if last != repr(c["tag"]):
             upload(n, c["tag"], True); last = repr(c["tag"])
@@ -655,9 +715,9 @@ def render_texture(prog, w, h, setup):
 print("PIXERA chain: IgelkottFisheye Mode Equirect -> PIXERA's own Equirectangular (Ref-Eric), source 1024 x 1024:"
       if has_ref else "PIXERA chain: SKIPPED, Ref-Eric/Equirectangular.glsl.txt (PIXERA's own effect) is not here")
 for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice 2 nadir")) if has_ref else ():
-    upload(1024, None, False)
     EW, EH = 4096, 2048
     ce = case("chain", EW, EH, cam=cam, pointing=2 if nadir else 1, mode=1)
+    upload(1024, ce["tag"], False)                                      # med taggen: utan den vägrar noden (0.20)
     equi_tex, _ = render_texture(pixera, EW, EH, lambda p: (glActiveTexture(GL_TEXTURE0), gl.glBindTexture(GL_TEXTURE_2D, src_tex),
                                                          setup_pixera(p, ce)))
     # Skärmkartan: M × M texlar, världspunkten i texelns mitt; en plan skärm 10 enheter fram (+X), 12 × 12 stor

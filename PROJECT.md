@@ -621,6 +621,15 @@ och hit (bygg shaders och prova i Live FX).
     **Ett nyimporterat klipp får Data Format Rec709 / Gamma 2.4** (Live FX standard), inte ACEScct: det ser då mjölkigt
     och blekt ut. Med Media → Data Format ACEScg (AP1) / ACEScct ser tågklippet ut som i IgelkottStage (Eric:s
     jämförelsebild från Stage 1 på Mac, 2026-11-20). Sätt det på varje klipp: Project Settings → Media Defaults har bara kamerornas RAW-format (ARRI, BRAW, R3D, ProRes RAW m.fl.), inget för ProRes/QuickTime (sett 2026-11-20). Live FX läser annars färgrymden ur filens taggar.
+- **0.20 (2026-11-23, Windows): en plåt utan pixeltagg spelas inte** (Eric: "shadern vägrar output med felmeddelande
+  att det inte är ett igelkott klipp när plate saknar kod"). Ingen giltig tagg (ingen kontrast, fel version eller fel CRC)
+  ger svart, NOT AN IGELKOTT CLIP i varningsgult mitt i bilden (5 × 7-punktstext, 70 % av bredden eller 15 % av
+  höjden) och varningstecknet, i båda utgåvorna och oavsett Camera/Pointing: också handval vägrar, så taggen läses
+  alltid. Förut gav Auto utan tagg PYXIS/Zenith med varningstecken och handval spelade. Kamera utan linsmodell (kod
+  4–7) som förut: svart och varningstecknet. Tiden (`bench_windows.py`, RX 9070 XT): taggad plåt 3,96 ms vid
+  15360 × 2160 som 0.19 med Auto; handval kostar nu lika mycket (0.19: 1,2 ms). `verify_windows.py` (alla fall har nu
+  taggen, nya fall för vägran, även 1920 × 1080) och `--canvas` PASS. **Inte sett i Live FX:** licensen hade gått ut
+  2026-11-23 ("Your license has expired"), installerad i `C:\ProgramData\Assimilator\plugin64\Matchbox\shaders`.
 - **0.19 (2026-11-21, Windows): pixeltaggen kostar mindre.** Shaderns tid mätt på grafikkortet (`tools/bench_windows.py`,
   Radeon RX 9070 XT): taggen lästes i varje pixel, 4 hörn × 20 texturläsningar, och var ~84 % av tiden (15360 × 2160:
   7,2 ms per bild med tagg, 1,2 utan). Nu: (1) hörn 0 och 1 som ger samma giltiga tagg avgör (ingen annan tagg kan få

@@ -43,12 +43,11 @@ struct IgelkottFisheye {
 // Offset X/Y move the finished picture (after the projection), in % of the height: PIXERA gives the effect no pixel size.
 // With Split on, Offset X/Y are the left wall's and Right Offset X/Y the right wall's.
 vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
-	float tag = -1.0;                                           // both chosen by hand: the tag is not used
-	if (s.camera == 0 || s.pointing == 0) tag = igkTag(s.sampler, 0.0);
+	float tag = igkTag(s.sampler, 0.0);         // always: a plate without the tag is refused (Eric 2026-11-23)
 	vec3 pl = igkPlate(tag, s.camera, s.pointing);
 	int cam = int(pl.x + 0.5);
 	vec3 color = vec3(0.0);
-	if (igkHasModel(cam)) {
+	if (pl.z < 0.5) {
 		float w = max(s.aspect, 0.01);
 		vec2 q = vec2(tex_coords.x * w, tex_coords.y);
 		float splitX = s.split ? clamp(s.splitPos, 0.0, 100.0) * 0.01 * w : w;
@@ -68,6 +67,8 @@ vec4 texture(IgelkottFisheye s, vec2 tex_coords) {
 		vec2 p = igkLensPoint(d, cam, pl.y > 0.5);
 		if (!past && igkInside(p)) color = igkFetch(s.sampler, p).rgb;
 	}
+	float aw = max(s.aspect, 0.01);
+	if (pl.z > 1.5 && igkMessage(vec2(tex_coords.x * aw, 1.0 - tex_coords.y), vec2(aw, 1.0)) > 0.5) color = IGK_WARNING_YELLOW;
 	if (pl.z > 0.5) {
 		float mark = igkWarning(vec2(tex_coords.x * max(s.aspect, 0.01), 1.0 - tex_coords.y), 0.05);
 		if (mark > 1.5) color = vec3(0.0);

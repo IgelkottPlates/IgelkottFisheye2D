@@ -38,7 +38,7 @@ Put one node on the fisheye clip for each wall.
 
 - **Camera** and **Pointing**: on **Auto (tag)**, the default, the camera and whether the lens pointed up (zenith) or
   down (nadir) are read from a small black and white pixel tag in the plate's corners (written by IgelkottDarkroom and
-  Fisheye to Equi). Or choose them by hand. With Auto and no tag, a yellow warning sign shows in the top left corner.
+  Fisheye to Equi). Or choose them by hand. A plate without the tag is not played: the output is black with NOT AN IGELKOTT CLIP and a yellow warning sign.
 - **Offset X / Y** move the finished picture, in output pixels (PIXERA: % of the height); with Split on, the left
   wall's picture, and **Right Offset X / Y** the right wall's. The plate must be centred.
 - **Yaw, Pitch, Roll, FOV**: the wall's view. FOV is the horizontal angle, from the wall's left edge to its right edge (with Split on, each wall's own width).

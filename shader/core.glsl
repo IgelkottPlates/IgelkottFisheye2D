@@ -1,5 +1,5 @@
-// IgelkottFisheye core: the lens, the nadir turn, the pixel tag and the warning sign. One source for Live FX (Matchbox,
-// GLSL 1.20) and PIXERA (GLSL 4.50): tools/build_shaders.py puts the camera numbers in front of this text and one of the
+// IgelkottFisheye core: the lens, the nadir turn, the pixel tag, the warning sign and the refusal message. One source
+// for Live FX (Matchbox, GLSL 1.20) and PIXERA (GLSL 4.50): tools/build_shaders.py puts the camera numbers in front of this text and one of the
 // wrappers (matchbox.glsl, pixera.glsl) after it. Keep to what both read: no integer bit operations, no arrays, no
 // `texture2D`. In shader/core.glsl the source is read with a placeholder the script swaps for each host (uv in fractions
 // of the picture, top row first); functions that read it take the sampler as a first parameter in PIXERA only.
@@ -166,19 +166,16 @@ float igkTag(SRC_PARAM float unused) {
     return best;
 }
 
-// The plate: vec3(camera, nadir 0/1, warning 0/1). Eric 2026-11-20: Auto is a choice in each list, no Plate control.
+// The plate: vec3(camera, nadir 0/1, state). Eric 2026-11-20: Auto is a choice in each list, no Plate control.
 // Camera: 0 Auto (the tag's camera), 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6. Pointing: 0 Auto, 1 Zenith, 2 Nadir.
-// A list on Auto with no valid tag: PYXIS 12K / Zenith and the warning. A camera without a lens model (a tag code 4-7,
-// none today): black and the warning, never another camera's model.
+// State 0: play. State 1: a camera without a lens model (a tag code 4-7, none today): black and the warning, never
+// another camera's model. State 2: no valid tag, whatever the lists say (Eric 2026-11-23: the shader refuses a plate
+// without the code, with a message that it is not an Igelkott clip): black, the message and the warning.
 vec3 igkPlate(float tag, int camera, int pointing) {
-    bool hasTag = tag >= 0.0;
-    int cam = camera;
-    if (camera == 0) cam = hasTag ? int(floor(tag / 2.0 + 0.25)) : 1;
-    float nadir = pointing == 2 ? 1.0 : 0.0;
-    if (pointing == 0 && hasTag) nadir = mod(tag, 2.0);
-    bool missing = !hasTag && (camera == 0 || pointing == 0);
-    float warn = (missing || !igkHasModel(cam)) ? 1.0 : 0.0;
-    return vec3(float(cam), nadir, warn);
+    if (tag < 0.0) return vec3(0.0, 0.0, 2.0);
+    int cam = camera == 0 ? int(floor(tag / 2.0 + 0.25)) : camera;
+    float nadir = pointing == 0 ? mod(tag, 2.0) : (pointing == 2 ? 1.0 : 0.0);
+    return vec3(float(cam), nadir, igkHasModel(cam) ? 0.0 : 1.0);
 }
 
 // The warning sign: a small yellow triangle with a black "!" in the top left corner of the output, no text.
@@ -193,3 +190,47 @@ float igkWarning(vec2 q, float size) {
 }
 
 const vec3 IGK_WARNING_YELLOW = vec3(1.0, 0.78, 0.0);
+
+// MARK: The refusal message "NOT AN IGELKOTT CLIP" (state 2), in the warning's yellow across the middle of the output.
+// 20 letters of 5 x 7 dots, 6 dots apart, so 119 dots wide. Each letter is two whole numbers: rows 0-3 and rows 4-6, 5
+// bits per row, the left dot highest. Read with floor and mod only (no integer bit operations, no arrays); dividing by a
+// power of two is exact in float, and the largest number (2^20) is well inside float's 24 bits.
+
+vec2 igkMessageGlyph(int i) {
+    if (i == 0 || i == 5) return vec2(583347.0, 17969.0);               // N
+    if (i == 1 || i == 12) return vec2(476721.0, 17966.0);              // O
+    if (i == 2 || i == 13 || i == 14) return vec2(1020036.0, 4228.0);   // T
+    if (i == 4) return vec2(476735.0, 17969.0);                         // A
+    if (i == 7 || i == 18) return vec2(462980.0, 4238.0);               // I
+    if (i == 8) return vec2(476695.0, 17967.0);                         // G
+    if (i == 9) return vec2(1032734.0, 16927.0);                        // E
+    if (i == 10 || i == 17) return vec2(541200.0, 16927.0);             // L
+    if (i == 11) return vec2(576152.0, 21073.0);                        // K
+    if (i == 16) return vec2(476688.0, 16942.0);                        // C
+    if (i == 19) return vec2(1001022.0, 16912.0);                       // P
+    return vec2(0.0);                                                   // the spaces (3, 6, 15)
+}
+
+// 32^n and 2^n for n = 0..3 and 0..4, written out so no GPU's pow() can land a hair under a power of two
+float igkPow32(float n) {
+    return n < 0.5 ? 1.0 : (n < 1.5 ? 32.0 : (n < 2.5 ? 1024.0 : 32768.0));
+}
+
+float igkPow2(float n) {
+    return n < 0.5 ? 1.0 : (n < 1.5 ? 2.0 : (n < 2.5 ? 4.0 : (n < 3.5 ? 8.0 : 16.0)));
+}
+
+// q = the point in the output from its top left corner (y down), size = the output's width and height, same units.
+// 1 on a dot of the message, else 0. The text is 70 % of the width or 15 % of the height, whichever is smaller.
+float igkMessage(vec2 q, vec2 size) {
+    float unit = min(0.7 * size.x / 119.0, 0.15 * size.y / 7.0);
+    vec2 p = (q - 0.5 * size) / unit + vec2(59.5, 3.5);                  // dots from the text's top left
+    if (p.x < 0.0 || p.x >= 119.0 || p.y < 0.0 || p.y >= 7.0) return 0.0;
+    float letter = floor(p.x / 6.0);
+    float col = floor(p.x - 6.0 * letter);
+    if (col > 4.5) return 0.0;
+    float row = floor(p.y);
+    vec2 g = igkMessageGlyph(int(letter));
+    float bits = row < 3.5 ? mod(floor(g.x / igkPow32(3.0 - row)), 32.0) : mod(floor(g.y / igkPow32(6.0 - row)), 32.0);
+    return mod(floor(bits / igkPow2(4.0 - col)), 2.0);
+}

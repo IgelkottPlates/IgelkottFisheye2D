@@ -24,8 +24,7 @@ uniform float roll_r;
 uniform float fov_r;
 
 void main() {
-    float tag = -1.0;                                                   // both chosen by hand: the tag is not used
-    if (camera == 0 || pointing == 0) tag = igkTag(0.0);
+    float tag = igkTag(0.0);                    // always: a plate without the tag is refused (Eric 2026-11-23)
     vec3 pl = igkPlate(tag, camera, pointing);
     int cam = int(pl.x + 0.5);
     bool nadir = pl.y > 0.5;
@@ -37,7 +36,7 @@ void main() {
     mat3 rLeft = igkRotation(yaw, pitch, roll);
     mat3 rRight = igkRotation(yaw_r, pitch_r, roll_r);
     vec3 sum = vec3(0.0);
-    if (igkHasModel(cam)) {
+    if (pl.z < 0.5) {
         // 2 x 2 samples over the pixel
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < 2; i++) {
@@ -60,6 +59,7 @@ void main() {
         }
     }
     vec3 color = sum * 0.25;
+    if (pl.z > 1.5 && igkMessage(gl_FragCoord.xy, vec2(w, h)) > 0.5) color = IGK_WARNING_YELLOW;
     if (pl.z > 0.5) {
         float mark = igkWarning(gl_FragCoord.xy, max(16.0, 0.05 * h));
         if (mark > 1.5) color = vec3(0.0);

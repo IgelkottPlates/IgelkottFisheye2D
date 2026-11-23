@@ -36,6 +36,8 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   Kamerornas tal kommer bara ur `_shared/IgelkottFisheyeLens`; proven jämför dem.
 - Pixeltaggens regler (plats, bitar, CRC, kontrast) står bara i `PixelTag` i `_shared/IgelkottFisheyeLens`
   (`IgelkottLensMark`); `shader/core.glsl` följer den och `verify_windows.py` provar mot dess provvektorer.
+- En plåt utan giltig pixeltagg spelas aldrig, inte heller med Camera/Pointing valda för hand (Eric 2026-11-23): svart,
+  NOT AN IGELKOTT CLIP och varningstecknet.
 - En kamera utan linsmodell (taggkod 4–7; ingen i listan sedan Z-Cam E2 S6 fick sin modell 2026-11-20) spelas aldrig
   med en annan kameras modell: svart och varningstecknet.
 - FOV är den vågräta vinkeln från väggens vänstra till högra kant, med Split varje väggs egen bredd (Eric 2026-11-20:

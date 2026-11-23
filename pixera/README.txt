@@ -21,8 +21,9 @@ Camera and Pointing on Auto (tag), the default: the camera and whether the lens
 pointed up (zenith) or down (nadir) are read from the small black and white tag
 that IgelkottDarkroom and Fisheye to Equi write next to the QR codes in the
 corners. Choose PYXIS 12K, Sony Venice 2 or Z-Cam E2 S6, and Zenith or Nadir,
-to set them by hand. With Auto and no tag (PYXIS 12K / Zenith is used), a small
-yellow warning sign shows in the top left corner.
+to set them by hand. A plate without the tag is not an Igelkott clip and is not
+played: the output is black with NOT AN IGELKOTT CLIP and a small yellow warning
+sign in the top left corner.
 
 Offset X / Y move the finished picture, after the projection, in % of the
 layer's height (+X right, +Y up); with Split on, the left wall's picture, and

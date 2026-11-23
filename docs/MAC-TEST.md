@@ -67,7 +67,8 @@ order than on Windows, and the shader then needs a Mac-specific fix.
       Auto (tag).
 - [ ] **Pointing: Zenith on A001C016 (look):** the picture is wrong, upside down or the wrong part. Set it back to
       Auto (tag).
-- [ ] **The clip without a tag, Auto / Auto (look):** a small yellow warning sign shows in the top left corner.
+- [ ] **The clip without a tag (look):** black, NOT AN IGELKOTT CLIP in yellow across the middle and a small yellow
+      warning sign in the top left corner, with Auto and with Camera/Pointing chosen by hand (0.20).
 - [ ] **Camera: Z-Cam E2 S6 on a Venice clip (look):** a picture (the Z-Cam's own lens model, 0.18), no warning sign.
 - [ ] **FOV 90, Yaw 45 (look):** what was straight ahead at Yaw 0 is now at the left edge: FOV is horizontal (0.18).
 
