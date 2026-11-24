@@ -1,4 +1,4 @@
-# Tutorial film: IgelkottFisheye in Live FX, a wall at 4K, 8K and 16 × 2K
+# Tutorial film: IgelkottFisheye in Live FX, a wall at 4K, 8K and 15360 × 2160
 
 The film (2560 × 1440, 30 fps, about 3:35, one uninterrupted walk through Live FX with an animated pointer and every click highlighted, English narration and captions) shows a new user how to:
 
@@ -7,7 +7,7 @@ The film (2560 × 1440, 30 fps, about 3:35, one uninterrupted walk through Live 
 - bring in the plate (No to the size question, ACEScg (AP1) / ACEScct) and set Shot Length;
 - put IgelkottFisheye2D on Black with Apply On Layer, and connect the plate with Fetch.. → the Fisheye input;
 - set Inputs Length and Black's colour;
-- use the wall sizes 3840 × 2160, 7680 × 4320 (2 × 2) and 15360 × 2160 (16 × 2K, Mode: Equirect);
+- use the wall sizes 3840 × 2160, 7680 × 4320 (2 × 2) and 15360 × 2160 (four 4K outputs in a row, Mode: Equirect);
 - set up the viewer.
 
 The screenshots in `images/` were taken on 2026-11-24 in Assimilate Live FX 9.9 on a Mac at 2560 × 1440, with plate A013C004 from
