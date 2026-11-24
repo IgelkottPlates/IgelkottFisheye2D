@@ -947,12 +947,16 @@ och hit (bygg shaders och prova i Live FX).
 ## Publik release (påbörjad 2026-10-12)
 
 **Produktsidan (2026-11-24):** `docs/index.html` med `igelkott.css` och `img/` — "4× faster. Lighter. Sharper.", lagring
-för 60 min, MTF50, de nio gratisplåtarna och nodens panel i Live FX. Erics ändringar ur Word-utkastet
+för 60 min, MTF50, sex hela väggar ur gratisplåtarna och Live FX med noden. Erics ändringar ur Word-utkastet
 (`Ref-Eric/IgelkottFisheye-on-the-Wall.docx`, 2026-11-24) är införda: vägranstexten borttagen, fps i stället för rutor,
-RX 9070 XT i Windows-raden. Väggbilderna är nodens linsmodell (`tools/compare_eq2d.py`, `ours`) i mitten av 8K-väggen
-vid FOV 90, 1:1, omvandlade till Rec.709 för webben; A001C016 yaw 255 pitch −5, A011C001 yaw 180 och A014C006 ruta 1734
-valdes för kontrast och tydligt motiv. Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
-https://igelkottplates.github.io/IgelkottFisheye2D/ — sedd i webbläsaren, alla 13 bilder laddas, ingen vågrät rullning.
+RX 9070 XT i Windows-raden. Bilderna (Eric 2026-11-24: "pixelskarp", "inga tågbilder", "90 grader med öppna
+landskap med tydliga motiv i centrum som hus, landskap. Inte dunkel skog eller skymt väg") är hela 8K-väggen vid FOV 90
+genom nodens linsmodell (`tools/compare_eq2d.py`, `ours`), nedskalad med area-filter och omvandlad till Rec.709 för
+webben: toppbilden A011C001 yaw 180 (3840 × 1080), galleriet A011C001 yaw 210 och 180, A001C016 yaw 270 pitch −8 och
+pitch −6, A013C004 och A014C001; Live FX-bilden är A011C001 med noden, klippet satt till ACES AP1 / ACEScct.
+Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
+https://igelkottplates.github.io/IgelkottFisheye2D/ — sedd i webbläsaren, alla 13 bilder laddas, ingen vågrät rullning. De nya bilderna
+(utan tåg) väntar på push: `HANDOFF/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-pages-bilder.md`.
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.

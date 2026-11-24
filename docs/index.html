@@ -54,11 +54,9 @@ p { margin: 0; color: var(--mute); max-width: 60ch; }
 
 /* hero: the plate first, the claim on top of it */
 .hero { position: relative; }
-.hero img { display: block; width: 100%; height: clamp(300px, 46vw, 580px); object-fit: cover; }
-.hero::after { content: ""; position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(14,16,20,0) 35%, var(--bg) 100%); pointer-events: none; }
-.hero-copy { position: relative; z-index: 1; margin-top: calc(-1 * clamp(150px, 17vw, 230px)); }
-.hero-copy h1 { font-size: clamp(44px, 7.4vw, 92px); line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; text-shadow: 0 2px 24px rgba(14,16,20,0.55); }
+.hero img { display: block; width: 100%; height: auto; aspect-ratio: 32 / 9; background: var(--panel); }
+.hero-copy { position: relative; margin-top: var(--igelkott-space-6); }
+.hero-copy h1 { font-size: clamp(44px, 7.4vw, 92px); line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; }
 .hero-copy h1 span { display: block; }
 .hero-copy .dek { margin-top: var(--igelkott-space-6); font-size: clamp(19px, 2vw, 23px); line-height: 1.5; color: var(--fg); max-width: 40ch; opacity: 0.88; }
 .caption { margin-top: var(--igelkott-space-3); font-size: 14px; color: var(--mute); }
@@ -96,15 +94,14 @@ section.block { padding-block: var(--igelkott-space-16); border-top: 1px solid v
 @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* screenshots */
-.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--igelkott-space-6); margin-top: var(--igelkott-space-8); }
+.shot { margin-top: var(--igelkott-space-8); }
 figure { margin: 0; display: flex; flex-direction: column; gap: var(--igelkott-space-2); min-width: 0; }
-figure img { width: 100%; display: block; border-radius: var(--igelkott-radius-md); border: 1px solid var(--line); background: var(--panel); }
+figure img { width: 100%; height: auto; display: block; border-radius: var(--igelkott-radius-md); border: 1px solid var(--line); background: var(--panel); }
 figcaption { font-size: 14px; color: var(--mute); }
 
 /* gallery: the nine plates */
-.panel { margin-bottom: var(--igelkott-space-6); }
-.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--igelkott-space-3); }
-.gallery figure img { aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--igelkott-radius-md);
+.gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--igelkott-space-4); }
+.gallery figure img { aspect-ratio: 32 / 9; object-fit: cover; border-radius: var(--igelkott-radius-md);
   transition: transform var(--igelkott-duration-base) var(--igelkott-ease); }
 .gallery figure:hover img { transform: scale(1.02); }
 
@@ -157,8 +154,8 @@ footer p { font-size: 14px; max-width: none; }
 
 @media (max-width: 820px) {
   .claims, .pairs { grid-template-columns: minmax(0, 1fr); }
-  .split, .shots { grid-template-columns: minmax(0, 1fr); }
-  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .gallery { grid-template-columns: minmax(0, 1fr); }
   .row { grid-template-columns: minmax(0, 1fr) 64px; }
   .row .n { grid-column: 1 / -1; }
 }
@@ -174,12 +171,12 @@ footer p { font-size: 14px; max-width: none; }
 </header>
 
 <div class="hero">
-  <img src="img/wall_A004C006.jpg" alt="The night plate A004C006 on an 8K wall, drawn by the node straight from the fisheye">
+  <img src="img/hero_A011C001.jpg" width="3840" height="1080" alt="Plate A011C001 on a whole 8K wall: a snowy mountain valley with a village in the middle, drawn by the node straight from the fisheye">
 </div>
 <div class="wrap hero-copy">
   <h1><span>4× faster.</span><span>Lighter.</span><span>Sharper.</span></h1>
   <p class="dek">Put Igelkott fisheye plates straight on the LED wall. No 16K equirect to render, store or stream, and one resample instead of two.</p>
-  <p class="caption mono">Plate A004C006 · Wall, FOV 90 · 7680 × 2160</p>
+  <p class="caption mono">Plate A011C001 · the whole wall, FOV 90 · 7680 × 2160</p>
 
   <div class="claims">
     <div class="claim">
@@ -223,10 +220,7 @@ footer p { font-size: 14px; max-width: none; }
     <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49</div></div>
     <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23</div></div>
   </div>
-  <div class="shots">
-    <figure><img src="img/livefx_nod.jpg" alt="Live FX on the Mac: the fisheye with the node on the 8K wall in Free Run" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX on the Mac, Free Run: 121 fps.</figcaption></figure>
-    <figure><img src="img/livefx_eq2d.jpg" alt="Live FX on the Mac: the 16K equirect through Eq->2D on the same wall" loading="lazy"><figcaption>The same wall from the 16K equirect through <span class="nw">Eq-&gt;2D</span>, FOV 31.42, which is 90° across.</figcaption></figure>
-  </div>
+  <figure class="shot"><img src="img/livefx_A011C001.jpg" width="1920" height="1080" alt="Assimilate Live FX with IgelkottFisheye: plate A011C001 on an 8K wall and the node's panel" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX: plate A011C001 on an 8K wall. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
 </section>
 
 <section class="block" id="lighter">
@@ -285,22 +279,18 @@ footer p { font-size: 14px; max-width: none; }
 
 <section class="block">
   <div class="head">
-    <span class="label">Nine free demo plates · nine walls</span>
+    <span class="label">Free demo plates · whole walls</span>
     <h2>Every plate tells the node what it is</h2>
-    <p>A pixel tag in each plate names the camera and which way it pointed. The node reads it and draws the wall, so the two plates shot looking down come out the right way up. The centre of each 8K wall, 1:1.</p>
+    <p>A pixel tag in each plate names the camera and which way it pointed. The node reads it and draws the wall, so the two plates shot looking down come out the right way up. Each still is the whole 8K wall, 90° across.</p>
     <p>The node never touches colour. The plate stays in ACEScct all the way to the wall, so you pick the output your LED volume runs: PQ, HLG or SDR. The stills here are converted to SDR for the web.</p>
   </div>
-  <figure class="panel"><img src="img/livefx_panel.jpg" alt="The IgelkottFisheye panel in Assimilate Live FX with plate A013C004 on the wall" loading="lazy"><figcaption>The IgelkottFisheye panel in Assimilate Live FX. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
   <div class="gallery">
-    <figure><img src="img/wall_A001C016.jpg" alt="A001C016" loading="lazy"><figcaption class="mono">A001C016 · nadir · yaw 255</figcaption></figure>
-    <figure><img src="img/wall_A004C002.jpg" alt="A004C002" loading="lazy"><figcaption class="mono">A004C002</figcaption></figure>
-    <figure><img src="img/wall_A004C006.jpg" alt="A004C006" loading="lazy"><figcaption class="mono">A004C006</figcaption></figure>
-    <figure><img src="img/wall_A005C006.jpg" alt="A005C006" loading="lazy"><figcaption class="mono">A005C006</figcaption></figure>
-    <figure><img src="img/wall_A007C001.jpg" alt="A007C001" loading="lazy"><figcaption class="mono">A007C001</figcaption></figure>
-    <figure><img src="img/wall_A011C001.jpg" alt="A011C001" loading="lazy"><figcaption class="mono">A011C001 · nadir · yaw 180</figcaption></figure>
-    <figure><img src="img/wall_A013C004.jpg" alt="A013C004" loading="lazy"><figcaption class="mono">A013C004</figcaption></figure>
-    <figure><img src="img/wall_A014C001.jpg" alt="A014C001" loading="lazy"><figcaption class="mono">A014C001</figcaption></figure>
-    <figure><img src="img/wall_A014C006.jpg" alt="A014C006" loading="lazy"><figcaption class="mono">A014C006</figcaption></figure>
+    <figure><img src="img/g1_A011C001.jpg" width="1600" height="450" alt="A011C001: a village under snowy mountains" loading="lazy"><figcaption class="mono">A011C001 · nadir · yaw 210</figcaption></figure>
+    <figure><img src="img/g2_A001C016.jpg" width="1600" height="450" alt="A001C016: a town on a headland, seen from the air" loading="lazy"><figcaption class="mono">A001C016 · nadir · yaw 270 · pitch −8</figcaption></figure>
+    <figure><img src="img/g3_A001C016.jpg" width="1600" height="450" alt="A001C016: a wide fjord with islands, seen from the air" loading="lazy"><figcaption class="mono">A001C016 · nadir · pitch −6</figcaption></figure>
+    <figure><img src="img/g4_A011C001.jpg" width="1600" height="450" alt="A011C001: a red house in a snowy valley under mountains" loading="lazy"><figcaption class="mono">A011C001 · nadir · yaw 180</figcaption></figure>
+    <figure><img src="img/g5_A013C004.jpg" width="1600" height="450" alt="A013C004: a street of brick houses with a red double-decker bus" loading="lazy"><figcaption class="mono">A013C004</figcaption></figure>
+    <figure><img src="img/g6_A014C001.jpg" width="1600" height="450" alt="A014C001: a suburban street of houses" loading="lazy"><figcaption class="mono">A014C001</figcaption></figure>
   </div>
 </section>
 
