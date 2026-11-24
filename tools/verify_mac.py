@@ -1,14 +1,15 @@
-# Provet på Mac: samma fall, samma räkning och samma gränser som verify_windows.py, som läses och körs härifrån med två
-# byten, så att fallen bara finns på ett ställe:
+# The test on the Mac: the same cases, the same maths and the same limits as verify_windows.py, which is read and run
+# from here with two swaps, so the cases live in one place only:
 #
-#   - OpenGL-kontexten: CGL (Legacy-profilen, GLSL 1.20, som Live FX:s Matchbox-shaders skrivs för) i stället för WGL.
-#   - PIXERA hoppas över: Macens OpenGL har inte GLSL 4.50. PIXERA-utgåvan provas bara med verify_windows.py.
+#   - The OpenGL context: CGL (the Legacy profile, GLSL 1.20, which Live FX's Matchbox shaders are written for) instead
+#     of WGL.
+#   - PIXERA is skipped: the Mac's OpenGL has no GLSL 4.50. The PIXERA edition is tested only with verify_windows.py.
 #
-# Live FX översätter shadern till Metal på Mac; det här provet kompilerar den med Apples GLSL 1.20 och säger alltså inget
-# om översättningen. Den ses i Live FX (docs/MAC-TEST.md).
+# Live FX translates the shader to Metal on the Mac; this test compiles it with Apple's GLSL 1.20 and so says nothing
+# about the translation. That is seen in Live FX (docs/MAC-TEST.md).
 #
-#   python3 tools/verify_mac.py            (från projektroten)
-#   python3 tools/verify_mac.py . --canvas (LED-dukarna i full storlek)
+#   python3 tools/verify_mac.py            (from the project root)
+#   python3 tools/verify_mac.py . --canvas (the LED canvases at full size)
 import os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -41,7 +42,7 @@ EXT = '''def ext(name, restype, *args):
 
 
 def cut(s, start, end, new, keep_end=True):
-    """Byt texten från start till end; fäll provet om verify_windows.py har ändrats så att markeringarna saknas."""
+    """Replace the text from start to end; fail the test if verify_windows.py has changed so the markers are missing."""
     a = s.find(start)
     b = s.find(end, a)
     if a < 0 or b < 0:
@@ -59,14 +60,14 @@ def swap(s, old, new):
 with open(WINDOWS, encoding="utf-8") as fh:
     src = fh.read()
 
-src = swap(src, "import array, ctypes, ctypes.wintypes as wt, math", "import array, ctypes, math")
+src = swap(src, "import array, ctypes, ctypes.wintypes as wt, ", "import array, ctypes, ")
 src = swap(src, "# MARK: - OpenGL via WGL", "# MARK: - OpenGL via CGL (verify_mac.py)")
 src = cut(src, "user32, gdi32, kernel32 = ctypes.windll.user32", "GLuint, GLint, GLenum, GLsizei, GLfloat =", CGL)
 src = cut(src, "def ext(name, restype, *args):", "\n\n\n", EXT)
 src = cut(src, 'pixera = link("#version 450 compatibility', 'print("PIXERA: the effect compiles and links (GLSL 4.50).")',
           'pixera = None\nprint("PIXERA: not tested on the Mac (no GLSL 4.50); run verify_windows.py on Windows.")',
           keep_end=False)
-# Inga PIXERA-fall: varje fall räknas som utan PIXERA, och kedjan med PIXERA:s Equirectangular hoppas över
+# No PIXERA cases: every case counts as without PIXERA, and the chain with PIXERA's Equirectangular is skipped
 src = swap(src, 'if not c["pixera"]:', 'if True:')
 src = swap(src, 'if host == "pixera" and not c["pixera"]:', 'if host == "pixera":')
 src = swap(src, "has_ref = os.path.exists(", "has_ref = False and os.path.exists(")

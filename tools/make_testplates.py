@@ -1,15 +1,16 @@
-# Provplåtar för att se noden i Live FX eller PIXERA utan riktiga taggade filer: en påhittad värld fotograferad genom
-# linsmodellen, med eller utan pixeltaggen (PixelTag i _shared/IgelkottFisheyeLens). Bara Python 3, inga paket.
+# Test plates to see the node in Live FX or PIXERA without real tagged files: a made-up world photographed through the
+# lens model, with or without the pixel tag (PixelTag in _shared/IgelkottFisheyeLens). Only Python 3, no packages.
 #
-#   python tools/make_testplates.py <mapp> [storlek]      (standard 1536)
+#   python tools/make_testplates.py <folder> [size]      (default 1536)
 #
-# Världen: rakt fram (yaw 0) röd, höger grön, bak blå, vänster gul; himlen ljus, marken mörk, horisonten vit; ett mörkt
-# rutnät var 15:e grad. Fram till höger (yaw 0–45) är ljusare än fram till vänster, så en spegelvänd bild syns.
-# Med Plate Auto, Yaw 0 och FOV 90 ska alla taggade plåtar ge samma vägg: röd i mitten, grön kant till höger.
+# The world: straight ahead (yaw 0) red, right green, back blue, left yellow; the sky light, the ground dark, the horizon
+# white; a dark grid every 15 degrees. Front right (yaw 0–45) is lighter than front left, so a mirrored picture shows.
+# With Plate Auto, Yaw 0 and FOV 90 every tagged plate should give the same wall: red in the centre, green edge on the
+# right.
 #
-#   pyxis_zenith_tag.png    PYXIS 12K, objektivet uppåt, tagg (kamera 1)
-#   venice_nadir_tag.png    Sony Venice 2, objektivet nedåt, tagg (kamera 2, nadir)
-#   pyxis_zenith_notag.png  utan tagg: noden ska visa varningen i Auto
+#   pyxis_zenith_tag.png    PYXIS 12K, lens pointing up, tag (camera 1)
+#   venice_nadir_tag.png    Sony Venice 2, lens pointing down, tag (camera 2, nadir)
+#   pyxis_zenith_notag.png  no tag: the node should show the warning in Auto
 import math, os, struct, sys, zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -96,7 +97,7 @@ def plate(n, cam, nadir, tag):
             d = unproject(x + 0.5, y + 0.5, n, cam)
             if d is None:
                 row += b"\0\0\0"; continue
-            if nadir:                                            # objektivet nedåt: linsens riktning (x, −y, −z) i världen
+            if nadir:                                            # lens down: lens direction (x, −y, −z) in the world
                 d = (d[0], -d[1], -d[2])
             row += bytes(int(round(v * 255)) for v in world(d))
         rows.append(row)

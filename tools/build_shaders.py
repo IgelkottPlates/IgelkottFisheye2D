@@ -1,16 +1,17 @@
-# Gör nodens filer ur en källa (Stage 1:s handoff 2026-11-19: "en gemensam källa för Matchbox och Pixera"):
+# Builds the node's files from one source (Stage 1's handoff 2026-11-19: "one shared source for Matchbox and Pixera"):
 #
-#   shader/core.glsl            linsen, nadirvändningen, pixeltaggen, varningen (GLSL som både 1.20 och 4.50 läser)
-#   shader/matchbox.glsl        Live FX-omslaget          -> matchbox/IgelkottFisheye2D.glsl
-#   shader/IgelkottFisheye2D.xml  panelen (@VERSION@)     -> matchbox/IgelkottFisheye2D.xml
-#   shader/pixera.glsl          PIXERA-omslaget           -> pixera/IgelkottFisheye.glsl
+#   shader/core.glsl            the lens, the nadir flip, the pixel tag, the warning (GLSL both 1.20 and 4.50 read)
+#   shader/matchbox.glsl        the Live FX wrapper       -> matchbox/IgelkottFisheye2D.glsl
+#   shader/IgelkottFisheye2D.xml  the panel (@VERSION@)   -> matchbox/IgelkottFisheye2D.xml
+#   shader/pixera.glsl          the PIXERA wrapper        -> pixera/IgelkottFisheye.glsl
 #
-# Kamerornas tal (PYXIS 12K, Sony Venice 2, Z-Cam E2 S6) läses ur _shared/IgelkottFisheyeLens/…/FisheyeLens.swift, som text, så att
-# shaders har exakt samma siffror, och skrivs av till shader/cameras.json. Den kopian ligger i GitHub-repot, så att den
-# som klonar utan _shared kan bygga; finns _shared är den källan och --check fäller en inaktuell kopia. Versionen ur VERSION.
+# The camera numbers (PYXIS 12K, Sony Venice 2, Z-Cam E2 S6) are read as text from
+# _shared/IgelkottFisheyeLens/…/FisheyeLens.swift, so the shaders have exactly the same digits, and are copied to
+# shader/cameras.json. That copy is in the GitHub repo, so someone who clones without _shared can build; if _shared is
+# there it is the source and --check fails a stale copy. The version comes from VERSION.
 #
-#   python tools/build_shaders.py           (från projektroten; skriver filerna)
-#   python tools/build_shaders.py --check   (0 när filerna redan är aktuella, annars 1)
+#   python tools/build_shaders.py           (from the project root; writes the files)
+#   python tools/build_shaders.py --check   (0 when the files are already up to date, otherwise 1)
 import json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,13 +27,13 @@ def read(*p):
 
 
 def flt(v):
-    """Ett tal som GLSL-flyttal: 1936 -> 1936.0 (Z-Cam-mitten står som heltal i Swift)."""
+    """A number as a GLSL float: 1936 -> 1936.0 (the Z-Cam centre is written as an integer in Swift)."""
     v = v.strip()
     return v if re.search(r"[.eE]", v) else v + ".0"
 
 
 def camera(swift, name):
-    """reference, center (2) och k (4) som text, ur `static let <name> = FisheyeLens(...)`."""
+    """reference, center (2) and k (4) as text, from `static let <name> = FisheyeLens(...)`."""
     m = re.search(r"static let %s = FisheyeLens\(reference: ([0-9.]+),\s*center: SIMD2\(([^)]*)\),\s*k: SIMD4\(([^)]*)\)" % name, swift)
     if not m:
         sys.exit("build_shaders: %s not found in %s" % (name, LENS))
@@ -45,7 +46,7 @@ CAMERAS = (("PYXIS", "pyxis12K", "PYXIS 12K"), ("VENICE", "sonyVenice2", "Sony V
 
 
 def cameras():
-    """{swift_name: {reference, center, k}} som text: ur _shared om den finns, annars ur kopian shader/cameras.json."""
+    """{swift_name: {reference, center, k}} as text: from _shared if it is there, else from the copy shader/cameras.json."""
     if os.path.exists(LENS):
         with open(LENS, encoding="utf-8") as fh:
             swift = fh.read()

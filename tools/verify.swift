@@ -1,24 +1,25 @@
-// Provet för IgelkottFisheye2D: shadern ritas på riktigt (OpenGL på Macen, samma GLSL som Live FX läser) och varje
-// utpixel jämförs med IgelkottStages räkning (FisheyeLens.point och CameraCost.rotation, avskrivna här i dubbel
-// precision). Källan är en gradient (R = x, G = y uppifrån, normerade), så utpixelns färg är källpunkten shadern läste.
+// The test for IgelkottFisheye2D: the shader is actually rendered (OpenGL on the Mac, the same GLSL Live FX reads) and
+// every output pixel is compared with IgelkottStage's math (FisheyeLens.point and CameraCost.rotation, copied here in
+// double precision). The source is a gradient (R = x, G = y from the top, normalized), so the output pixel's colour is
+// the source point the shader read.
 //
-// Varje fall körs i båda radordningarna: Live FX (standard, Flip Vertical av) lägger källan och utbilden uppifrån i
-// minnet — här efterliknat genom att gradienten laddas upp översta raden först och utbilden läses med rad 0 överst —
-// och OpenGL/Flame (Flip Vertical på), nerifrån.
+// Every case runs in both row orders: Live FX (default, Flip Vertical off) puts the source and the output top-down in
+// memory — emulated here by uploading the gradient top row first and reading the output with row 0 at the top —
+// and OpenGL/Flame (Flip Vertical on), bottom-up.
 //
-//   swift tools/verify.swift            (från projektroten)
+//   swift tools/verify.swift            (from the project root)
 //
-// Stabiliseringen (Stab Yaw, Pitch, Roll) prövas två gånger: i fallen (förväntat d = S · R · stråle) och i ett eget
-// prov där Back, Side, Sky och Ref TV ritas med och utan samma S; källpunkterna räknas tillbaka till riktningar, och
-// varje pixel i varje vy ska ha vridits med just S — sfären rör sig som en kropp.
+// The stabilization (Stab Yaw, Pitch, Roll) is tested twice: in the cases (expected d = S · R · ray) and in a separate
+// test where Back, Side, Sky and Ref TV are rendered with and without the same S; the source points are mapped back to
+// directions, and every pixel in every view must have been rotated by exactly S — the sphere moves as one body.
 //
-// Ger 0 när alla fall håller (största felet i källpixlar vid 8040 under gränsen), annars 1.
+// Returns 0 when all cases hold (largest error in source pixels at 8040 below the limit), otherwise 1.
 import Foundation
 import OpenGL.GL
 import OpenGL.GL3
 import simd
 
-// MARK: - IgelkottStages räkning (StageKit/FisheyeLens.swift, StageProtocol/CameraCost.swift)
+// MARK: - IgelkottStage's math (StageKit/FisheyeLens.swift, StageProtocol/CameraCost.swift)
 
 let REF = 8040.0
 let CENTER = SIMD2(4019.9389914282037, 4019.9389463189077)
@@ -32,19 +33,19 @@ func rotation(yaw: Double, pitch: Double, roll: Double) -> simd_double3x3 {
     return ry * rx * rz
 }
 
-// Sony Venice 2 (_shared/IgelkottFisheyeLens, FisheyeLens.sonyVenice2): egen referens, mitt och kurva. Kontrolleras
-// mot den delade filen nedan, så att shadern, provet och resten av husen inte glider isär.
+// Sony Venice 2 (_shared/IgelkottFisheyeLens, FisheyeLens.sonyVenice2): its own reference, centre and curve. Checked
+// against the shared file below, so the shader, the test and the rest of the house do not drift apart.
 let VREF = 5760.0
 let VCENTER = SIMD2(2848.031459694644, 2854.3896750742356)
 let VK = SIMD4(1440.3464186123263, -21.606695057429874, 0.09789618777410111, -0.0002943394610105899)
 
-/// Kamerans modell i andelar av bildens bredd: (mitten, kurvan). camera 0 = PYXIS skalad (Sensor Height, Lens Scale),
-/// 1 = PYXIS 12K som den är, 2 = Sony Venice 2.
+/// The camera's model as fractions of the image width: (centre, curve). camera 0 = PYXIS scaled (Sensor Height, Lens
+/// Scale), 1 = PYXIS 12K as is, 2 = Sony Venice 2.
 func lens(camera: Int32, scale: Double) -> (center: SIMD2<Double>, k: SIMD4<Double>) {
     camera == 2 ? (VCENTER / VREF, VK / VREF) : (CENTER / REF, K / REF * (camera == 1 ? 1 : scale))
 }
 
-/// Källpunkten i pixlar vid 8040 (origo uppe till vänster), som FisheyeLens.point.
+/// The source point in pixels at 8040 (origin top left), as FisheyeLens.point.
 func point(_ d: SIMD3<Double>, offset: SIMD2<Double>, scale: Double = 1, camera: Int32 = 0) -> SIMD2<Double> {
     let l = lens(camera: camera, scale: scale)
     let rho = (d.x * d.x + d.z * d.z).squareRoot()
@@ -54,27 +55,28 @@ func point(_ d: SIMD3<Double>, offset: SIMD2<Double>, scale: Double = 1, camera:
     return (l.center + SIMD2(d.x, d.z) * f) * REF + offset
 }
 
-/// Väggens riktning genom lagerpunkten (x, y uppifrån, pixelmitt = heltal + 0,5), som CameraCost.Projection.direction med
-/// Eq->2D:s brännvidd ur den lodräta FOV:en.
+/// The wall's direction through the layer point (x, y from the top, pixel centre = integer + 0.5), as
+/// CameraCost.Projection.direction with Eq->2D's focal length from the vertical FOV.
 func wallDirection(_ x: Double, _ yTop: Double, w: Double, h: Double, fov: Double, R: simd_double3x3) -> SIMD3<Double> {
     let f = (h / 2) / tan(fov * .pi / 360)
     return R * simd_normalize(SIMD3((x - w / 2) / f, (h / 2 - yTop) / f, 1))
 }
 
-/// Tracking view: fast skala i grader per pixel (TRACK_SCALE i shadern), sidled och höjd raka i bilden; R = bara yaw.
+/// Tracking view: fixed scale in degrees per pixel (TRACK_SCALE in the shader), sideways and height straight in the
+/// image; R = yaw only.
 let TRACK_SCALE = 0.02
 func trackDirection(_ x: Double, _ yTop: Double, w: Double, h: Double, R: simd_double3x3) -> SIMD3<Double> {
     let lon = (x - w / 2) * TRACK_SCALE * .pi / 180, lat = (h / 2 - yTop) * TRACK_SCALE * .pi / 180
     return R * SIMD3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon))
 }
 
-/// Equirect: dirToSrc baklänges.
+/// Equirect: dirToSrc in reverse.
 func equiDirection(_ x: Double, _ yTop: Double, w: Double, h: Double, R: simd_double3x3) -> SIMD3<Double> {
     let lon = (x / w - 0.5) * 2 * .pi, lat = (0.5 - yTop / h) * .pi
     return R * SIMD3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon))
 }
 
-/// Källpunkten (pixlar vid 8040) tillbaka till riktningen: r(θ) löst med Newton.
+/// The source point (pixels at 8040) back to the direction: r(θ) solved with Newton.
 func unproject(_ p: SIMD2<Double>, offset: SIMD2<Double>, scale: Double = 1, camera: Int32 = 0) -> SIMD3<Double> {
     let l = lens(camera: camera, scale: scale), k = l.k
     let v = (p - offset) / REF - l.center, len = simd_length(v), r = len
@@ -125,8 +127,8 @@ if linked == 0 { fail("link failed") }
 glUseProgram(prog)
 print("The shader compiles and links (GLSL 1.20).")
 
-// Källan: N × N gradient, R = x / N och G = y uppifrån / N i texelns mitt. Uppladdad rad 0 = bildens översta (Live FX)
-// eller nedersta (OpenGL/Flame).
+// The source: N × N gradient, R = x / N and G = y from the top / N at the texel centre. Uploaded row 0 = the image's
+// top row (Live FX) or bottom row (OpenGL/Flame).
 var N = 1024
 func gradient(topRowFirst: Bool) -> [Float] {
     var tex: [Float] = []
@@ -148,7 +150,7 @@ glUniform1i(glGetUniformLocation(prog, "front"), 0)
 struct Case { var name: String; var w: Int; var h: Int; var yaw, pitch, roll, fov: Double; var offset: SIMD2<Double>; var quality: Int32; var mode: Int32
               var stab = SIMD3<Double>(0, 0, 0)                         // Stab Yaw, Pitch, Roll
               var scale = 1.0                                           // Lens Scale
-              var sensorHeight = 23.32                                  // Sensor Height mm (23,32 = PYXIS 12K)
+              var sensorHeight = 23.32                                  // Sensor Height mm (23.32 = PYXIS 12K)
               var camera: Int32 = 0 }                                   // 0 Custom, 1 PYXIS 12K, 2 Sony Venice 2
 let cases = [
     Case(name: "Back 3840x2160 (scaled 384x216), pitch 15, FOV 58.5", w: 384, h: 216, yaw: 0, pitch: 15, roll: 0, fov: 58.5, offset: .zero, quality: 1, mode: 0),
@@ -178,7 +180,7 @@ let cases = [
     Case(name: "Equirect, Stab Yaw 30, Pitch 10, Roll -5", w: 512, h: 256, yaw: 0, pitch: 0, roll: 0, fov: 90, offset: .zero, quality: 1, mode: 1, stab: SIMD3(30, 10, -5)),
 ]
 
-/// Ritar ett fall och ger utbilden (RGBA, glReadPixels ordning).
+/// Renders a case and returns the output image (RGBA, glReadPixels order).
 func render(_ c: Case, liveFX: Bool) -> [Float] {
     var fbo: GLuint = 0, out: GLuint = 0
     glGenTextures(1, &out); glBindTexture(GLenum(GL_TEXTURE_2D), out)
@@ -207,9 +209,9 @@ func render(_ c: Case, liveFX: Bool) -> [Float] {
 }
 
 var allGood = true
-// Källans storlek ska inte spela någon roll: noden räknar i andelar av bilden. Andra varvet har en källa på 1008 × 1008
-// (4032 / 4, inte en tvåpotens) — PYXIS-mastrarna är 4032² sedan 2026-11-04 (IgelkottDarkroom), samma bild som 8040²
-// nedskalad.
+// The source size must not matter: the node computes in fractions of the image. The second pass has a 1008 × 1008
+// source (4032 / 4, not a power of two) — the PYXIS masters are 4032² since 2026-11-04 (IgelkottDarkroom), the same
+// image as 8040² scaled down.
 for texN in [1024, 1008] {
 N = texN
 for liveFX in (texN == 1024 ? [true, false] : [true]) {
@@ -227,15 +229,15 @@ for c in cases {
     let n = Int(c.quality)
     var worst = 0.0, checked = 0, black = 0, wrongBlack = 0
     for row in 0..<c.h {
-        let yTopPix = liveFX ? row : c.h - 1 - row                    // glReadPixels rad 0 = översta i Live FX:s ordning
+        let yTopPix = liveFX ? row : c.h - 1 - row                    // glReadPixels row 0 = top in Live FX's order
         for x in 0..<c.w {
-            // Förväntat: medlet av källpunkterna i provens lägen (normerade), svart utanför bildramen
+            // Expected: the mean of the source points at the sample positions (normalized), black outside the frame
             var sum = SIMD2<Double>.zero, inside = 0
             for j in 0..<n {
                 for i in 0..<n {
                     let sx = Double(x) + (Double(i) + 0.5) / Double(n)
-                    // Provets läge uppifrån: (j + 0,5) / n från gl_FragCoord-radens början, som räknas uppifrån i
-                    // Live FX:s ordning och nerifrån i OpenGL:s
+                    // The sample position from the top: (j + 0.5) / n from the start of the gl_FragCoord row, which
+                    // counts from the top in Live FX's order and from the bottom in OpenGL's
                     let sy = liveFX ? Double(yTopPix) + (Double(j) + 0.5) / Double(n)
                                     : Double(yTopPix) + 1 - (Double(j) + 0.5) / Double(n)
                     let d = c.mode == 3 ? trackDirection(sx, sy, w: Double(c.w), h: Double(c.h), R: S * rotation(yaw: c.yaw, pitch: 0, roll: 0))
@@ -244,7 +246,7 @@ for c in cases {
                                         : wallDirection(sx, sy, w: Double(c.w), h: Double(c.h), fov: c.fov, R: R)
                     let p = point(d, offset: c.offset, scale: lensScale, camera: c.camera) / REF
                     if p.x >= 0, p.x <= 1, p.y >= 0, p.y <= 1 {
-                        // Gradientens bilinjära värde: rakt inom texelmitterna, klämt vid kanten
+                        // The gradient's bilinear value: linear between texel centres, clamped at the edge
                         let lo = 0.5 / Double(N), hi = 1 - lo
                         sum += SIMD2(min(max(p.x, lo), hi), min(max(p.y, lo), hi)); inside += 1
                     }
@@ -257,7 +259,7 @@ for c in cases {
                 if got.x != 0 || got.y != 0 { wrongBlack += 1 }
                 continue
             }
-            guard inside == n * n else { continue }                   // pixlar på bildramens kant: blandade, hoppas över
+            guard inside == n * n else { continue }                   // pixels on the frame's edge: mixed, skipped
             let want = sum / Double(n * n)
             worst = max(worst, simd_length(got - want) * REF)
             checked += 1
@@ -269,8 +271,8 @@ for c in cases {
                  ok ? "PASS" : "FAIL", c.name, worst, checked, black, wrongBlack > 0 ? ", \(wrongBlack) NOT black" : ""))
 }
 
-// Sfären som en kropp: samma S på fyra vyer, varje pixels riktning ska ha vridits med S (vinkeln i källpixlar vid 8040
-// mitt i bilden, K.x pixlar per radian)
+// The sphere as one body: the same S on four views, every pixel's direction must have been rotated by S (the angle in
+// source pixels at 8040 at the image centre, K.x pixels per radian)
 let stab = SIMD3(1.5, 1.3, -0.8)
 let S = rotation(yaw: stab.x, pitch: stab.y, roll: stab.z)
 print("  The sphere as one body, Stab Yaw \(stab.x), Pitch \(stab.y), Roll \(stab.z) on every view:")
@@ -278,7 +280,7 @@ for c0 in [cases[0], cases[1], cases[2], cases[4]] {
     var c1 = c0; c1.stab = stab
     let a = render(c0, liveFX: liveFX), b = render(c1, liveFX: liveFX)
     var worst = 0.0, checked = 0
-    let lo = 1.0 / Double(N), hi = 1 - lo                             // inte i gradientens klämda kant
+    let lo = 1.0 / Double(N), hi = 1 - lo                             // not in the gradient's clamped edge
     for k in stride(from: 0, to: a.count, by: 4) {
         let p0 = SIMD2(Double(a[k]), Double(a[k + 1])), p1 = SIMD2(Double(b[k]), Double(b[k + 1]))
         guard p0.x > lo, p0.x < hi, p0.y > lo, p0.y < hi, p1.x > lo, p1.x < hi, p1.y > lo, p1.y < hi else { continue }
@@ -295,12 +297,14 @@ for c0 in [cases[0], cases[1], cases[2], cases[4]] {
 }
 }
 
-// Tecknet, för PROJECT.md: var hamnar väggen rakt fram och den rakt bak med Stab Pitch +5?
+// The sign, for PROJECT.md (internal notes): where do the wall straight ahead and the one straight behind land with
+// Stab Pitch +5?
 for (name, yaw) in [("yaw 0", 0.0), ("yaw 180", 180.0)] {
     let d = rotation(yaw: 0, pitch: 5, roll: 0) * rotation(yaw: yaw, pitch: 0, roll: 0) * SIMD3(0, 0, 1)
     print(String(format: "Stab Pitch +5: the centre of the wall at %@ fetches the source at elevation %+.2f deg", name, asin(d.y) * 180 / .pi))
 }
-// Kamerornas tal ska vara desamma som i _shared/IgelkottFisheyeLens (shadern kontrolleras mot provets tal ovan)
+// The cameras' numbers must be the same as in _shared/IgelkottFisheyeLens (the shader is checked against the test's
+// numbers above)
 let sharedURL = root.deletingLastPathComponent().appendingPathComponent("_shared/IgelkottFisheyeLens/Sources/IgelkottFisheyeLens/FisheyeLens.swift")
 if let shared = try? String(contentsOf: sharedURL, encoding: .utf8) {
     let shaderText = source

@@ -18,3 +18,10 @@ desktop.ini
 *.tmp
 .SynologyWorkingDirectory/
 #SynoRecycle/
+
+# Internal project notes (Swedish, the Igelkott ecosystem's own files): kept in Synology Drive, not on GitHub
+PROJECT.md
+AGENTS.md
+CLAUDE.md
+ARCHITECTURE_CHECKLIST.md
+HANDOFF/

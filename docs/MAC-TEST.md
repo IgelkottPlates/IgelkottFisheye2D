@@ -114,7 +114,7 @@ For each size, play the clip and write down whether it plays in real time.
 
 ## 11. Store in NotchLC: file weight and max fps (8K canvas)
 
-The same test as on Windows (2026-11-22, `PROJECT.md`, "Store i NotchLC: storlek och tyngd"), but the Mac has a faster
+The same test as on Windows (2026-11-22, the NotchLC storage results in the internal project notes), but the Mac has a faster
 disk and Live FX's **Free Run** plays as fast as it can instead of at the clip's rate, so the real maximum shows. On
 Windows the fisheye with the node stopped at 25 fps only because that is the clip's rate, and the 16K equirect was
 limited by the disk (1.3–1.5 GB/s).

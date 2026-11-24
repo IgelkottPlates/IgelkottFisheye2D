@@ -14,7 +14,7 @@ other content only one of them has are left out of the shift and sharpness numbe
 Ours: core.glsl/matchbox.glsl in numpy (2 x 2 bilinear samples per pixel, lens model from shader/cameras.json, tag ->
 camera/nadir). Eq->2D: the atlas formula (eq2d-fov-framing.md): f = (h/2)/tan(FOVv/2), yaw/pitch/roll as ours, one
 bilinear sample in the 15360 x 7680 equirect (u = lon/2pi + 0.5, top row = up). The FOV is set so both are the same
-horizontal angle. Windows results 2026-11-22: PROJECT.md, "Equirect + Eq->2D mot noden".
+horizontal angle. Windows results 2026-11-22: the internal project notes (PROJECT.md), Eq->2D against the node.
 """
 import json, math, subprocess, sys, os
 import numpy as np, cv2

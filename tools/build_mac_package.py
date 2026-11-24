@@ -1,7 +1,7 @@
-# Bygger Mac-paketet för Live FX: ../_releases/IgelkottFisheye/IgelkottFisheye-Mac.zip (Eric 2026-11-23: en enkel
-# Mac-zip i Release, inget program). En mapp IgelkottFisheye-<version>-Mac med noden, README.txt (mac/README.txt),
-# VERSION och LICENSE.txt. Inga byggresultat i projektmappen (atlas regel 1-3). Går på Mac och Windows; vägrar om
-# matchbox/ inte stämmer med shader/ (build_shaders.py --check). Provet (verify_windows.py / verify_mac.py) körs före.
+# Builds the Mac package for Live FX: ../_releases/IgelkottFisheye/IgelkottFisheye-Mac.zip (Eric 2026-11-23: "a simple
+# Mac zip in the Release, no app"). A folder IgelkottFisheye-<version>-Mac with the node, README.txt (mac/README.txt),
+# VERSION and LICENSE.txt. No build output in the project folder (atlas rules 1-3). Runs on Mac and Windows; refuses if
+# matchbox/ does not match shader/ (build_shaders.py --check). The test (verify_windows.py / verify_mac.py) runs first.
 #
 #   python tools/build_mac_package.py
 import os, subprocess, sys, time, zipfile

@@ -1,6 +1,6 @@
 // swift-tools-version: 5.9
-// Auto Stabilize (autoyaw): fisheyeklippet in, Stab Yaw ut. Läser Darkroms hörnmärke med IgelkottLensMark och tar
-// kamerans linsmodell ur _shared/IgelkottFisheyeLens. Bygg utanför Drive:
+// Auto Stabilize (autoyaw): fisheye clip in, Stab Yaw out. Reads Darkroom's corner mark with IgelkottLensMark and takes
+// the camera's lens model from _shared/IgelkottFisheyeLens. Build outside Drive:
 //   swift build -c release --package-path tools/autoyaw --build-path ~/Library/Caches/Igelkott/IgelkottLiveFXFisheye/autoyaw-build
 import PackageDescription
 

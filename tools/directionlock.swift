@@ -1,54 +1,60 @@
-// Direction Lock för IgelkottFisheye: en trackad kurva ur Live FX (CSV ur Curve Editor) → Erics formel → kurvor för
-// Stab Yaw och Stab Pitch (CSV som Curve Editor importerar på noden).
+// Direction Lock for IgelkottFisheye: a tracked curve from Live FX (CSV from the Curve Editor) → Eric's formula →
+// curves for Stab Yaw and Stab Pitch (CSV that the Curve Editor imports on the node).
 //
-// Formeln (Eric 2025, avläst ur "Tracked mountain Yaw.csv" → "… Yaw_DL.csv"):
+// The formula (Eric 2025, read from "Tracked mountain Yaw.csv" → "… Yaw_DL.csv"):
 //     ut[0] = t[0]
-//     ut[n] = (t[n] − t[n−1]) + k · ut[n−1]          DL: k = 1/2, DL1.3: k = 1/1,3
-// Skakningen (snabb ändring) rättas, men rättningen klingar av, så att långsamma svängar i vägen följer med bilen.
-// En shader har inget minne mellan bildrutorna, därför räknas detta här och inte i noden.
+//     ut[n] = (t[n] − t[n−1]) + k · ut[n−1]          DL: k = 1/2, DL1.3: k = 1/1.3
+// The shake (fast change) is corrected, but the correction decays, so slow turns in the road follow the car.
+// A shader has no memory between frames, so this is computed here and not in the node.
 //
-//   swift tools/directionlock.swift <tracker.csv> … [--k 0.5] [--pixels <FOV> <höjd>] [--yaw-sign 1] [--pitch-sign -1]
-//                                                   [--strength 1] [--out <mapp>]
+//   swift tools/directionlock.swift <tracker.csv> … [--k 0.5] [--pixels <FOV> <height>] [--yaw-sign 1] [--pitch-sign -1]
+//                                                   [--strength 1] [--out <folder>]
 //   swift tools/directionlock.swift "… Offset X.csv" "… Offset Y.csv" --fisheye 4096 [--sensor-height 23.9] [--start x y]
 //                                                   [--yaw-only]
 //   swift tools/directionlock.swift "… Offset X.csv" "… Offset Y.csv" --view 60 3840 2160 --smooth 0.5 [--start x y]
-//   swift tools/directionlock.swift --test tools/fixtures       (provet mot 2025-filerna; 0 när det stämmer)
+//   swift tools/directionlock.swift --test tools/fixtures       (the test against the 2025 files; 0 when it matches)
 //
-// --pixels: trackern ger pixlar i en väggs utbild (inte grader). Vinkeln räknas från första nyckeln:
-// atan((p − p[0]) / f), f = (höjd / 2) / tan(FOV / 2), väggens FOV och höjd som i noden.
-// --fisheye <bredd>: trackern har följt en punkt i själva fisheyeklippet (Framing → Stabilize → Track 1 Point, Apply To
-// Framing, exporterat som Framing\Offset X och Offset Y). Punkten stannar i bild hela klippet, också när bilen svänger.
-// Avläst 2026-10-11 mot Offroad-klippet (rutor ur klippet vid bildruta 0, 480 och 900): Offset är MINUS punktens
-// rörelse, i källans pixlar, med Y uppåt — punkten = start + (−Offset X, +Offset Y) i bildens pixlar (y nedåt).
-// Punkten går genom objektivets modell (samma r(θ) som shadern, --sensor-height) till en riktning; Stab Yaw är
-// ändringen i sidled (azimut) och Stab Pitch ändringen i höjd, båda genom DL. Startläget behövs inte: när bilen svänger
-// går punkten i en cirkel kring objektivets mitt, och cirkeln passas till spåret (--start x y om klippet inte svänger).
-// En punkt bakom bilen ger omvänd Stab Pitch (räknas), en punkt rakt åt sidan visar roll, inte pitch (varnas).
-// Flera spår i samma mapp hålls isär på filnamnet ("Track bak Offset X/Y" → "Track bak Stab Yaw").
-// --yaw-only (Eric 2026-10-11: "det är bara pan vi försöker stabilisera"): bara Stab Yaw skrivs, och en äldre
-// Stab Pitch-fil för samma spår tas bort ur utmappen så att den inte importeras av misstag.
+// --pixels: the tracker gives pixels in a wall's output image (not degrees). The angle is counted from the first key:
+// atan((p − p[0]) / f), f = (height / 2) / tan(FOV / 2), the wall's FOV and height as in the node.
+// --fisheye <width>: the tracker has followed a point in the fisheye clip itself (Framing → Stabilize → Track 1 Point,
+// Apply To Framing, exported as Framing\Offset X and Offset Y). The point stays in frame the whole clip, also when the
+// car turns. Read 2026-10-11 against the Offroad clip (frames from the clip at frame 0, 480 and 900): Offset is MINUS
+// the point's movement, in source pixels, with Y up — point = start + (−Offset X, +Offset Y) in image pixels (y down).
+// The point goes through the lens model (the same r(θ) as the shader, --sensor-height) to a direction; Stab Yaw is
+// the sideways change (azimuth) and Stab Pitch the change in height, both through DL. The start position is not
+// needed: when the car turns the point moves in a circle around the lens centre, and the circle is fitted to the
+// track (--start x y if the clip does not turn).
+// A point behind the car gives reversed Stab Pitch (accounted for), a point straight to the side shows roll, not
+// pitch (warned). Several tracks in the same folder are kept apart by file name ("Track bak Offset X/Y" →
+// "Track bak Stab Yaw").
+// --yaw-only (Eric 2026-10-11: "it's only pan we're trying to stabilize"): only Stab Yaw is written, and an older
+// Stab Pitch file for the same track is removed from the output folder so it is not imported by mistake.
 //
-// --view <FOV> <bredd> <höjd> + --smooth <sekunder>: HUVUDVÄGEN (SPL26 2026-10-12, Eric: "det ser ut att fungera").
-// Trackat i en trackingvy — en IgelkottFisheye-nod i Mode Wall på råklippet, riktad rakt fram mot horisonten — så att
-// trackern arbetar i en rak bild. Offset X/Y är pixlar i vyn (minus punktens rörelse, Y uppåt). Vinklarna:
-// f = (höjd / 2) / tan(FOV / 2), sidled = atan(x / f), höjd = atan(y / hypot(x, f)), relativt första nyckeln, med
-// punktens startläge --start <x> <y> (vyns pixlar, origo uppe till vänster; utan flaggan: bildens mitt).
-// --smooth delar vinkeln i väg (Gauss-utjämning åt båda hållen, sigma = sekunder · --fps bildrutor, avrundat nedåt) och
-// skak = vinkel − väg; skaket skrivs som Stab Yaw / Stab Pitch. DL (k = 0,5) klingar av på 2–3 rutor och släpper
-// igenom gungandet på 1–3 Hz; på en inspelad plåt är utjämning åt båda hållen rätt filter. Utan --smooth används DL.
-// Samma räkning som SPL26:s prototyp vy_stab.py (borttagen i 0.9; provet jämför mot dess kurvor i fixtures/vy).
+// --view <FOV> <width> <height> + --smooth <seconds>: THE MAIN PATH (SPL26 2026-10-12, Eric: "it looks like it works").
+// Tracked in a tracking view — an IgelkottFisheye node in Mode Wall on the raw clip, aimed straight ahead at the
+// horizon — so the tracker works in a rectilinear image. Offset X/Y are pixels in the view (minus the point's
+// movement, Y up). The angles: f = (height / 2) / tan(FOV / 2), sideways = atan(x / f), height = atan(y / hypot(x, f)),
+// relative to the first key, with the point's start position --start <x> <y> (view pixels, origin top left; without
+// the flag: the image centre).
+// --smooth splits the angle into road (Gaussian smoothing in both directions, sigma = seconds · --fps frames, rounded
+// down) and shake = angle − road; the shake is written as Stab Yaw / Stab Pitch. DL (k = 0.5) decays over 2–3 frames
+// and lets the 1–3 Hz rocking through; on a recorded plate, smoothing in both directions is the right filter. Without
+// --smooth, DL is used. Same computation as SPL26's prototype vy_stab.py (removed in 0.9; the test compares against
+// its curves in fixtures/vy).
 //
-// --tracking: trackat i nodens Mode Tracking view (fast skala 0,02° per pixel, TRACK_SCALE i shadern). Vinkeln är
-// förskjutningen gånger skalan; varken FOV, bildstorlek eller startpunkt behövs. Används med --smooth som --view.
+// --tracking: tracked in the node's Mode Tracking view (fixed scale 0.02° per pixel, TRACK_SCALE in the shader). The
+// angle is the offset times the scale; neither FOV, image size nor start point is needed. Used with --smooth, like
+// --view.
 //
-// Tecknen: Stab Yaw + = hämta längre åt höger, Stab Pitch + = hämta högre upp (PROJECT.md, Stabilisering). En punkt
-// som trackern ser längre ner (y växer nedåt) rättas med Stab Pitch −, därav --pitch-sign −1 som standard för pixlar.
+// The signs: Stab Yaw + = fetch further to the right, Stab Pitch + = fetch higher up (the internal project notes,
+// stabilisation). A point the tracker sees further down (y grows downward) is corrected with Stab Pitch −, hence
+// --pitch-sign −1 as the default for pixels.
 import Foundation
 
 struct Channel { var name: String; var keys: [(frame: Double, value: Double)] }
 
-/// Live FX:s kurv-CSV: block som börjar med "#ANIM <namn>", sedan "#COND …" och en nyckel per rad. Två kolumner
-/// (bild, värde) eller sex (vänster tangent, nyckel, höger tangent); "," eller ";"; Numbers skriver minus som "−".
+/// Live FX's curve CSV: blocks that start with "#ANIM <name>", then "#COND …" and one key per line. Two columns
+/// (frame, value) or six (left tangent, key, right tangent); "," or ";"; Numbers writes minus as "−".
 func parse(_ text: String) -> [Channel] {
     var out: [Channel] = []
     for raw in text.components(separatedBy: .newlines) {
@@ -74,7 +80,7 @@ func directionLock(_ t: [Double], k: Double) -> [Double] {
     return out
 }
 
-/// Sex kolumner, som Live FX själv exporterar en Matchbox-parameter (importerad på Stab Pitch 2026-10-11).
+/// Six columns, as Live FX itself exports a Matchbox parameter (imported on Stab Pitch 2026-10-11).
 func write(_ name: String, _ keys: [(frame: Double, value: Double)]) -> String {
     var s = "#ANIM Stab\\\(name)\n#COND CC\n"
     for k in keys {
@@ -89,7 +95,7 @@ func isPitch(_ name: String) -> Bool {
     return n.contains("pitch") || n.hasSuffix("y") || n.contains("tilt")
 }
 
-// Objektivet, som i matchbox/IgelkottFisheye2D.glsl (FisheyeLens.pyxis12K): r(θ) i pixlar vid 8040
+// The lens, as in matchbox/IgelkottFisheye2D.glsl (FisheyeLens.pyxis12K): r(θ) in pixels at 8040
 let K = (2068.8673345215607, -31.032060077989637, 0.1394366394877631, -0.00029359255648059773)
 func lensRadius(_ th: Double) -> Double { let t2 = th * th; return th * (K.0 + t2 * (K.1 + t2 * (K.2 + t2 * K.3))) }
 func lensAngle(_ r: Double) -> Double {
@@ -101,7 +107,7 @@ func lensAngle(_ r: Double) -> Double {
     return th
 }
 
-/// Cirkeln som bäst passar punkterna (minsta kvadrat, algebraiskt): mitt och radie.
+/// The circle that best fits the points (least squares, algebraic): centre and radius.
 func fitCircle(_ pts: [(x: Double, y: Double)]) -> (cx: Double, cy: Double, r: Double)? {
     var m = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 3)
     for p in pts {
@@ -118,12 +124,12 @@ func fitCircle(_ pts: [(x: Double, y: Double)]) -> (cx: Double, cy: Double, r: D
     let c = m[2][3] / m[2][2], r2 = c + cx * cx + cy * cy
     guard r2 > 0 else { return nil }
     var r = r2.squareRoot()
-    // Den algebraiska passningen ger för liten radie på en kort båge med brus; förfina på avstånden (Gauss–Newton)
+    // The algebraic fit gives too small a radius on a short noisy arc; refine on the distances (Gauss–Newton)
     for _ in 0..<50 {
         var a = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 3)
         for p in pts {
             let dx = p.x - cx, dy = p.y - cy, d = max(hypot(dx, dy), 1e-9)
-            let row = [-dx / d, -dy / d, -1, -(d - r)]                // d(rest)/d(cx, cy, r) och −resten
+            let row = [-dx / d, -dy / d, -1, -(d - r)]                // d(resid)/d(cx, cy, r) and −resid
             for i in 0..<3 { for j in 0..<4 { a[i][j] += row[i] * row[j] } }
         }
         var singular = false
@@ -143,11 +149,11 @@ func fitCircle(_ pts: [(x: Double, y: Double)]) -> (cx: Double, cy: Double, r: D
 
 struct FisheyeTrack { var yaw: [Double]; var pitch: [Double]; var report: String }
 
-/// Offset X/Y ur Framing (källpixlar) → punktens vinklar relativt första nyckeln: sidled (azimut, + = höger) och höjd.
-/// `center` = objektivets mitt i källans pixlar; behövs bara med `start`.
+/// Offset X/Y from Framing (source pixels) → the point's angles relative to the first key: sideways (azimuth, + = right)
+/// and height. `center` = the lens centre in source pixels; needed only with `start`.
 func fisheyeTrack(ox: [Double], oy: [Double], width: Double, sensorHeight: Double, start: (x: Double, y: Double)?,
                   center: (x: Double, y: Double)) -> FisheyeTrack? {
-    // Punktens rörelse i bildens pixlar (y nedåt), från startläget. Första nyckeln är inte alltid 0 (Track bak: −17,5)
+    // The point's movement in image pixels (y down), from the start. The first key is not always 0 (Track bak: −17.5)
     let move = zip(ox, oy).map { (x: -($0 - ox[0]), y: $1 - oy[0]) }
     var v0: (x: Double, y: Double), note: String
     if let s = start {
@@ -162,17 +168,17 @@ func fisheyeTrack(ox: [Double], oy: [Double], width: Double, sensorHeight: Doubl
             run += d; lo = min(lo, run); hi = max(hi, run)
         }
         span = (hi - lo) * 180 / .pi
-        // Kort båge eller dålig passning: cirkelns mitt är inte bestämd, då måste startläget ges
+        // Short arc or poor fit: the circle's centre is not determined, so the start position must be given
         guard span > 8, dev < 0.05 * c.r else { return nil }
         v0 = (-c.cx, -c.cy)
         note = String(format: "circle fitted to the track: radius %.1f px, deviation %.1f px, arc %.1f deg; start %.0f, %.0f px from the lens centre",
                       c.r, dev, span, v0.x, v0.y)
     }
-    let scale = 23.32 / sensorHeight * width / 8040                   // källpixlar per modellpixel
+    let scale = 23.32 / sensorHeight * width / 8040                   // source pixels per model pixel
     var az: [Double] = [], el: [Double] = []
     for m in move {
         let x = v0.x + m.x, y = v0.y + m.y
-        az.append(atan2(x, y) * 180 / .pi)                            // bildens x = höger, y nedåt = framåt
+        az.append(atan2(x, y) * 180 / .pi)                            // image x = right, y down = forward
         el.append(90 - lensAngle(hypot(x, y) / scale) * 180 / .pi)
     }
     var yaw = [0.0], pitch = [0.0], unwrapped = 0.0
@@ -180,7 +186,7 @@ func fisheyeTrack(ox: [Double], oy: [Double], width: Double, sensorHeight: Doubl
         var d = az[i] - az[i - 1]; if d > 180 { d -= 360 }; if d < -180 { d += 360 }
         unwrapped += d
         yaw.append(unwrapped)
-        // Stab Pitch + lyfter det som ligger framför och sänker det bakom: en punkt bakom bilen räknas omvänt
+        // Stab Pitch + raises what is in front and lowers what is behind: a point behind the car counts reversed
         pitch.append(pitch[i - 1] + (el[i] - el[i - 1]) * (cos(az[i] * .pi / 180) >= 0 ? 1 : -1))
     }
     let side = az.filter { abs(cos($0 * .pi / 180)) < 0.5 }.count
@@ -189,13 +195,13 @@ func fisheyeTrack(ox: [Double], oy: [Double], width: Double, sensorHeight: Doubl
     return FisheyeTrack(yaw: yaw, pitch: pitch, report: note)
 }
 
-/// Offset X/Y ur Framing i en trackingvy (Mode Wall) → punktens vinklar relativt första nyckeln, som prototypen.
-/// `start` = punktens läge i vyns pixlar relativt bildmitten, x åt höger, y uppåt.
+/// Offset X/Y from Framing in a tracking view (Mode Wall) → the point's angles relative to the first key, as the
+/// prototype. `start` = the point's position in view pixels relative to the image centre, x to the right, y up.
 func viewTrack(ox: [Double], oy: [Double], fov: Double, height: Double, start: (x: Double, y: Double)) -> FisheyeTrack {
     let f = (height / 2) / tan(fov * .pi / 360)
     var yaw: [Double] = [], pitch: [Double] = []
     for (a, b) in zip(ox, oy) {
-        let x = start.x - (a - ox[0]), y = start.y - (b - oy[0])        // Offset = minus rörelsen, Y uppåt; första nyckeln inte alltid 0
+        let x = start.x - (a - ox[0]), y = start.y - (b - oy[0])        // Offset = minus the movement, Y up; first key not always 0
         yaw.append(atan2(x, f) * 180 / .pi)
         pitch.append(atan2(y, hypot(x, f)) * 180 / .pi)
     }
@@ -205,7 +211,7 @@ func viewTrack(ox: [Double], oy: [Double], fov: Double, height: Double, start: (
     return FisheyeTrack(yaw: yaw.map { $0 - y0 }, pitch: pitch.map { $0 - p0 }, report: note)
 }
 
-/// Gauss-utjämning åt båda hållen, kanten upprepad, som prototypen.
+/// Gaussian smoothing in both directions, edge repeated, as the prototype.
 func gauss(_ v: [Double], sigma: Double) -> [Double] {
     let r = Int(3 * sigma), n = v.count
     let w = (-r...r).map { exp(-0.5 * pow(Double($0) / sigma, 2)) }
@@ -227,7 +233,7 @@ var start: (x: Double, y: Double)? = nil, lensOffset = (x: 0.0, y: 0.0)
 var yawOnly = false
 var view: (fov: Double, width: Double, height: Double)? = nil
 var tracking = false
-let TRACK_SCALE = 0.02                                               // grader per pixel, som shadern
+let TRACK_SCALE = 0.02                                               // degrees per pixel, as the shader
 var smooth: Double? = nil, fps = 25.0
 var files: [String] = []
 func number(_ flag: String) -> Double {
@@ -250,7 +256,7 @@ while !args.isEmpty {
     case "--fisheye": fisheyeWidth = number(a)
     case "--sensor-height": sensorHeight = number(a)
     case "--start": let x = number(a); start = (x, number(a))
-    case "--lens-offset": let x = number(a); lensOffset = (x, number(a))        // som nodens Lens Offset, pixlar vid 8040
+    case "--lens-offset": let x = number(a); lensOffset = (x, number(a))        // as the node's Lens Offset, pixels at 8040
     case "--out": guard !args.isEmpty else { fail("--out needs a folder") }; outDir = args.removeFirst()
     case "--test": guard !args.isEmpty else { fail("--test needs a folder") }; testDir = args.removeFirst()
     default: files.append(a)
@@ -258,7 +264,7 @@ while !args.isEmpty {
 }
 
 if let dir = testDir {
-    // Provet: 2025-filerna. k = 1/2 ska ge _DL, k = 1/1,3 ska ge _DL1.3, på sex decimaler.
+    // The test: the 2025 files. k = 1/2 must give _DL, k = 1/1.3 must give _DL1.3, to six decimals.
     var good = true
     for (axis, suffix, kk) in [("Yaw", "_DL", 0.5), ("Yaw", "_DL1.3", 1 / 1.3), ("Pitch", "_DL", 0.5), ("Pitch", "_DL1.3", 1 / 1.3)] {
         func load(_ n: String) -> [(frame: Double, value: Double)] {
@@ -274,8 +280,8 @@ if let dir = testDir {
         print(String(format: "  %@ Tracked mountain %@ → %@ (k = %.4f): largest difference %.7f over %d keys",
                      ok ? "PASS" : "FAIL", axis, suffix, kk, worst, want.count))
     }
-    // Fisheye-läget: en punkt 20° över horisonten rakt fram, bilen svänger 40° och nickar; spåret görs som Live FX
-    // skriver det (Offset = −rörelsen, Y uppåt, källpixlar) och ska ge tillbaka svängen och nicken.
+    // Fisheye mode: a point 20° above the horizon straight ahead, the car turns 40° and nods; the track is made as Live FX
+    // writes it (Offset = −movement, Y up, source pixels) and must give back the turn and the nod.
     do {
         let w = 4096.0, sh = 23.9, scale = 23.32 / sh * w / 8040
         var ox: [Double] = [], oy: [Double] = [], wantYaw: [Double] = [], wantPitch: [Double] = []
@@ -290,7 +296,7 @@ if let dir = testDir {
         }
         var worst = 1e9
         if let t = fisheyeTrack(ox: ox, oy: oy, width: w, sensorHeight: sh, start: nil, center: (w / 2, w / 2)) {
-            // Det som används är DL av vinklarna (skakningen); cirkelns mitt är bara ungefärligt bestämd av en kort båge
+            // What is used is DL of the angles (the shake); the circle's centre is only roughly set by a short arc
             let gy = directionLock(t.yaw, k: 0.5), wy = directionLock(wantYaw, k: 0.5)
             let gp = directionLock(t.pitch, k: 0.5), wp = directionLock(wantPitch, k: 0.5)
             worst = 0
@@ -303,8 +309,8 @@ if let dir = testDir {
         good = good && ok
         print(String(format: "  %@ Fisheye track (synthetic turn and nod, start from the fitted circle): largest error after DL %.4f deg", ok ? "PASS" : "FAIL", worst))
     }
-    // Trackingvyn: Offroad-spåret (Track vy) ska ge SPL26:s kurvor ur prototypen (FOV 60, 3840 × 2160, start
-    // 754 px vänster om och 287 px över mitten, sigma 12 bildrutor)
+    // The tracking view: the Offroad track (Track vy) must give SPL26's curves from the prototype (FOV 60, 3840 × 2160,
+    // start 754 px left of and 287 px above the centre, sigma 12 frames)
     do {
         func load(_ n: String) -> [Double] {
             guard let s = try? String(contentsOfFile: "\(dir)/vy/\(n)", encoding: .utf8), let c = parse(s).first else { fail("cannot read \(dir)/vy/\(n)") }
@@ -326,7 +332,7 @@ if let dir = testDir {
     exit(good ? 0 : 1)
 }
 
-/// Skaket ur en vinkelkurva: vinkel − väg med --smooth, annars Erics DL.
+/// The shake from an angle curve: angle − road with --smooth, otherwise Eric's DL.
 func shake(_ t: [Double]) -> [Double] {
     guard let s = smooth else { return directionLock(t, k: k) }
     let road = gauss(t, sigma: max(1, (s * fps).rounded(.down)))
@@ -343,7 +349,7 @@ func save(_ target: String, _ base: String, _ dir: String, _ frames: [Double], _
 
 if fisheyeWidth != nil || view != nil || tracking {
     let width = fisheyeWidth ?? 0
-    // Kurvorna paras på filnamnet utan " Offset X" / " Offset Y": ett spår per namn
+    // The curves are paired on the file name without " Offset X" / " Offset Y": one track per name
     var tracks: [String: (x: Channel?, y: Channel?, url: URL)] = [:], order: [String] = []
     for path in files {
         guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { fail("cannot read \(path)") }
@@ -367,11 +373,11 @@ if fisheyeWidth != nil || view != nil || tracking {
         let ox = cx.keys.prefix(n).map(\.value), oy = cy.keys.prefix(n).map(\.value)
         var track: FisheyeTrack? = nil
         if tracking {
-            // Offset = minus rörelsen (Y uppåt), gånger den fasta skalan
+            // Offset = minus the movement (Y up), times the fixed scale
             track = FisheyeTrack(yaw: ox.map { -($0 - ox[0]) * TRACK_SCALE }, pitch: oy.map { -($0 - oy[0]) * TRACK_SCALE },
                                  report: String(format: "tracking view, %.2f deg per pixel", TRACK_SCALE))
         } else if let v = view {
-            // --start i vyns pixlar (origo uppe till vänster) → relativt mitten, y uppåt
+            // --start in view pixels (origin top left) → relative to the centre, y up
             track = viewTrack(ox: ox, oy: oy, fov: v.fov, height: v.height,
                               start: start.map { ($0.x - v.width / 2, v.height / 2 - $0.y) } ?? (0, 0))
         } else {

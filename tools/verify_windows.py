@@ -1,27 +1,28 @@
-# Provet för IgelkottFisheye på Windows: båda utgåvorna ritas på riktigt med datorns grafikkort (en OpenGL-kontext ur
-# WGL) och varje utpixel jämförs i dubbel precision med IgelkottStages räkning. Live FX på Windows kör OpenGL själv
-# (loggen: "OpenGL 4.6.0 Compatibility Profile"), så Matchbox-shadern (GLSL 1.20) kompileras här av samma drivrutin som
-# Live FX använder; PIXERA-effekten (GLSL 4.50) ritas med GPUpad-mallens omskrivning av texture(). Inga paket, bara
-# Python 3 (ctypes), inget som kräver AMD eller NVIDIA.
+# The test for IgelkottFisheye on Windows: both editions are really drawn on the computer's graphics card (an OpenGL
+# context from WGL) and every output pixel is compared in double precision with IgelkottStage's maths. Live FX on Windows
+# runs OpenGL itself (the log: "OpenGL 4.6.0 Compatibility Profile"), so the Matchbox shader (GLSL 1.20) is compiled here
+# by the same driver Live FX uses; the PIXERA effect (GLSL 4.50) is drawn with the GPUpad template's rewrite of
+# texture(). No packages, only Python 3 (ctypes), nothing that needs AMD or NVIDIA.
 #
-#   python tools/verify_windows.py            (från projektroten)
+#   python tools/verify_windows.py            (from the project root)
 #
-# Källan är en gradient (R = x, G = y uppifrån, normerade), så utpixelns färg är källpunkten shadern läste. Pixeltaggen
-# (PixelTag i _shared/IgelkottFisheyeLens) ritas i hörnen som Darkroom ritar den; dess bitar kontrolleras mot Swift-testets
-# provvektorer. Fallen täcker Plate Manual och Auto (tagg i alla hörn, i ett hörn, efter en LUT, trasig CRC, Z-Cam, kod 4 utan modell,
-# majoritet, för svag kontrast, ingen tagg), PYXIS 12K och Sony Venice 2, zenit och nadir, Wall, Split och Equirect,
-# och varningstecknet pixel för pixel. Gränsen är 0,5 källpixlar vid 8040.
+# The source is a gradient (R = x, G = y from the top, normalised), so the output pixel's colour is the source point the
+# shader read. The pixel tag (PixelTag in _shared/IgelkottFisheyeLens) is drawn in the corners as Darkroom draws it; its
+# bits are checked against the Swift test's test vectors. The cases cover Plate Manual and Auto (tag in every corner, in
+# one corner, after a LUT, broken CRC, Z-Cam, code 4 without a model, majority, too weak contrast, no tag), PYXIS 12K
+# and Sony Venice 2, zenith and nadir, Wall, Split and Equirect, and the warning sign pixel by pixel. The limit is 0.5
+# source pixels at 8040.
 #
-# Ger 0 när alla fall håller, annars 1.
+# Returns 0 when all cases hold, otherwise 1.
 import array, ctypes, ctypes.wintypes as wt, json, math, os, subprocess, sys
 
 root = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
-# Filerna ska vara gjorda ur shader/ (tools/build_shaders.py)
+# The files must be generated from shader/ (tools/build_shaders.py)
 if subprocess.call([sys.executable, os.path.join(root, "tools", "build_shaders.py"), "--check"]) != 0:
     sys.stderr.write("Run python tools/build_shaders.py first.\n"); sys.exit(1)
 
-# MARK: - IgelkottStages räkning (StageKit/FisheyeLens.swift, StageProtocol/CameraCost.swift)
+# MARK: - IgelkottStage's maths (StageKit/FisheyeLens.swift, StageProtocol/CameraCost.swift)
 
 REF = 8040.0
 CENTER = (4019.9389914282037, 4019.9389463189077)
@@ -33,7 +34,7 @@ ZREF = 3872.0
 ZCENTER = (1936.0, 1936.0)
 ZK = (965.3796533166083, -9.478101051830038, 0.2498244786039206, -0.5051113655662752)
 CAMS = {1: (REF, CENTER, K), 2: (VREF, VCENTER, VK), 3: (ZREF, ZCENTER, ZK)}
-# Färgerna ur IgelkottDesigns tokens, som build_shaders.py skriver av till shader/tokens.json (atlas regel 17)
+# The colours from IgelkottDesign's tokens, which build_shaders.py copies to shader/tokens.json (atlas rule 17)
 with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "shader", "tokens.json"),
           encoding="utf-8") as _fh:
     _tok = json.load(_fh)["color"]
@@ -51,7 +52,7 @@ def apply(m, v):
 
 
 def rotation(yaw, pitch, roll):
-    # Rader här, kolumner i GLSL/simd: R = Ry(yaw) · Rx(−pitch) · Rz(roll)
+    # Rows here, columns in GLSL/simd: R = Ry(yaw) · Rx(−pitch) · Rz(roll)
     y, p, r = math.radians(yaw), math.radians(-pitch), math.radians(roll)
     ry = [[math.cos(y), 0, math.sin(y)], [0, 1, 0], [-math.sin(y), 0, math.cos(y)]]
     rx = [[1, 0, 0], [0, math.cos(p), -math.sin(p)], [0, math.sin(p), math.cos(p)]]
@@ -60,7 +61,7 @@ def rotation(yaw, pitch, roll):
 
 
 def point(d, cam, nadir):
-    """FisheyeLens.point / referensen, nadir som (x, −y, −z): källpunkten i andelar, uppifrån."""
+    """FisheyeLens.point / the reference, nadir as (x, −y, −z): the source point in fractions, from the top."""
     if nadir:
         d = (d[0], -d[1], -d[2])
     ref, c, k = CAMS[cam]
@@ -72,7 +73,7 @@ def point(d, cam, nadir):
 
 
 def wall_direction(cx, cy, ww, R, fov):
-    """FOV vågrätt över väggens bredd ww (Eric 2026-11-20; till och med 0.17 lodrätt över höjden)."""
+    """FOV horizontal across the wall's width ww (Eric 2026-11-20; through 0.17 vertical across the height)."""
     f = (ww / 2) / math.tan(fov * math.pi / 360)
     v = (cx / f, cy / f, 1.0)
     l = math.sqrt(v[0] ** 2 + v[1] ** 2 + 1)
@@ -80,8 +81,8 @@ def wall_direction(cx, cy, ww, R, fov):
 
 
 def equi_direction(cx, cy, w, R):
-    """Mode Equirect: 360 grader över hela bredden w, samma grader per pixel på höjden, (cx, cy) från väggens mitt,
-    riktad med väggens R; None förbi en pol."""
+    """Mode Equirect: 360 degrees across the full width w, the same degrees per pixel in height, (cx, cy) from the
+    wall's centre, aimed with the wall's R; None past a pole."""
     k = 2 * math.pi / w
     lat, lon = cy * k, cx * k
     if abs(lat) > math.pi / 2:
@@ -90,8 +91,9 @@ def equi_direction(cx, cy, w, R):
 
 
 def direction(c, qx, qy_up, w, h, scale=1.0):
-    """Riktningen genom punkten (qx, qy_up) i en utbild w × h (y upp), som nodens Wall/Split/Equirect. Offset X/Y (vänstra
-    väggen) och Right Offset X/Y (högra) flyttar bilden efter projektionen, gånger scale; Split-gränsen står kvar."""
+    """The direction through the point (qx, qy_up) in an output picture w × h (y up), as the node's Wall/Split/Equirect.
+    Offset X/Y (left wall) and Right Offset X/Y (right) move the picture after the projection, times scale; the Split
+    edge stays put."""
     split_x = c["pos"] / 100 * w if c["split"] else w
     right = qx >= split_x
     ox, oy = c["roffset"] if right else c["offset"]
@@ -105,7 +107,7 @@ def direction(c, qx, qy_up, w, h, scale=1.0):
 
 
 def warning(qx, qy_top, size):
-    """Varningstecknet (igkWarning): 0 inget, 1 gult, 2 svart."""
+    """The warning sign (igkWarning): 0 none, 1 yellow, 2 black."""
     px, py = (qx - 0.5 * size) / size, (qy_top - 0.5 * size) / size
     if px < 0 or px > 1 or py < 0 or py > 0.9:
         return 0
@@ -130,7 +132,7 @@ FONT = {"N": "10001 11001 10101 10011 10001 10001 10001", "O": "01110 10001 1000
         "K": "10001 10010 10100 11000 10100 10010 10001", "C": "01110 10001 10000 10000 10000 10001 01110",
         "P": "11110 10001 10001 11110 10000 10000 10000", "S": "01111 10000 10000 01110 00001 00001 11110",
         "M": "10001 11011 10101 10101 10001 10001 10001", ".": "00000 00000 00000 00000 00000 01100 01100"}
-for i, ch in enumerate("NOT AN IGELKOTT CLIP" + "IGELKOTTPLATES.COM"):   # shaderns tal ska vara just dessa bokstäver
+for i, ch in enumerate("NOT AN IGELKOTT CLIP" + "IGELKOTTPLATES.COM"):   # the shader's numbers must be these letters
     r = [int(x, 2) for x in FONT[ch].split()] if ch != " " else [0] * 7
     want = (((r[0] * 32 + r[1]) * 32 + r[2]) * 32 + r[3], (r[4] * 32 + r[5]) * 32 + r[6])
     if GLYPHS.get(i, (0, 0)) != want:
@@ -138,7 +140,7 @@ for i, ch in enumerate("NOT AN IGELKOTT CLIP" + "IGELKOTTPLATES.COM"):   # shade
 
 
 def message(qx, qy_top, sw, sh):
-    """Meddelandet (igkMessage): 1 på en punkt i NOT AN IGELKOTT CLIP, 2 i IGELKOTTPLATES, 3 i .COM, annars 0."""
+    """The message (igkMessage): 1 on a point in NOT AN IGELKOTT CLIP, 2 in IGELKOTTPLATES, 3 in .COM, otherwise 0."""
     unit = min(0.7 * sw / 119.0, 0.15 * sh / 7.0)
     px, py = (qx - 0.5 * sw) / unit + 59.5, (qy_top - 0.5 * sh) / unit + 9.0
     if px < 0 or px >= 119 or py < 0 or py >= 18:
@@ -147,17 +149,17 @@ def message(qx, qy_top, sw, sh):
     if col > 4.5:
         return 0
     row = math.floor(py)
-    if row > 6:                                       # andra raden: rad 11-17, bokstav 1-18
+    if row > 6:                                       # second line: rows 11-17, letters 1-18
         if row < 11 or letter < 1 or letter > 18:
             return 0
         row -= 11; letter += 19
-    line = (3 if letter > 33 else 2) if letter > 19 else 1          # .COM är bokstav 34-37
+    line = (3 if letter > 33 else 2) if letter > 19 else 1          # .COM is letters 34-37
     g = GLYPHS.get(letter, (0, 0))
     bits = (g[0] >> (5 * (3 - row))) & 31 if row < 4 else (g[1] >> (5 * (6 - row))) & 31
     return line * ((bits >> (4 - col)) & 1)
 
 
-# MARK: - Pixeltaggen (PixelTag.swift: reglerna står där)
+# MARK: - The pixel tag (PixelTag.swift: the rules are there)
 
 def crc6(bits):
     crc = 0x3F
@@ -179,7 +181,7 @@ def tag_cells(cam, nadir, adjusted=True, oriented=False):
 
 
 def tag_rect(i, corner, n):
-    """PixelTag.rect: rutan i pixlar (y nedåt), kanterna avrundade som Swifts .rounded()."""
+    """PixelTag.rect: the cell in pixels (y down), the edges rounded like Swift's .rounded()."""
     rnd = lambda v: math.floor(v + 0.5)
     u0 = 0.116 + (i % 10) * 0.011; v0 = 0.010 + (i // 10) * 0.011
     x0, x1 = rnd(u0 * n), rnd((u0 + 0.011) * n)
@@ -196,7 +198,7 @@ def in_tag_zone(p):
     return 0.112 < u < 0.230 and v < 0.036
 
 
-# Swift-testets provvektorer (PixelTagTests: cellerna som text)
+# The Swift test's test vectors (PixelTagTests: the cells as text)
 vectors = {(1, False, True, False): "10010010100000000011", (2, True, True, True): "10010101110000110100",
            (3, False, False, False): "10010110000000001011", (0, False, False, False): "10010000000000101001"}
 for (cam, nadir, adj, ori), want in vectors.items():
@@ -206,7 +208,7 @@ for (cam, nadir, adj, ori), want in vectors.items():
         sys.exit(1)
 print("The pixel tag's bits match PixelTag's test vectors.")
 
-# MARK: - OpenGL via WGL (ett dolt fönster, en vanlig kontext; Compatibility Profile ger GLSL 1.20 och glBegin)
+# MARK: - OpenGL via WGL (a hidden window, a plain context; Compatibility Profile gives GLSL 1.20 and glBegin)
 
 def fail(s):
     sys.stderr.write(s + "\n"); sys.exit(1)
@@ -242,7 +244,7 @@ opengl32.wglGetProcAddress.restype = ctypes.c_void_p
 opengl32.wglGetProcAddress.argtypes = [ctypes.c_char_p]
 opengl32.glGetString.restype = ctypes.c_char_p
 
-# Fönsterklassen "STATIC" finns alltid; fönstret visas aldrig
+# The window class "STATIC" always exists; the window is never shown
 hwnd = user32.CreateWindowExW(0, "STATIC", "verify", 0, 0, 0, 16, 16, None, None, None, None)
 hdc = user32.GetDC(hwnd)
 pfd = PIXELFORMATDESCRIPTOR()
@@ -334,7 +336,7 @@ matchbox_src = read_file("matchbox", "IgelkottFisheye2D.glsl")
 pixera_src = read_file("pixera", "IgelkottFisheye.glsl")
 matchbox = link("#version 120\nvoid main() { gl_Position = gl_Vertex; }\n", matchbox_src)
 print("Live FX (Matchbox): the shader compiles and links (GLSL 1.20).")
-# PIXERA: GPUpad-mallens block byts mot samma omskrivning, sedan en main som anropar effektens texture()
+# PIXERA: the GPUpad template's block is replaced with the same rewrite, then a main that calls the effect's texture()
 body = pixera_src[pixera_src.index("#endif") + len("#endif"):]
 pixera = link("#version 450 compatibility\nvoid main() { gl_Position = gl_Vertex; }\n",
               "#version 450\n"
@@ -354,7 +356,8 @@ gl.glPixelStorei(GL_PACK_ALIGNMENT, 1); gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
 
 def upload(n, tag, top_row_first):
-    """Gradienten n × n (R = x, G = y uppifrån) med taggen ritad: tag = fyra hörn, vart och ett None eller (celler, vit, svart)."""
+    """The gradient n × n (R = x, G = y from the top) with the tag drawn: tag = four corners, each None or
+    (cells, white, black)."""
     img = array.array("f", bytes(4 * 4 * n * n))
     for y in range(n):
         g = (y + 0.5) / n
@@ -406,7 +409,7 @@ def render(prog, c, setup):
         px = (GLfloat * (w * h * 4))()
         gl.glReadPixels(0, 0, w, h, GL_RGBA, GL_FLOAT, px)
     else:
-        # Stora dukar: bara var step:e rad läses tillbaka (raden på sin plats, resten nollor som check() hoppar över)
+        # Large canvases: only every step-th row is read back (the row in its place, the rest zeros that check() skips)
         px = {}
         line = (GLfloat * (w * 4))()
         for row in range(step // 2, h, step):
@@ -441,7 +444,7 @@ def setup_pixera(p, c):
     seti(p, "sampler", 0)
     glUniform2f(glGetUniformLocation(p, b"u_size"), GLfloat(c["w"]), GLfloat(c["h"]))
     seti(p, "camera", c["cam"]); seti(p, "pointing", c["pointing"])
-    # PIXERA: Offset X/Y i % av höjden; fallet anger pixlar i utbilden
+    # PIXERA: Offset X/Y in % of the height; the case gives pixels in the output
     setf(p, "offsetX", c["offset"][0] / c["h"] * 100); setf(p, "offsetY", c["offset"][1] / c["h"] * 100)
     setf(p, "offsetXR", c["roffset"][0] / c["h"] * 100); setf(p, "offsetYR", c["roffset"][1] / c["h"] * 100)
     seti(p, "mode", c["mode"])
@@ -456,11 +459,11 @@ glUniform2f = ext("glUniform2f", None, GLint, GLfloat, GLfloat)
 
 def case(name, w, h, cam=1, pointing=1, offset=(0.0, 0.0), roffset=(0.0, 0.0), mode=0, yaw=0.0, pitch=0.0, roll=0.0, fov=90.0,
          split=False, pos=50.0, right=(0.0, 0.0, 0.0, 90.0), tag="auto", expect=None, pixera=False, step=1):
-    """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (panelens värden).
-    offset: Offset X/Y i utbildens pixlar. expect = (kamera, nadir, läge) som noden ska välja; utan = handvalet.
-    Läge 0 spelar, 1 svart med varningstecknet (kamera utan linsmodell), 2 vägrar (ingen tagg: svart, NOT AN IGELKOTT
-    CLIP och varningstecknet, Eric 2026-11-23). tag "auto" = handvalets egen tagg i alla hörn (en plåt utan tagg spelas
-    aldrig sedan 0.20), None = ingen tagg."""
+    """cam: 0 Auto, 1 PYXIS, 2 Venice, 3 Z-Cam; pointing: 0 Auto, 1 Zenith, 2 Nadir (the panel's values).
+    offset: Offset X/Y in output pixels. expect = (camera, nadir, state) the node should choose; without = the manual
+    choice. State 0 plays, 1 black with the warning sign (camera without a lens model), 2 refuses (no tag: black, NOT AN
+    IGELKOTT CLIP and the warning sign, Eric 2026-11-23). tag "auto" = the manual choice's own tag in every corner (a
+    plate without a tag never plays since 0.20), None = no tag."""
     auto = tag == "auto"
     if auto:
         tag = every(tag_cells(cam if cam in (1, 2, 3) else 1, pointing == 2))
@@ -477,7 +480,7 @@ def every(cells, white=1.0, black=0.0):
 
 PYXIS_UP, PYXIS_DOWN = tag_cells(1, False), tag_cells(1, True)
 VENICE_UP, VENICE_DOWN = tag_cells(2, False), tag_cells(2, True)
-broken = list(VENICE_DOWN); broken[7] = not broken[7]                    # ruta 7 (nadir) vänd: fel CRC
+broken = list(VENICE_DOWN); broken[7] = not broken[7]                    # cell 7 (nadir) flipped: wrong CRC
 O = (12.5, -7.25)
 REFUSED = (0, False, 2)
 cases = [
@@ -543,7 +546,8 @@ cases = [
 
 
 def check(c, px, n, host):
-    """Jämför utbilden med räkningen. 2 × 2 prov per pixel i båda (PIXERA sedan 0.21); Live FX räknar raden uppifrån, PIXERA y uppåt."""
+    """Compare the output with the maths. 2 × 2 samples per pixel in both (PIXERA since 0.21); Live FX counts rows
+    from the top, PIXERA y up."""
     w, h = c["w"], c["h"]
     cam, nadir, state = c["expect"]
     warn = state > 0
@@ -564,7 +568,7 @@ def check(c, px, n, host):
             else:
                 mk = lambda e: warning((x + 0.5 + e) / h, 1 - (row + 0.5 + e) / h, 0.05)
             mark = mk(0.0) if warn else 0
-            if state == 2 and not mark and mk(-0.05) == 0 and mk(0.05) == 0:   # vägrad: svart, meddelandet i gult
+            if state == 2 and not mark and mk(-0.05) == 0 and mk(0.05) == 0:   # refused: black, the message in yellow
                 if host == "livefx":
                     mm = lambda e: message(x + 0.5 + e, row + 0.5 + e, w, h)
                 else:
@@ -582,7 +586,7 @@ def check(c, px, n, host):
                 black += 0 if m else 1
                 continue
             if warn and (mk(-0.05) != mark or mk(0.05) != mark):
-                continue                    # exakt på tecknets kant: grafikkortets float kan hamna på andra sidan
+                continue                    # exactly on the sign's edge: the GPU's float can land on the other side
             if mark:
                 sign_px += 1
                 want = YELLOW if mark == 1 else (0.0, 0.0, 0.0)
@@ -596,7 +600,7 @@ def check(c, px, n, host):
                 if host == "livefx":
                     qx, qy_up = x + ox, h - (row + oy)
                 else:
-                    qx, qy_up = (x + ox) / h, (row + oy) / h                   # PIXERA: höjden = 1
+                    qx, qy_up = (x + ox) / h, (row + oy) / h                   # PIXERA: height = 1
                 if host == "livefx":
                     d = direction(c, qx, qy_up, w, h)
                 else:
@@ -605,7 +609,7 @@ def check(c, px, n, host):
                     continue
                 p = point(d, cam, nadir)
                 if min(abs(p[0]), abs(p[0] - 1), abs(p[1]), abs(p[1] - 1)) < 1e-4:
-                    skip = True                             # exakt på källbildens kant: float kan hamna på andra sidan
+                    skip = True                             # exactly on the source's edge: float can land on either side
                 if 0 <= p[0] <= 1 and 0 <= p[1] <= 1:
                     if c["tag"] and in_tag_zone(p):
                         skip = True
@@ -620,7 +624,7 @@ def check(c, px, n, host):
                         print("    black px x %d row %d: got %r" % (x, row, got))
                 continue
             if skip or inside != len(samples):
-                continue                                                    # bildramens kant, eller taggen
+                continue                                                    # the picture frame's edge, or the tag
             worst = max(worst, math.hypot(got[0] - sx / inside, got[1] - sy / inside) * REF)
             checked += 1
     ok = (worst < 0.5 and bad == 0 and (checked > 0 or cam not in CAMS or state == 2) and (sign_px > 0) == warn
@@ -634,8 +638,8 @@ def check(c, px, n, host):
 
 all_good = True
 
-# --canvas: LED-dukarnas storlekar (Eric 2026-11-20: "4k kanvas och 8k och 16kx2160"), ritade i full storlek, var
-# step:e pixel kontrollerad. Källan är 2048 × 2048 (felet räknas ändå i källpixlar vid 8040).
+# --canvas: the LED canvas sizes (Eric 2026-11-20: "4k canvas and 8k and 16kx2160"), drawn at full size, every step-th
+# pixel checked. The source is 2048 × 2048 (the error is still counted in source pixels at 8040).
 if "--canvas" in sys.argv:
     mx = GLint(0); gl.glGetIntegerv(0x0D33, ctypes.byref(mx))                                  # GL_MAX_TEXTURE_SIZE
     vp = (GLint * 2)(); gl.glGetIntegerv(0x0D3A, vp)                                          # GL_MAX_VIEWPORT_DIMS
@@ -669,7 +673,7 @@ if "--canvas" in sys.argv:
     print("All canvases match IgelkottStage." if all_good else "Some canvases differ from IgelkottStage.")
     sys.exit(0 if all_good else 1)
 
-# Källans storlek ska inte spela någon roll: andra varvet har en källa på 1008 × 1008 (4032 / 4, inte en tvåpotens).
+# The source size must not matter: the second round has a 1008 × 1008 source (4032 / 4, not a power of two).
 for n in (1024, 1008):
     print("Live FX (top row first), source %d x %d:" % (n, n))
     last = "unset"
@@ -688,13 +692,13 @@ for n in (1024, 1008):
             upload(n, c["tag"], False); last = repr(c["tag"])
         all_good &= check(c, render(pixera, c, setup_pixera), n, "pixera")
 
-# PIXERA-kedjan: vår effekt i Mode Equirect ger en equirect, PIXERA:s egen Equirectangular (Ref-Eric) läser den genom en
-# Screen Pixel Position-karta (en plan skärm framför ögat). Varje pixel ska hamna på källpunkten för den riktning PIXERA:s
-# effekt räknar fram; deras mitt är +X i världen, FisheyetoEquis är d.z: d = (n.z, n.y, n.x).
-# Ref-Eric ligger inte i GitHub-repot (PIXERA:s fil, inte vår att lägga ut): utan den hoppas kedjan över.
+# The PIXERA chain: our effect in Mode Equirect gives an equirect, PIXERA's own Equirectangular (Ref-Eric) reads it
+# through a Screen Pixel Position map (a flat screen in front of the eye). Every pixel must land on the source point for
+# the direction PIXERA's effect works out; their centre is +X in the world, FisheyetoEqui's is d.z: d = (n.z, n.y, n.x).
+# Ref-Eric is not in the GitHub repo (PIXERA's file, not ours to publish): without it the chain is skipped.
 has_ref = os.path.exists(os.path.join(root, "Ref-Eric", "Equirectangular.glsl.txt"))
 ref_src = read_file("Ref-Eric", "Equirectangular.glsl.txt") if has_ref else "#endif"
-ref_body = ref_src[ref_src.index("#endif") + len("#endif"):].replace("radians(", "radiansEq(")   # deras egen radians()
+ref_body = ref_src[ref_src.index("#endif") + len("#endif"):].replace("radians(", "radiansEq(")   # their own radians()
 equirect_ref = None if not has_ref else link("#version 450 compatibility\nvoid main() { gl_Position = gl_Vertex; }\n",
                     "#version 450\n"
                     "vec4 texture_(sampler2D s, vec2 tc) { return texture(s, tc); }\n"
@@ -705,7 +709,7 @@ equirect_ref = None if not has_ref else link("#version 450 compatibility\nvoid m
 
 
 def render_texture(prog, w, h, setup):
-    """Ritar till en RGBA32F-textur och lämnar den kvar (texturens id)."""
+    """Draws to an RGBA32F texture and keeps it (the texture's id)."""
     out, fbo = GLuint(0), GLuint(0)
     gl.glGenTextures(1, ctypes.byref(out)); gl.glBindTexture(GL_TEXTURE_2D, out)
     for pname, val in ((GL_TEXTURE_MIN_FILTER, GL_LINEAR), (GL_TEXTURE_MAG_FILTER, GL_LINEAR),
@@ -731,10 +735,10 @@ print("PIXERA chain: IgelkottFisheye Mode Equirect -> PIXERA's own Equirectangul
 for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice 2 nadir")) if has_ref else ():
     EW, EH = 4096, 2048
     ce = case("chain", EW, EH, cam=cam, pointing=2 if nadir else 1, mode=1)
-    upload(1024, ce["tag"], False)                                      # med taggen: utan den vägrar noden (0.20)
+    upload(1024, ce["tag"], False)                                      # with the tag: without it the node refuses
     equi_tex, _ = render_texture(pixera, EW, EH, lambda p: (glActiveTexture(GL_TEXTURE0), gl.glBindTexture(GL_TEXTURE_2D, src_tex),
                                                          setup_pixera(p, ce)))
-    # Skärmkartan: M × M texlar, världspunkten i texelns mitt; en plan skärm 10 enheter fram (+X), 12 × 12 stor
+    # The screen map: M × M texels, the world point in the texel's centre; a flat screen 10 units ahead (+X), 12 × 12
     M = 128
     def world(u, v):
         return (10.0, (v - 0.5) * 12.0, (u - 0.5) * 12.0)
@@ -765,7 +769,7 @@ for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice
     for row in range(H):
         for x in range(W):
             tx, ty = (x + 0.5) / W, (row + 0.5) / H
-            # deras shiftedTexCoords (ct = 1, index 0), sedan kartan: världspunkten är affin i texelkoordinaterna
+            # their shiftedTexCoords (ct = 1, index 0), then the map: the world point is affine in the texel coordinates
             su = (tx - 0.5) * scale + 0.5
             sv = ((1.0 - ty) - 0.5) * scale + 0.5
             n = world(su, sv)
@@ -782,23 +786,25 @@ for cam, nadir, label in ((1, False, "PYXIS 12K zenith"), (2, True, "Sony Venice
     gl.glDeleteTextures(1, ctypes.byref(equi_tex)); gl.glDeleteTextures(1, ctypes.byref(map_tex))
     gl.glDeleteTextures(1, ctypes.byref(out_tex))
 
-# MARK: - MTF50 (Eric 2026-11-23: "lägg in det här i provet det windows kör också")
-# Nodens skärpa vid FOV 90 på 4K-duken (3840 × 2160), Venice 2 (5760²) zenit. En sned kant (5° från lodrät = vågrät
-# upplösning H, 85° = lodrät V) ritas analytiskt i fisheyen (8 × 8 delprov i pixlarna kanten går genom, sensorns
-# lådapertur), shadern ritar väggen på grafikkortet och kanten mäts som ISO 12233 (kantlinjen passad rad för rad, ESF i
-# ¼ px, Hamming, derivatan rättad). Gränsen är numpy-modellen av nodens räkning (~/IgelkottCompare/mtf/mtf50.py,
-# PROJECT.md "MTF50") ± 0,02, åt båda hållen: skarpare är också en ändring (färre prov per pixel viker bilden); Live FX
-# och PIXERA ska ge samma tal. På Mac 2026-11-23 gav grafikkortet modellens tal på tredje decimalen. Eq->2D (FisheyetoEquis 16K-equi, samma vy,
-# 2026-11-23) skrivs ut som jämförelse. Prov på metoden: en kant med Gauss 1 px ger 0,187 (teorin 0,187).
+# MARK: - MTF50 (Eric 2026-11-23: "put this in the test that Windows runs too")
+# The node's sharpness at FOV 90 on the 4K canvas (3840 × 2160), Venice 2 (5760²) zenith. A slanted edge (5° from
+# vertical = horizontal resolution H, 85° = vertical V) is drawn analytically in the fisheye (8 × 8 subsamples in the
+# pixels the edge passes through, the sensor's box aperture), the shader draws the wall on the graphics card and the edge
+# is measured as ISO 12233 (the edge line fitted row by row, ESF in ¼ px, Hamming, the derivative corrected). The limit
+# is the numpy model of the node's maths (~/IgelkottCompare/mtf/mtf50.py, PROJECT.md (internal notes), "MTF50") ± 0.02,
+# both ways: sharper is also a change (fewer samples per pixel alias the picture); Live FX and PIXERA must give the same
+# number. On the Mac 2026-11-23 the graphics card gave the model's numbers to the third decimal. Eq->2D (FisheyetoEqui's
+# 16K equi, the same view, 2026-11-23) is printed for comparison. Check of the method: an edge with a 1 px Gaussian gives
+# 0.187 (theory 0.187).
 MTF_W, MTF_H, MTF_T = 3840, 2160, 200
-MTF_CASES = (  # namn, yaw, pitch, riktning, kantens vinkel, modellen, Eq->2D
+MTF_CASES = (  # name, yaw, pitch, direction, edge angle, the model, Eq->2D
     ("horizon (yaw 0)", 0, 0, "H", 5.0, 0.355, 0.299), ("horizon (yaw 0)", 0, 0, "V", 85.0, 0.236, 0.220),
     ("pitch +30", 0, 30, "H", 5.0, 0.296, 0.260), ("pitch +30", 0, 30, "V", 85.0, 0.245, 0.225),
     ("yaw 45 pitch -20", 45, -20, "H", 5.0, 0.420, 0.308), ("yaw 45 pitch -20", 45, -20, "V", 85.0, 0.223, 0.207))
 
 
 def mtf_theta(r, k):
-    """Linsmodellens r(θ) baklänges (Newton): vinkeln från axeln för r källpixlar från mitten."""
+    """The lens model's r(θ) inverted (Newton): the angle from the axis for r source pixels from the centre."""
     th = r / k[0]
     for _ in range(6):
         t2 = th * th
@@ -809,7 +815,7 @@ def mtf_theta(r, k):
 
 
 def mtf_patch(yaw, pitch, angle, half=220, lo=0.25, hi=0.75, ss=8):
-    """Fisheyens ruta kring vyns mitt med kanten: (x0, y0, storlek, värden uppifrån)."""
+    """The fisheye patch around the view's centre with the edge: (x0, y0, size, values from the top)."""
     ref, c, k = CAMS[2]
     R = rotation(yaw, pitch, 0.0)
     a = math.radians(angle)
@@ -835,7 +841,7 @@ def mtf_patch(yaw, pitch, angle, half=220, lo=0.25, hi=0.75, ss=8):
 
 
 def mtf_upload(patch, top_row_first, lo=0.25):
-    """Venice-källan 5760² i grått lo, kantens ruta och Venice-zenittaggen ovanpå."""
+    """The Venice source 5760² in grey lo, the edge patch and the Venice zenith tag on top."""
     n = int(VREF)
     gl.glBindTexture(GL_TEXTURE_2D, src_tex)
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, n, n, 0, GL_RGBA, GL_FLOAT, None)
@@ -846,7 +852,7 @@ def mtf_upload(patch, top_row_first, lo=0.25):
     glBindFramebuffer(GL_FRAMEBUFFER, 0); glDeleteFramebuffers(1, ctypes.byref(fbo))
     gl.glBindTexture(GL_TEXTURE_2D, src_tex)
 
-    def put(x0, y0, w, h, rows):            # rows uppifrån, w × h värden
+    def put(x0, y0, w, h, rows):            # rows from the top, w × h values
         if not top_row_first:
             y0 = n - y0 - h; rows = rows[::-1]
         buf = array.array("f")
@@ -863,7 +869,7 @@ def mtf_upload(patch, top_row_first, lo=0.25):
 
 
 def mtf_render(prog, c, setup):
-    """Väggen 3840 × 2160 på grafikkortet; bara rutan MTF_T² i mitten läses tillbaka (rad 0 nederst)."""
+    """The wall 3840 × 2160 on the graphics card; only the MTF_T² tile in the centre is read back (row 0 at the bottom)."""
     w, h = c["w"], c["h"]
     out, fbo = GLuint(0), GLuint(0)
     gl.glGenTextures(1, ctypes.byref(out)); gl.glBindTexture(GL_TEXTURE_2D, out)
@@ -885,8 +891,8 @@ def mtf_render(prog, c, setup):
 
 
 def mtf50(tile, vertical_edge):
-    """ISO 12233 sned kant: MTF50 i cykler per utpixel, och MTF vid 0,1/0,2/0,3 (för utskriften)."""
-    t = tile if vertical_edge else [list(col) for col in zip(*tile)]       # kanten nästan lodrät i t
+    """ISO 12233 slanted edge: MTF50 in cycles per output pixel, and MTF at 0.1/0.2/0.3 (for the printout)."""
+    t = tile if vertical_edge else [list(col) for col in zip(*tile)]       # the edge nearly vertical in t
     h, w = len(t), len(t[0])
     ys, cs = [], []
     for r, row in enumerate(t):
@@ -956,10 +962,10 @@ for name, yaw, pitch, d, ang, model, eq2d in MTF_CASES:
         print("  %s Live FX and PIXERA give the same MTF50 (%s %s, difference %.4f)"
               % ("PASS" if same else "FAIL", name, d, abs(got[0] - got[1]) if None not in got else float("nan")))
 
-# Kamerornas tal ska vara desamma som i _shared/IgelkottFisheyeLens
+# The camera numbers must be the same as in _shared/IgelkottFisheyeLens
 shared_path = os.path.join(os.path.dirname(os.path.abspath(root)), "_shared", "IgelkottFisheyeLens", "Sources",
                            "IgelkottFisheyeLens", "FisheyeLens.swift")
-# Utan _shared (en klon av GitHub-repot): kopian shader/cameras.json, som build_shaders skriver ur _shared
+# Without _shared (a clone of the GitHub repo): the copy shader/cameras.json, which build_shaders writes from _shared
 if os.path.exists(shared_path):
     with open(shared_path, encoding="utf-8") as fh:
         shared = fh.read()

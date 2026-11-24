@@ -12,7 +12,7 @@ Write each result into `PROJECT.md` with the date, the machine and the Live FX v
 
 ## Before you start
 
-- [x] **The disk is NTFS (64 KB clusters), formatted on Windows** (Eric 2026-11-23, Threadripper: "behåll ntfs").
+- [x] **The disk is NTFS (64 KB clusters), formatted on Windows** (Eric 2026-11-23, Threadripper: "keep NTFS").
       NTFS is Windows' own file system and costs nothing when reading. The Mac can read NTFS but not write it. To use
       the disk read-write on the Mac as well, format it exFAT instead; erase it only after copying everything off
       (6.3 TB on 2026-11-23). The exFAT recipe, in an administrator command prompt, `diskpart`:

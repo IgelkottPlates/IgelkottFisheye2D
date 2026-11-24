@@ -1,22 +1,24 @@
-// Provet för PIXERA-effekten (pixera/IgelkottFisheye.glsl): effekten ritas på riktigt i en OpenGL 4.1-kontext på Macen
-// (modern GLSL som PIXERA:s, med GPUpad-mallens omskrivning av texture()), och varje utpixel jämförs i dubbel precision.
-// Källan är en gradient (R = x, G = y uppifrån, normerade), så utpixelns färg är källpunkten effekten läste.
+// The test for the PIXERA effect (pixera/IgelkottFisheye.glsl): the effect is actually rendered in an OpenGL 4.1
+// context on the Mac (modern GLSL like PIXERA's, with the GPUpad template's rewrite of texture()), and every output
+// pixel is compared in double precision. The source is a gradient (R = x, G = y from the top, normalized), so the
+// output pixel's colour is the source point the effect read.
 //
-//  1. 3D_Screens: en Screen Pixel Position-karta (en lutande skärmyta runt ögat), ögats läge och vridning, Stab och
-//     de tre kamerorna, mot räkningen här (samma linsmodell som verify.swift och _shared/IgelkottFisheyeLens).
-//  2. Wall: som Live FX-noden (vertikal FOV, Yaw, Pitch, Roll).
-//  3. Mot PIXERA:s egen Equirectangular-effekt (Ref-Eric/Equirectangular.glsl.txt): den får en equirect gjord som
-//     FisheyetoEqui gör den ur samma fisheye, IgelkottFisheye får fisheyen direkt — samma skärmkarta och öga ska ge
-//     samma källpunkt. Det prövar att riktningarna i PIXERA:s värld är rätt översatta.
+//  1. 3D_Screens: a Screen Pixel Position map (a tilted screen surface around the eye), the eye's position and
+//     rotation, Stab and the three cameras, against the math here (same lens model as verify.swift and
+//     _shared/IgelkottFisheyeLens).
+//  2. Wall: like the Live FX node (vertical FOV, Yaw, Pitch, Roll).
+//  3. Against PIXERA's own Equirectangular effect (Ref-Eric/Equirectangular.glsl.txt): it gets an equirect made the way
+//     FisheyetoEqui makes it from the same fisheye, IgelkottFisheye gets the fisheye directly — the same screen map and
+//     eye must give the same source point. This tests that directions in PIXERA's world are translated correctly.
 //
-//   swift tools/verify_pixera.swift            (från projektroten; 0 när det stämmer)
+//   swift tools/verify_pixera.swift            (from the project root; 0 when it matches)
 import Foundation
 import OpenGL.GL3
 import simd
 
 func fail(_ s: String) -> Never { FileHandle.standardError.write((s + "\n").data(using: .utf8)!); exit(1) }
 
-// MARK: - Räkningen
+// MARK: - The math
 
 let REF = 8040.0
 let CENTER = SIMD2(4019.9389914282037, 4019.9389463189077)
@@ -27,7 +29,7 @@ let VK = SIMD4(1440.3464186123263, -21.606695057429874, 0.09789618777410111, -0.
 
 struct Lens { var camera: Int32 = 1; var sensorHeight = 23.32; var lensScale = 1.0; var offset = SIMD2<Double>.zero }
 
-/// Källpunkten i andelar av bilden (uppifrån) för riktningen d (y upp, z rakt fram).
+/// The source point as fractions of the image (from the top) for direction d (y up, z straight ahead).
 func point(_ d: SIMD3<Double>, _ l: Lens) -> SIMD2<Double> {
     let (c, k): (SIMD2<Double>, SIMD4<Double>) = l.camera == 2 ? (VCENTER / VREF, VK / VREF)
         : (CENTER / REF, K / REF * (l.camera == 1 ? 1 : l.lensScale * 23.32 / l.sensorHeight))
@@ -45,7 +47,7 @@ func rotation(yaw: Double, pitch: Double, roll: Double) -> simd_double3x3 {
     return ry * rx * rz
 }
 
-/// PIXERA:s ögonvridning (Equirectangular-effektens getRotationMatrix3x3; GLSL m[i][j] = kolumn i, rad j).
+/// PIXERA's eye rotation (the Equirectangular effect's getRotationMatrix3x3; GLSL m[i][j] = column i, row j).
 func eyeRotation(_ deg: SIMD3<Double>) -> simd_double3x3 {
     let r = deg * .pi / 180
     let c1 = cos(-r.x), c2 = cos(-r.y), c3 = cos(-r.z), s1 = sin(-r.x), s2 = sin(-r.y), s3 = sin(-r.z)
@@ -69,7 +71,7 @@ print("OpenGL: \(String(cString: glGetString(GLenum(GL_RENDERER)))) · \(String(
 let root = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : FileManager.default.currentDirectoryPath)
 func load(_ rel: String) -> String {
     guard let s = try? String(contentsOf: root.appendingPathComponent(rel), encoding: .utf8) else { fail("cannot read \(rel)") }
-    // GPUpad-blocket (#version 450 …) byts mot provets eget huvud
+    // The GPUpad block (#version 450 …) is replaced with the test's own header
     guard let a = s.range(of: "#if defined(GPUPAD)"), let b = s.range(of: "#endif", range: a.upperBound..<s.endIndex) else { return s }
     return String(s[..<a.lowerBound]) + String(s[b.upperBound...])
 }
@@ -106,7 +108,7 @@ func program(_ body: String, _ type: String, _ what: String) -> GLuint {
 }
 let ours = program(load("pixera/IgelkottFisheye.glsl"), "IgelkottFisheye", "pixera/IgelkottFisheye.glsl")
 print("pixera/IgelkottFisheye.glsl compiles and links (GLSL 4.10, PIXERA's texture() form).")
-// PIXERA:s egen effekt definierar om radians(); i provet får den ett eget namn
+// PIXERA's own effect redefines radians(); in the test it gets its own name
 let refText = "#define radians radians_ref\n" + load("Ref-Eric/Equirectangular.glsl.txt")
 let theirs = program(refText, "Equirectangular", "Ref-Eric/Equirectangular.glsl.txt")
 print("PIXERA's Equirectangular effect compiles and links as the reference.")
@@ -122,14 +124,14 @@ func makeTexture(_ w: Int, _ h: Int, _ data: [Float]) -> GLuint {
     return t
 }
 
-// Fisheyen: N × N, rad 0 = nederst (OpenGL), R = x, G = y uppifrån (texelns mitt)
+// The fisheye: N × N, row 0 = bottom (OpenGL), R = x, G = y from the top (texel centre)
 let N = 1024
 var grad: [Float] = []
 for row in 0..<N { for x in 0..<N { grad += [Float((Double(x) + 0.5) / Double(N)), Float(1 - (Double(row) + 0.5) / Double(N)), 0, 1] } }
 let fishTex = makeTexture(N, N, grad)
 
-// Screen Pixel Position: en skärmyta, linjär i texturkoordinaten (så den bilinjära läsningen är exakt): ögat + M · (15,
-// 30·(v − 0,5), 40·(u − 0,5)), M en vridning — riktningar upp till ±50° från ögats +X.
+// Screen Pixel Position: a screen surface, linear in the texture coordinate (so the bilinear read is exact): eye + M ·
+// (15, 30·(v − 0.5), 40·(u − 0.5)), M a rotation — directions up to ±50° from the eye's +X.
 let eye = SIMD3(1.5, -0.7, 10.0)
 let M = rotation(yaw: 25, pitch: 8, roll: -6)
 func screenPos(_ u: Double, _ v: Double) -> SIMD3<Double> { eye + M * SIMD3(15, 30 * (v - 0.5), 40 * (u - 0.5)) }
@@ -141,7 +143,8 @@ for j in 0..<PW { for i in 0..<PW {
 } }
 let posTex = makeTexture(PW, PW, posData)
 
-/// Direction n (PIXERA:s värld, efter ögats vridning) för utpixelns texturkoordinat, som Equirectangular-effekten räknar den.
+/// Direction n (PIXERA's world, after the eye's rotation) for the output pixel's texture coordinate, as the
+/// Equirectangular effect computes it.
 func screenDirection(_ tu: Double, _ tv: Double, eyeRot: SIMD3<Double>) -> SIMD3<Double> {
     let scale = (Double(PW) - 2) / Double(PW)
     let sx = (tu - 0.5) * scale + 0.5, sy = ((1 - tv) - 0.5) * scale + 0.5
@@ -181,7 +184,7 @@ func render(_ prog: GLuint, _ src: GLuint, w: Int, h: Int, _ p: Params) -> [Floa
     return px
 }
 
-/// Jämför en utbild med förväntade källpunkter (nil = svart utanför bildramen). Fel i källpixlar vid 8040.
+/// Compares an output image with expected source points (nil = black outside the frame). Error in source pixels at 8040.
 var allGood = true
 func check(_ name: String, _ px: [Float], w: Int, h: Int, limit: Double = 0.5, expect: (Double, Double) -> SIMD2<Double>?) {
     var worst = 0.0, checked = 0, black = 0, wrongBlack = 0
@@ -229,8 +232,8 @@ for (name, p) in [
     }
 }
 
-// PIXERA:s Equirectangular med en equirect gjord som FisheyetoEqui gör den (lon = atan2(d.x, d.z), lat = asin(d.y), rad 0
-// uppe i bilden) ur samma gradient-fisheye, mot IgelkottFisheye på fisheyen.
+// PIXERA's Equirectangular with an equirect made the way FisheyetoEqui makes it (lon = atan2(d.x, d.z), lat = asin(d.y),
+// row 0 at the top of the image) from the same gradient fisheye, against IgelkottFisheye on the fisheye.
 print("Against PIXERA's Equirectangular effect (equirect made like FisheyetoEqui makes it):")
 let EW = 4096, EH = 2048
 var equi: [Float] = []

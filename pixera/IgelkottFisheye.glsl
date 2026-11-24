@@ -224,7 +224,7 @@ float igkWarning(vec2 q, float size) {
 // tools/build_shaders.py (atlas rule 17: no colour typed by hand).
 
 // MARK: The refusal message (state 2), in the warning's yellow across the middle of the output: NOT AN IGELKOTT CLIP and
-// under it IGELKOTTPLATES.COM, where Igelkott plates come from (Eric 2026-11-23: "branding är viktig"). Letters of 5 x 7
+// under it IGELKOTTPLATES.COM, where Igelkott plates come from (Eric 2026-11-23: "branding is important"). Letters of 5 x 7
 // dots, 6 dots apart: the first line 20 letters (119 dots wide), the second 18 letters one letter in, 4 dots below. Each
 // letter is two whole numbers: rows 0-3 and rows 4-6, 5 bits per row, the left dot highest. Letters 0-19 are the first
 // line, 20-37 the second. Read with floor and mod only (no integer bit operations, no arrays); dividing by a power of
@@ -259,7 +259,7 @@ float igkPow2(float n) {
 
 // q = the point in the output from its top left corner (y down), size = the output's width and height, same units.
 // 1 on a dot of the first line, 2 on IGELKOTTPLATES (the brand's text colour), 3 on .COM (the brand's cyan, Eric
-// 2026-11-23: ".com ska vara i vår cyan"), else 0. The first line is 70 % of the width or 15 % of the height, whichever is smaller; the
+// 2026-11-23: ".com in our cyan"), else 0. The first line is 70 % of the width or 15 % of the height, whichever is smaller; the
 // two lines (18 dots high) sit centred.
 float igkMessage(vec2 q, vec2 size) {
     float unit = min(0.7 * size.x / 119.0, 0.15 * size.y / 7.0);

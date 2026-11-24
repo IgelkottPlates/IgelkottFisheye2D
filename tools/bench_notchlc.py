@@ -11,7 +11,7 @@ the run can be stopped and started again. --only fisheye|equi measures one kind.
 ones on PATH (Homebrew ffmpeg has the NotchLC decoder). The disk is read past the system's file cache
 (F_NOCACHE on the Mac, FILE_FLAG_NO_BUFFERING on Windows), 4 readers x 32 MB like a player reading ahead.
 
-Windows results 2026-11-22: PROJECT.md, "Store i NotchLC: storlek och tyngd".
+Windows results 2026-11-22: the internal project notes (PROJECT.md), NotchLC storage.
 """
 import argparse, glob, json, os, shutil, subprocess, sys, threading, time
 

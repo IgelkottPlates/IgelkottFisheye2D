@@ -1,26 +1,30 @@
-// Auto Stabilize för IgelkottFisheye: fisheyeklippet in, Stab Yaw-kurvan ut. Ingen tracker och inga mått.
-// (Eric 2026-10-12: "detta måste automatiseras, kan inte va ansvarig för detta" — FOV, bildstorlek och startpunkt
-// skrevs in för hand och blev fel utan varning.)
+// Auto Stabilize for IgelkottFisheye: fisheye clip in, Stab Yaw curve out. No tracker and no measurements.
+// (Eric 2026-10-12: "this has to be automated, I can't be responsible for this" — FOV, image size and start point
+// were typed in by hand and went wrong without warning.)
 //
-// Med objektivet rakt upp är pan (yaw) en vridning av bilden kring objektivets mitt. Ett band strax över horisonten
-// (himmel och avlägsna berg; inte marken, som rör sig med farten) vecklas ut till vinkel × radie, och vridningen mellan
-// två bildrutor är den förskjutning längs vinkeln som passar bäst. Summan är panen; skaket = pan − väg (Gauss-utjämning
-// åt båda hållen, som trackingvyn i directionlock.swift) skrivs som Stab Yaw.
+// With the lens pointing straight up, pan (yaw) is a rotation of the image around the lens centre. A band just above
+// the horizon (sky and distant mountains; not the ground, which moves with the speed) is unwrapped to angle × radius,
+// and the rotation between two frames is the shift along the angle that fits best. The sum is the pan; the shake =
+// pan − road (Gaussian smoothing in both directions, like the tracking view in directionlock.swift) is written as
+// Stab Yaw.
 //
-// Det som förr skrevs in hämtas ur klippet: bildtakten, antalet bildrutor och — ur Darkroms hörnmärke — kameran och
-// objektivets mitt. FOV och startpunkt finns inte i den här räkningen.
+// What used to be typed in is taken from the clip: the frame rate, the number of frames and — from Darkroom's corner
+// mark — the camera and the lens centre. FOV and start point are not part of this computation.
 //
-// Objektivets mitt (2026-10-19, handoffarna från IgelkottMotion och IgelkottDarkroom: bara Darkroom hittar bildcirkeln):
-//  - ett litat hörnmärke (QR i hörnen, IGK1|1|<kamera>|…, läst med IgelkottLensMark): kamerans modell som den är;
-//  - annars kameran ur --camera (standard PYXIS 12K) och mitten ur FisheyetoEquis kalibrering för klippet, eller modellens
-//    egen (FisheyeLens.forClip). Ingen egen cirkeldetektor — den mätte bakgrunden i hörnen, där märket nu står.
+// The lens centre (2026-10-19, the handoffs from IgelkottMotion and IgelkottDarkroom: only Darkroom finds the image
+// circle):
+//  - a trusted corner mark (QR in the corners, IGK1|1|<camera>|…, read with IgelkottLensMark): the camera's model as is;
+//  - otherwise the camera from --camera (default PYXIS 12K) and the centre from FisheyetoEqui's calibration for the clip,
+//    or the model's own (FisheyeLens.forClip). No circle detector of its own — it measured the background in the
+//    corners, where the mark now sits.
 //
-// Provat mot Offroad-plåten 2026-10-12 (1124 bildrutor): mot molnspåret genom objektivets modell korrelation 0,9995,
-// största skillnad 0,035°; mot trackingvyn utan dess spikar 0,998. Inga spikar, där trackern hade nio.
+// Tested against the Offroad plate 2026-10-12 (1124 frames): against the cloud track through the lens model,
+// correlation 0.9995, largest difference 0.035°; against the tracking view without its spikes 0.998. No spikes, where
+// the tracker had nine.
 //
-//   autoyaw <klipp.mov> [--camera pyxis12K|sonyVenice2] [--out <mapp>] [--smooth 0.5] [--strength 1] [--invert] [--whole]
-//   autoyaw --selftest          (påhittat klipp med känd pan; 0 när det stämmer)
-// Bygg: tools/autoyaw/Package.swift.
+//   autoyaw <clip.mov> [--camera pyxis12K|sonyVenice2] [--out <folder>] [--smooth 0.5] [--strength 1] [--invert] [--whole]
+//   autoyaw --selftest          (made-up clip with a known pan; 0 when it matches)
+// Build: tools/autoyaw/Package.swift.
 import Foundation
 import AVFoundation
 import Accelerate
@@ -29,24 +33,25 @@ import IgelkottLensMark
 
 func fail(_ s: String) -> Never { FileHandle.standardError.write((s + "\n").data(using: .utf8)!); exit(1) }
 
-// Objektivet (FisheyeLens.pyxis12K), bara för var horisonten ligger i bildcirkeln: radie / cirkelns radie vid en höjd
+// The lens (FisheyeLens.pyxis12K), only for where the horizon lies in the image circle: radius / circle radius at an
+// elevation
 let K = (2068.8673345215607, -31.032060077989637, 0.1394366394877631, -0.00029359255648059773)
 func lensRadius(_ th: Double) -> Double { let t2 = th * th; return th * (K.0 + t2 * (K.1 + t2 * (K.2 + t2 * K.3))) }
 func circleFraction(elevation: Double) -> Double { lensRadius((90 - elevation) * .pi / 180) / lensRadius(125 * .pi / 180) }
 
-/// Objektivets mitt och bildcirkelns radie (125° från zenit) i en gråbild S pixlar bred.
+/// The lens centre and the image circle's radius (125° from zenith) in a grey image S pixels wide.
 struct Circle { var cx: Double; var cy: Double; var r: Double }
 
-/// Cirkeln ur en kameras modell (mitten kan vara flyttad av FisheyetoEquis kalibrering), i en bild S pixlar bred.
+/// The circle from a camera's model (the centre may be moved by FisheyetoEqui's calibration), in an image S pixels wide.
 func lensCircleOf(_ lens: FisheyeLens, size S: Int) -> Circle {
     let k = Double(S) / lens.reference
     return Circle(cx: lens.center.x * k, cy: lens.center.y * k, r: lens.radius(125 * .pi / 180) * k)
 }
 
-/// Vridningen mellan bildrutor i ett band över horisonten.
+/// The rotation between frames in a band above the horizon.
 struct PanEstimator {
     let S: Int
-    let A = 3600, NR = 40, maxShift = 40                             // 0,1° per steg; högst ±4° mellan två bildrutor
+    let A = 3600, NR = 40, maxShift = 40                             // 0.1° per step; at most ±4° between two frames
     var sx: [Float], sy: [Float]
     var prev: [Float]? = nil
 
@@ -54,16 +59,16 @@ struct PanEstimator {
         S = size
         sx = [Float](repeating: 0, count: A * NR); sy = sx
         for j in 0..<NR {
-            // 3° … 28° över horisonten
+            // 3° … 28° above the horizon
             let rad = circle.r * circleFraction(elevation: 3 + 25 * Double(j) / Double(NR - 1))
             for a in 0..<A {
                 let p = Double(a) * 2 * .pi / Double(A)
-                sx[j * A + a] = Float(circle.cx + rad * sin(p)); sy[j * A + a] = Float(circle.cy + rad * cos(p))   // vinkeln = sidled, 0 = framåt (bildens nederkant)
+                sx[j * A + a] = Float(circle.cx + rad * sin(p)); sy[j * A + a] = Float(circle.cy + rad * cos(p))   // angle = sideways, 0 = forward (bottom edge of the image)
             }
         }
     }
 
-    /// Bandet utvecklat ur en gråbild, varje radie utan sitt långsamma förlopp (6° glidande medel)
+    /// The band unwrapped from a grey image, each radius without its slow trend (6° moving average)
     func unwrap(_ g: [UInt8]) -> [Float] {
         var out = [Float](repeating: 0, count: A * NR)
         var valid = [Bool](repeating: false, count: A * NR)
@@ -90,7 +95,7 @@ struct PanEstimator {
         return hp
     }
 
-    /// Lägger till en bildruta; ger vridningen sedan förra (grader, + = innehållet har gått åt höger i bilens ram)
+    /// Adds a frame; returns the rotation since the previous one (degrees, + = content moved right in the car's frame)
     mutating func add(_ g: [UInt8]) -> Double {
         let cur = unwrap(g)
         defer { prev = cur }
@@ -101,7 +106,7 @@ struct PanEstimator {
                 var acc: Float = 0
                 for j in 0..<NR {
                     let o = j * A
-                    // prev[a] · cur[a + s] över hela varvet, i två raka stycken
+                    // prev[a] · cur[a + s] over the whole turn, in two straight pieces
                     let k = (s + A) % A
                     var d1: Float = 0, d2: Float = 0
                     vDSP_dotpr(pb.baseAddress! + o, 1, cb.baseAddress! + o + k, 1, &d1, vDSP_Length(A - k))
@@ -121,7 +126,7 @@ struct PanEstimator {
     }
 }
 
-/// Gauss-utjämning åt båda hållen, kanten upprepad (samma som directionlock.swift och stabilizer-sidan).
+/// Gaussian smoothing in both directions, edge repeated (same as directionlock.swift and the stabilizer page).
 func gauss(_ v: [Double], sigma: Double) -> [Double] {
     let r = Int(3 * sigma), n = v.count
     let w = (-r...r).map { exp(-0.5 * pow(Double($0) / sigma, 2)) }
@@ -138,12 +143,12 @@ func curveCSV(_ name: String, _ values: [Double]) -> String {
     return s
 }
 
-// MARK: - Provet: ett påhittat klipp med känd pan
+// MARK: - The test: a made-up clip with a known pan
 
 func selftest() -> Never {
     let S = 768, n = 120
     var rng = SystemRandomNumberGenerator()
-    // Struktur som bara beror på riktningen: summor av vågor längs vinkeln, olika per radie
+    // Structure that depends only on direction: sums of waves along the angle, different per radius
     let waves = (0..<60).map { _ in (h: Double(Int.random(in: 3...220, using: &rng)), ph: Double.random(in: 0...(2 * .pi), using: &rng),
                                      amp: Double.random(in: 4...16, using: &rng), rr: Double.random(in: 0...6, using: &rng)) }
     let circle = (cx: 0.497 * Double(S), cy: 0.492 * Double(S), r: 0.509 * Double(S))
@@ -154,7 +159,7 @@ func selftest() -> Never {
         for y in 0..<S { for x in 0..<S {
             let dx = Double(x) + 0.5 - circle.cx, dy = Double(y) + 0.5 - circle.cy, r = hypot(dx, dy)
             guard r < circle.r else { continue }
-            let phi = atan2(dx, dy) - yaw * .pi / 180, q = r / circle.r                 // innehållet har gått +yaw längs vinkeln
+            let phi = atan2(dx, dy) - yaw * .pi / 180, q = r / circle.r                 // the content has moved +yaw along the angle
             var v = 128.0
             for w in waves { v += w.amp * sin(w.h * phi + w.ph + w.rr * q) }
             g[y * S + x] = UInt8(max(40, min(250, v)))
@@ -163,7 +168,7 @@ func selftest() -> Never {
     }
     let first = frame(truth[0])
     let found = Circle(cx: circle.cx, cy: circle.cy, r: circle.r)
-    // Venice-modellen i en 4096-bild: mitten där FisheyeLens.sonyVenice2 har den
+    // The Venice model in a 4096 image: the centre where FisheyeLens.sonyVenice2 has it
     let v = lensCircleOf(.sonyVenice2, size: 4096)
     var good = abs(v.cx - 2848.031459694644 * 4096 / 5760) < 1e-9 && abs(v.r - FisheyeLens.sonyVenice2.radius(125 * .pi / 180) * 4096 / 5760) < 1e-9
     print(String(format: "  %@ image circle from the camera's lens model (Sony Venice 2 at 4096: centre %.1f, %.1f, radius %.1f)", good ? "PASS" : "FAIL", v.cx, v.cy, v.r))
@@ -179,7 +184,7 @@ func selftest() -> Never {
     exit(good ? 0 : 1)
 }
 
-// MARK: - Klippet
+// MARK: - The clip
 
 var args = Array(CommandLine.arguments.dropFirst())
 var path: String? = nil, outDir: String? = nil, smooth = 0.5, strength = 1.0, invert = false, whole = false
@@ -209,7 +214,7 @@ guard abs(size.width - size.height) <= 0.02 * size.width else {
 let fps = Double(track.nominalFrameRate) > 1 ? Double(track.nominalFrameRate) : 25
 let W = Int(size.width), S = min(1536, W)
 
-// Kameran och objektivets mitt: ett litat hörnmärke först, annars --camera och FisheyetoEquis kalibrering
+// The camera and the lens centre: a trusted corner mark first, otherwise --camera and FisheyetoEqui's calibration
 var lensModel: FisheyeLens, lensNote: String
 let reading = await LensMark.read(movie: url)
 if let r = reading, r.trusted, let cam = r.mark.camera {
