@@ -169,6 +169,10 @@ td.ok { color: var(--good); font-weight: 600; }
 .btn:hover { background: var(--igelkott-accent-hover); border-color: var(--igelkott-accent-hover); }
 .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line-2); }
 .btn.ghost:hover { background: var(--panel-2); border-color: var(--line-2); }
+.cta-actions.big { margin-top: var(--igelkott-space-10); gap: var(--igelkott-space-4); }
+.cta-actions.big .btn { font-size: clamp(20px, 2.2vw, 24px); padding: 22px 40px; font-weight: 700; }
+.cta-actions.big .btn:first-child { box-shadow: 0 0 0 6px var(--igelkott-accent-glow); }
+@media (max-width: 820px) { .cta-actions.big .btn { flex: 1 1 100%; text-align: center; } }
 .stack { display: flex; flex-direction: column; gap: var(--igelkott-space-6); }
 
 footer { border-top: 1px solid var(--line); padding-block: var(--igelkott-space-8) var(--igelkott-space-12); }
@@ -321,9 +325,9 @@ footer p { font-size: 14px; max-width: none; }
     <figure><img src="img/g8_A001C016.jpg" width="1600" height="450" alt="A001C016: a wide fjord with islands, seen from the air" loading="lazy"><figcaption class="mono">A001C016 · nadir · pitch −6°</figcaption></figure>
     <figure><img src="img/g1_A013C004.jpg" width="1600" height="450" alt="A013C004: driving down a street of brick houses, a red double-decker bus ahead" loading="lazy"><figcaption class="mono">A013C004 · zenith</figcaption></figure>
   </div>
-  <div class="cta-actions" style="margin-top:var(--igelkott-space-8)">
+  <div class="cta-actions big">
     <a class="btn" href="https://igelkottplates.com/?openDemo=1">Get the free demo plates</a>
-    <a class="btn ghost" href="https://github.com/IgelkottPlates/IgelkottFisheye2D/releases/tag/v0.22">Download IgelkottFisheye v0.22</a>
+    <a class="btn ghost" href="https://github.com/IgelkottPlates/IgelkottFisheye2D/releases/tag/v0.22">Download the node</a>
     <a class="btn ghost" href="https://igelkottplates.com">The plate library</a>
   </div>
   <p class="caption">Free, also commercially, for playing Igelkott plates. Live FX 9.9 on Mac or Windows, or PIXERA on Windows.</p>
