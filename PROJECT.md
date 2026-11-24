@@ -960,6 +960,8 @@ Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
 https://igelkottplates.github.io/IgelkottFisheye2D/ — de nya bilderna (utan tåg) pushade i 4e647f7 och
 sedda i webbläsaren. Galleriet med en bild per plåt pushat i 332bcaf (alla 10 bilder laddas). Första stycket
 säger sedan f53d1fb vad noden är och vad den ersätter (Eric 2026-11-24: "Folk har ingen aning").
+Länkad överst i release-texten för v0.21 och i repots Website-fält (About) sedan 2026-11-24 (Eric: "Hur hittar man
+till sidan härifrån?").
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.
