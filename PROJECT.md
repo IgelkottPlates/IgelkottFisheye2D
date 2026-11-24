@@ -952,11 +952,14 @@ för 60 min, MTF50, sex hela väggar ur gratisplåtarna och Live FX med noden. E
 RX 9070 XT i Windows-raden. Bilderna (Eric 2026-11-24: "pixelskarp", "inga tågbilder", "90 grader med öppna
 landskap med tydliga motiv i centrum som hus, landskap. Inte dunkel skog eller skymt väg") är hela 8K-väggen vid FOV 90
 genom nodens linsmodell (`tools/compare_eq2d.py`, `ours`), nedskalad med area-filter och omvandlad till Rec.709 för
-webben: toppbilden A011C001 yaw 180 (3840 × 1080), galleriet A011C001 yaw 210 och 180, A001C016 yaw 270 pitch −8 och
-pitch −6, A013C004 och A014C001; Live FX-bilden är A011C001 med noden, klippet satt till ACES AP1 / ACEScct.
+webben: toppbilden A011C001 yaw 180 (3840 × 1080). Galleriet visar varje gratisplåt en gång (Eric 2026-11-24: "Vi gör
+primärt bil. Se till att varje plate i demon representeras en gång"): de åtta andra, mest framåt i körriktningen —
+A013C004, A014C001, A004C006 yaw 0, A005C006 yaw 180, A004C002 yaw 180, A014C006 yaw 180, A007C001 yaw 0 (rälsen,
+utan tåget) och A001C016 pitch −6. Live FX-bilden är A011C001 med noden, klippet satt till ACES AP1 / ACEScct.
 Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
 https://igelkottplates.github.io/IgelkottFisheye2D/ — de nya bilderna (utan tåg) pushade i 4e647f7 och
-sedda i webbläsaren: alla 8 bilder laddas, toppbilden 3840 px, ingen vågrät rullning.
+sedda i webbläsaren. Galleriet med en bild per plåt väntar på push:
+`HANDOFF/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-pages-en-per-plat.md`.
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.
