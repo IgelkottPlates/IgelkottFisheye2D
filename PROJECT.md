@@ -951,8 +951,8 @@ för 60 min, MTF50, de nio gratisplåtarna och nodens panel i Live FX. Erics än
 (`Ref-Eric/IgelkottFisheye-on-the-Wall.docx`, 2026-11-24) är införda: vägranstexten borttagen, fps i stället för rutor,
 RX 9070 XT i Windows-raden. Väggbilderna är nodens linsmodell (`tools/compare_eq2d.py`, `ours`) i mitten av 8K-väggen
 vid FOV 90, 1:1, omvandlade till Rec.709 för webben; A001C016 yaw 255 pitch −5, A011C001 yaw 180 och A014C006 ruta 1734
-valdes för kontrast och tydligt motiv. Ska ut på GitHub Pages från ERIC-DESKTOP
-(`HANDOFF/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-github-pages.md`).
+valdes för kontrast och tydligt motiv. Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
+https://igelkottplates.github.io/IgelkottFisheye2D/ — sedd i webbläsaren, alla 13 bilder laddas, ingen vågrät rullning.
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.

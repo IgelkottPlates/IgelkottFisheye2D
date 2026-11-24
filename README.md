@@ -12,6 +12,8 @@ going through an equirect first. It is the same maths IgelkottStage uses, writte
 | PIXERA (AV Stumpfl) | Built and tested on a graphics card; not yet seen inside PIXERA | `pixera/IgelkottFisheye.glsl` |
 | Nuke, Nuke Stage, Flame, Unreal, Notch, Smode, disguise, ISF hosts… | Not yet: see [docs/PLAYERS.md](docs/PLAYERS.md) | |
 
+What it does on the wall, with numbers: [IgelkottFisheye on the Wall](https://igelkottplates.github.io/IgelkottFisheye2D/).
+
 Help with the other players is welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Install
