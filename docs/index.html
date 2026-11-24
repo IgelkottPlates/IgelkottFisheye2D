@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="IgelkottFisheye puts Igelkott fisheye plates straight on the LED wall in Assimilate Live FX and PIXERA: faster, lighter and sharper than the equirect route.">
+<title>IgelkottFisheye on the Wall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="igelkott.css">
+<style>
+/* Layout: a dark shop window. The plate fills the top, three claims follow, then one chapter per claim.
+   Every value comes from IgelkottDesign (igelkott.css). The page is deliberately dark only, like the design. */
+:root {
+  color-scheme: dark;
+  --bg: var(--igelkott-surface-0);
+  --panel: var(--igelkott-surface-1);
+  --panel-2: var(--igelkott-surface-2);
+  --fg: var(--igelkott-text);
+  --mute: var(--igelkott-text-mute);
+  --line: var(--igelkott-border);
+  --line-2: var(--igelkott-border-strong);
+  --link: var(--igelkott-accent);
+  --good: var(--igelkott-success);
+  --warn: var(--igelkott-warning);
+  --mark: var(--igelkott-marker);
+  --font: var(--igelkott-font-brand);
+  --mono: var(--igelkott-font-mono);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font);
+  font-size: var(--igelkott-storefront-fs-body); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1100px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--link); text-decoration: none; border-bottom: 1px solid transparent;
+  transition: border-color var(--igelkott-duration-fast) var(--igelkott-ease); }
+a:hover { border-bottom-color: var(--link); }
+a:focus-visible { outline: none; box-shadow: var(--igelkott-focus-ring); border-radius: var(--igelkott-radius-sm); }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; }
+h3 { font-size: var(--igelkott-storefront-fs-h3); font-weight: 600; }
+p { margin: 0; color: var(--mute); max-width: 60ch; }
+.mono { font-family: var(--mono); font-size: 0.85em; font-variant-numeric: tabular-nums; }
+.nw { white-space: nowrap; }
+.label { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+
+/* top bar */
+.top { border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--igelkott-space-4);
+  padding-block: var(--igelkott-space-4); flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 18px; letter-spacing: 0.01em; }
+.brand span { color: var(--mute); font-weight: 500; }
+.pill { font-family: var(--mono); font-size: 14px; color: var(--fg); border: 1px solid var(--line-2);
+  border-radius: var(--igelkott-radius-pill); padding: 4px 12px; }
+
+/* hero: the plate first, the claim on top of it */
+.hero { position: relative; }
+.hero img { display: block; width: 100%; height: clamp(300px, 46vw, 580px); object-fit: cover; }
+.hero::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(14,16,20,0) 35%, var(--bg) 100%); pointer-events: none; }
+.hero-copy { position: relative; z-index: 1; margin-top: calc(-1 * clamp(150px, 17vw, 230px)); }
+.hero-copy h1 { font-size: clamp(44px, 7.4vw, 92px); line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; text-shadow: 0 2px 24px rgba(14,16,20,0.55); }
+.hero-copy h1 span { display: block; }
+.hero-copy .dek { margin-top: var(--igelkott-space-6); font-size: clamp(19px, 2vw, 23px); line-height: 1.5; color: var(--fg); max-width: 40ch; opacity: 0.88; }
+.caption { margin-top: var(--igelkott-space-3); font-size: 14px; color: var(--mute); }
+
+/* the three claims */
+.claims { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--igelkott-space-4); margin-top: var(--igelkott-space-12); }
+.claim { background: var(--panel); border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg);
+  padding: var(--igelkott-space-8) var(--igelkott-space-6); display: flex; flex-direction: column; gap: var(--igelkott-space-3); min-width: 0; }
+.claim .word { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+.claim b { font-size: clamp(44px, 5vw, 60px); line-height: 1; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.claim p { font-size: 17px; line-height: 1.5; }
+.claim a { font-size: 15px; font-weight: 600; margin-top: auto; padding-top: var(--igelkott-space-2); align-self: flex-start; }
+
+section.block { padding-block: var(--igelkott-space-16); border-top: 1px solid var(--line); }
+.first { border-top: 0 !important; }
+.head { display: flex; flex-direction: column; gap: var(--igelkott-space-3); margin-bottom: var(--igelkott-space-8); }
+.head .label b { color: var(--fg); }
+
+/* bars */
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg);
+  padding: var(--igelkott-space-6); display: flex; flex-direction: column; gap: var(--igelkott-space-4); }
+.row { display: grid; grid-template-columns: 230px minmax(0, 1fr) 72px; gap: var(--igelkott-space-4); align-items: center; }
+.row .n { font-size: 16px; color: var(--fg); }
+.row .n span { display: block; color: var(--mute); font-size: 14px; }
+.row .v { font-size: 18px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.track { position: relative; height: 22px; background: var(--panel-2); border-radius: var(--igelkott-radius-sm); }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--igelkott-radius-sm); background: var(--fg);
+  transform-origin: left; animation: grow var(--igelkott-duration-slow) var(--igelkott-ease-out) both; }
+.fill.alt { background: var(--mute); opacity: 0.55; }
+.ref { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--mark); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--igelkott-space-6); font-size: 14px; color: var(--mute); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+.group { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
+  margin-top: var(--igelkott-space-2); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* screenshots */
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--igelkott-space-6); margin-top: var(--igelkott-space-8); }
+figure { margin: 0; display: flex; flex-direction: column; gap: var(--igelkott-space-2); min-width: 0; }
+figure img { width: 100%; display: block; border-radius: var(--igelkott-radius-md); border: 1px solid var(--line); background: var(--panel); }
+figcaption { font-size: 14px; color: var(--mute); }
+
+/* gallery: the nine plates */
+.panel { margin-bottom: var(--igelkott-space-6); }
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--igelkott-space-3); }
+.gallery figure img { aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--igelkott-radius-md);
+  transition: transform var(--igelkott-duration-base) var(--igelkott-ease); }
+.gallery figure:hover img { transform: scale(1.02); }
+
+/* two columns */
+.split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--igelkott-space-10); align-items: start; }
+.points { display: flex; flex-direction: column; gap: var(--igelkott-space-6); }
+.points div { display: flex; flex-direction: column; gap: 6px; padding-left: var(--igelkott-space-4); border-left: 2px solid var(--line-2); }
+.points p { font-size: 17px; }
+
+/* sharper: numbers only */
+.pairs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg); overflow: hidden; }
+.pair { background: var(--panel); padding: var(--igelkott-space-6); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pair .what { font-size: 15px; color: var(--mute); }
+.pair .nums { display: flex; align-items: baseline; gap: var(--igelkott-space-3); flex-wrap: wrap; }
+.pair .nums b { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pair .nums s { text-decoration: none; font-size: 20px; color: var(--mute); font-variant-numeric: tabular-nums; }
+.pair .gain { font-size: 15px; font-weight: 600; color: var(--good); }
+
+svg text { fill: var(--mute); font-family: var(--font); font-size: 13px; }
+.svgbox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg); padding: var(--igelkott-space-4); }
+.svgbox svg { width: 100%; height: auto; display: block; }
+
+/* facts tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 16px; }
+th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); background: var(--panel); }
+td { color: var(--fg); font-variant-numeric: tabular-nums; }
+td.mono, td.ok { white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.ok { color: var(--good); font-weight: 600; }
+
+
+.cta-box { background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--igelkott-radius-lg);
+  padding: var(--igelkott-space-10) var(--igelkott-space-8); display: flex; align-items: center; justify-content: space-between;
+  gap: var(--igelkott-space-8); flex-wrap: wrap; }
+.cta-box > div:first-child { display: flex; flex-direction: column; gap: var(--igelkott-space-3); min-width: 0; flex: 1 1 380px; }
+.cta-actions { display: flex; gap: var(--igelkott-space-3); flex-wrap: wrap; }
+.btn { display: inline-block; background: var(--link); color: var(--igelkott-on-accent); font-weight: 600; font-size: 17px;
+  padding: 14px 24px; border-radius: var(--igelkott-radius-pill); border: 1px solid var(--link);
+  transition: background var(--igelkott-duration-fast) var(--igelkott-ease); }
+.btn:hover { background: var(--igelkott-accent-hover); border-color: var(--igelkott-accent-hover); }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line-2); }
+.btn.ghost:hover { background: var(--panel-2); border-color: var(--line-2); }
+.stack { display: flex; flex-direction: column; gap: var(--igelkott-space-6); }
+
+footer { border-top: 1px solid var(--line); padding-block: var(--igelkott-space-8) var(--igelkott-space-12); }
+footer p { font-size: 14px; max-width: none; }
+
+@media (max-width: 820px) {
+  .claims, .pairs { grid-template-columns: minmax(0, 1fr); }
+  .split, .shots { grid-template-columns: minmax(0, 1fr); }
+  .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .row { grid-template-columns: minmax(0, 1fr) 64px; }
+  .row .n { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { .fill { animation: none; } .gallery figure img { transition: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">IgelkottFisheye <span>· for Live FX and PIXERA</span></div>
+    <div class="pill">v0.21 · 2026-11-23</div>
+  </div>
+</header>
+
+<div class="hero">
+  <img src="img/wall_A004C006.jpg" alt="The night plate A004C006 on an 8K wall, drawn by the node straight from the fisheye">
+</div>
+<div class="wrap hero-copy">
+  <h1><span>4× faster.</span><span>Lighter.</span><span>Sharper.</span></h1>
+  <p class="dek">Put Igelkott fisheye plates straight on the LED wall. No 16K equirect to render, store or stream, and one resample instead of two.</p>
+  <p class="caption mono">Plate A004C006 · Wall, FOV 90 · 7680 × 2160</p>
+
+  <div class="claims">
+    <div class="claim">
+      <span class="word">Faster</span>
+      <b>4.3–4.8×</b>
+      <p>real time. 121 fps on a Mac Studio, 108 on a Windows workstation. The equirect route falls below 25 fps on the same PC.</p>
+      <a href="#faster">Playback in Live FX</a>
+    </div>
+    <div class="claim">
+      <span class="word">Lighter</span>
+      <b>2.5×</b>
+      <p>less disk. An hour of plate is 2.6 TB in NotchLC instead of 6.6 TB, and reads at 0.7 GB/s instead of 1.8.</p>
+      <a href="#lighter">Storage and disks</a>
+    </div>
+    <div class="claim">
+      <span class="word">Sharper</span>
+      <b>+16 %</b>
+      <p>MTF50 across the wall, +7 % up and down. The fisheye is sampled once, straight through the lens model.</p>
+      <a href="#sharper">How it was measured</a>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<section class="block first" id="faster">
+  <div class="head">
+    <span class="label"><b>Faster</b> · Live FX, Free Run, 8K wall</span>
+    <h2>The wall runs four times ahead of the plate</h2>
+    <p>Free Run plays as fast as the machine allows. With the node, both computers clear 100 fps on an 8K wall and 90 on 16K. Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on Windows and the transform halves that to 23, short of the plate's 25.</p>
+  </div>
+  <div class="chart" role="img" aria-label="Frames per second in Live FX. Fisheye with the node, 8K wall: Mac 121, Windows 108. 16K wall: Mac 123, Windows 91. Equirect with Eq->2D, 8K wall: Mac 49, Windows 23. The plate's rate is 25.">
+    <div class="legend"><span><i style="background:var(--fg)"></i>Mac Studio, M3 Ultra</span><span><i style="background:var(--mute);opacity:.55"></i>Windows workstation, Threadripper 3960X + RX 9070 XT</span><span><i style="background:var(--mark)"></i>the plate, 25 fps</span></div>
+    <div class="group">Fisheye + IgelkottFisheye, 7680 × 2160</div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:93%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">121</div></div>
+    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:83%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">108</div></div>
+    <div class="group">Fisheye + IgelkottFisheye, 15360 × 2160</div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:94.6%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">123</div></div>
+    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:70%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">91</div></div>
+    <div class="group">16K equirect + <span class="nw">Eq-&gt;2D</span>, 7680 × 2160</div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49</div></div>
+    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23</div></div>
+  </div>
+  <div class="shots">
+    <figure><img src="img/livefx_nod.jpg" alt="Live FX on the Mac: the fisheye with the node on the 8K wall in Free Run" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX on the Mac, Free Run: 121 fps.</figcaption></figure>
+    <figure><img src="img/livefx_eq2d.jpg" alt="Live FX on the Mac: the 16K equirect through Eq->2D on the same wall" loading="lazy"><figcaption>The same wall from the 16K equirect through <span class="nw">Eq-&gt;2D</span>, FOV 31.42, which is 90° across.</figcaption></figure>
+  </div>
+</section>
+
+<section class="block" id="lighter">
+  <div class="head">
+    <span class="label"><b>Lighter</b> · 60 minutes of plate at 25 fps</span>
+    <h2>An hour of fisheye fits in 2.6 TB. The same hour as equirect needs 6.6 TB</h2>
+    <p>NotchLC is the codec Live FX plays fastest, and it is where the equirect gets heavy. One 8 TB drive holds three hours of fisheye or a little over one hour of equirect. ProRes 4444 is the master you download, and the smallest of all.</p>
+  </div>
+  <div class="chart" role="img" aria-label="Terabytes per hour, mean of the nine free demo plates. NotchLC: fisheye 2.59, equirect 6.57. ProRes 4444: fisheye 1.76, equirect 2.35.">
+    <div class="legend"><span><i style="background:var(--fg)"></i>Fisheye, 5760 × 5760</span><span><i style="background:var(--mute);opacity:.55"></i>Equirect, 15360 × 7680</span></div>
+    <div class="group">NotchLC · what plays</div>
+    <div class="row"><div class="n">Fisheye<span>2.0–2.8 TB</span></div><div class="track"><div class="fill" style="width:32.4%"></div></div><div class="v">2.59</div></div>
+    <div class="row"><div class="n">Equirect<span>4.8–7.6 TB</span></div><div class="track"><div class="fill alt" style="width:82.1%"></div></div><div class="v">6.57</div></div>
+    <div class="group">ProRes 4444 · the master</div>
+    <div class="row"><div class="n">Fisheye<span>1.1–2.0 TB</span></div><div class="track"><div class="fill" style="width:22%"></div></div><div class="v">1.76</div></div>
+    <div class="row"><div class="n">Equirect<span>1.3–3.7 TB</span></div><div class="track"><div class="fill alt" style="width:29.4%"></div></div><div class="v">2.35</div></div>
+    <p class="caption" style="margin-top:4px">TB per hour (90,000 frames), mean and range over the nine free demo plates. Scale 0–8 TB.</p>
+  </div>
+  <div class="tablewrap" style="margin-top:var(--igelkott-space-6)">
+    <table>
+      <tr><th>Format</th><th>Per frame</th><th>Read at 25 fps</th><th>Per hour</th><th>On an 8 TB drive</th></tr>
+      <tr><td>NotchLC fisheye</td><td class="mono">28.7 MB</td><td class="mono">718 MB/s</td><td class="mono">2.59 TB</td><td class="mono">3 h 5 min</td></tr>
+      <tr><td>NotchLC equirect 16K</td><td class="mono">73.0 MB</td><td class="mono">1,825 MB/s</td><td class="mono">6.57 TB</td><td class="mono">1 h 13 min</td></tr>
+      <tr><td>ProRes 4444 fisheye</td><td class="mono">19.5 MB</td><td class="mono">489 MB/s</td><td class="mono">1.76 TB</td><td class="mono">4 h 33 min</td></tr>
+      <tr><td>ProRes 4444 equirect 16K</td><td class="mono">26.2 MB</td><td class="mono">654 MB/s</td><td class="mono">2.35 TB</td><td class="mono">3 h 24 min</td></tr>
+    </table>
+  </div>
+
+  <div class="head" style="margin-top:var(--igelkott-space-12)">
+    <h3>Any Gen 4 drive keeps up</h3>
+    <p>We tested the same Corsair drive in the Mac and in the Windows workstation. It reads as fast with APFS as with NTFS. An older Gen 3 drive still plays the fisheye, but not the equirect.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Drive</th><th>Reads</th><th>Fisheye frames/s</th><th>Equirect frames/s</th></tr>
+      <tr><td>Mac · Corsair MP600 PRO NH 8 TB, APFS</td><td class="mono">4.6–6.9 GB/s</td><td class="ok">147–242</td><td class="ok">70–105</td></tr>
+      <tr><td>Windows · same drive, NTFS, Gen 4</td><td class="mono">5.3–6.2 GB/s</td><td class="ok">175–270</td><td class="ok">64–110</td></tr>
+      <tr><td>Older PC · Intel 660p, Gen 3</td><td class="mono">1.3–1.7 GB/s</td><td class="ok">54–75</td><td class="mono">15–24</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="sharper">
+  <div class="head">
+    <span class="label"><b>Sharper</b> · MTF50 at FOV 90 on a 4K wall</span>
+    <h2>One resample keeps more of the plate</h2>
+    <p>The equirect route resamples twice: fisheye to equirect, then equirect to wall. IgelkottFisheye goes from the fisheye to the wall in one step. MTF50 is the detail where contrast has fallen to half; higher is sharper.</p>
+  </div>
+  <div class="pairs">
+    <div class="pair"><span class="what">Across the wall, at the horizon</span><div class="nums"><b>0.36</b><s>vs 0.30</s></div><span class="gain">+16 %</span></div>
+    <div class="pair"><span class="what">Up and down, at the horizon</span><div class="nums"><b>0.24</b><s>vs 0.22</s></div><span class="gain">+7 %</span></div>
+    <div class="pair"><span class="what">Across, looking down 20°</span><div class="nums"><b>0.42</b><s>vs 0.31</s></div><span class="gain">+27 %</span></div>
+  </div>
+  <p class="caption" style="margin-top:12px; max-width:80ch">Cycles per output pixel; IgelkottFisheye first, a 16K equirect of the same plate through <span class="nw">Eq-&gt;2D</span> second. IgelkottFisheye's MTF comes from a slanted edge drawn through the shader (ISO 12233); the equirect route is measured against it on all nine plates. Up and down, the fisheye itself sets the limit for both: about 22 source pixels per degree against 43 on the wall.</p>
+</section>
+
+<section class="block">
+  <div class="head">
+    <span class="label">Nine free demo plates · nine walls</span>
+    <h2>Every plate tells the node what it is</h2>
+    <p>A pixel tag in each plate names the camera and which way it pointed. The node reads it and draws the wall, so the two plates shot looking down come out the right way up. The centre of each 8K wall, 1:1.</p>
+    <p>The node never touches colour. The plate stays in ACEScct all the way to the wall, so you pick the output your LED volume runs: PQ, HLG or SDR. The stills here are converted to SDR for the web.</p>
+  </div>
+  <figure class="panel"><img src="img/livefx_panel.jpg" alt="The IgelkottFisheye panel in Assimilate Live FX with plate A013C004 on the wall" loading="lazy"><figcaption>The IgelkottFisheye panel in Assimilate Live FX. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
+  <div class="gallery">
+    <figure><img src="img/wall_A001C016.jpg" alt="A001C016" loading="lazy"><figcaption class="mono">A001C016 · nadir · yaw 255</figcaption></figure>
+    <figure><img src="img/wall_A004C002.jpg" alt="A004C002" loading="lazy"><figcaption class="mono">A004C002</figcaption></figure>
+    <figure><img src="img/wall_A004C006.jpg" alt="A004C006" loading="lazy"><figcaption class="mono">A004C006</figcaption></figure>
+    <figure><img src="img/wall_A005C006.jpg" alt="A005C006" loading="lazy"><figcaption class="mono">A005C006</figcaption></figure>
+    <figure><img src="img/wall_A007C001.jpg" alt="A007C001" loading="lazy"><figcaption class="mono">A007C001</figcaption></figure>
+    <figure><img src="img/wall_A011C001.jpg" alt="A011C001" loading="lazy"><figcaption class="mono">A011C001 · nadir · yaw 180</figcaption></figure>
+    <figure><img src="img/wall_A013C004.jpg" alt="A013C004" loading="lazy"><figcaption class="mono">A013C004</figcaption></figure>
+    <figure><img src="img/wall_A014C001.jpg" alt="A014C001" loading="lazy"><figcaption class="mono">A014C001</figcaption></figure>
+    <figure><img src="img/wall_A014C006.jpg" alt="A014C006" loading="lazy"><figcaption class="mono">A014C006</figcaption></figure>
+  </div>
+</section>
+
+<section class="block">
+  <div class="head">
+    <span class="label">Checked on every build</span>
+    <h2>What you see on the wall is what the lens saw</h2>
+    <p>Every release is drawn on a real graphics card and compared pixel by pixel with the lens model, in both Live FX and PIXERA. NotchLC keeps the picture too: the encoded plates stay within +3.7 of 1023 of the ProRes master, frame for frame.</p>
+  </div>
+  <div class="tablewrap">
+      <table style="min-width:0">
+        <tr><th>Check</th><th>Result</th></tr>
+        <tr><td>Every pixel against the lens model, Live FX and PIXERA</td><td class="ok">129 pass</td></tr>
+        <tr><td>LED canvases from 4K to 16384 × 2160</td><td class="ok">55 pass</td></tr>
+        <tr><td>Sharpness (MTF50), six views</td><td class="ok">pass</td></tr>
+        <tr><td>PIXERA against Live FX</td><td class="ok">within 0.0001</td></tr>
+        <tr><td>NotchLC against the ProRes master, 18 files</td><td class="ok">0 to +3.7 of 1023</td></tr>
+      </table>
+    </div>
+</section>
+
+<section class="block cta">
+  <div class="cta-box">
+    <div>
+      <h2>Put a plate on your wall</h2>
+      <p>IgelkottFisheye 0.21 for Assimilate Live FX and PIXERA. One zip for the Mac, one for Windows. Free to use for playing Igelkott plates.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="btn" href="https://github.com/IgelkottPlates/IgelkottFisheye2D/releases/tag/v0.21">Download v0.21</a>
+      <a class="btn ghost" href="https://igelkottplates.com">Browse plates</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Measured in November 2026 on a Mac Studio (M3 Ultra) and Windows PCs with an AMD Radeon RX 9070 XT, in Assimilate Live FX 9.9, on the nine free demo plates from <a href="https://igelkottplates.com">igelkottplates.com</a>. © Igelkott Film AB.</p>
+  </div>
+</footer>
+</body>
+</html>

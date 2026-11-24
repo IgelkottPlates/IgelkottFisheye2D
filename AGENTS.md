@@ -26,6 +26,9 @@ DOX-kontrakt för denna mapp. Läs `_atlas/README.md` regel 15 först.
   (engelska); resultaten skrivs i `PROJECT.md`.
 - `docs/PLAYERS.md` — kartan över andra spelare (Nuke, Unreal, disguise, ISF med flera) och hur en ny port läggs till
   (engelska, för bidragsgivare).
+- `docs/index.html`, `docs/igelkott.css`, `docs/img/` — produktsidan "IgelkottFisheye on the Wall" (engelska) för GitHub
+  Pages från `main` och `/docs` (Eric 2026-11-24). Fristående HTML; färger och typsnitt ur IgelkottDesign (`igelkott.css`
+  är en kopia av `dist/igelkott.css`).
 - `Ref-Eric/` — referenser från Eric (PIXERA:s egen `Equirectangular.glsl.txt`).
 - `mac/README.txt` och `tools/build_mac_package.py` → `_releases/IgelkottFisheye/IgelkottFisheye-Mac.zip`: Mac-zippen för
   GitHub Release (noden, README, VERSION, LICENSE; inget program, Eric 2026-11-23).

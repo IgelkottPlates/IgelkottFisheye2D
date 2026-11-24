@@ -1,0 +1,79 @@
+/* Genererad av IgelkottDesign/tools/build_tokens.py ur tokens/tokens.json.
+   Version 0.2.0. Redigera inte här. */
+
+:root {
+  color-scheme: dark;
+  --igelkott-surface-0: #0E1014;
+  --igelkott-surface-1: #1A1D24;
+  --igelkott-surface-2: #242833;
+  --igelkott-surface-3: #2C313D;
+  --igelkott-text: #FFFFFF;
+  --igelkott-text-mute: #B8C2CC;
+  --igelkott-text-dim: rgba(255,255,255,0.65);
+  --igelkott-border: rgba(255,255,255,0.08);
+  --igelkott-border-strong: rgba(255,255,255,0.16);
+  --igelkott-accent: #00BCDB;
+  --igelkott-accent-hover: #00A8C4;
+  --igelkott-accent-press: #008FAA;
+  --igelkott-accent-glow: rgba(0,188,219,0.35);
+  --igelkott-on-accent: #0E1014;
+  --igelkott-success: #4EC779;
+  --igelkott-warning: #FACC15;
+  --igelkott-error: #EF4444;
+  --igelkott-marker: #C8A960;
+  --igelkott-part-a: #00BCDB;
+  --igelkott-part-b: #F5A524;
+  --igelkott-part-c: #A78BFA;
+  --igelkott-part-d: #4ADE80;
+  --igelkott-part-e: #F472B6;
+  --igelkott-part-f: #FB923C;
+  --igelkott-email-frame: #0A0C0F;
+  --igelkott-email-surface: #1A1D24;
+  --igelkott-email-heading: #F2F4F6;
+  --igelkott-email-body: #B8C2CC;
+  --igelkott-email-line: #242833;
+  --igelkott-email-dim: #AFB0B2;
+  --igelkott-font-brand: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --igelkott-font-tool: 'Inter', -apple-system, system-ui, sans-serif;
+  --igelkott-font-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  --igelkott-storefront-fs-body: 20px;
+  --igelkott-storefront-fs-small: 20px;
+  --igelkott-storefront-fs-h3: 24px;
+  --igelkott-storefront-fs-h2: 28px;
+  --igelkott-storefront-fs-h1: 32px;
+  --igelkott-storefront-fs-display: 40px;
+  --igelkott-tool-fs-body: 14px;
+  --igelkott-tool-fs-small: 12px;
+  --igelkott-tool-fs-h3: 16px;
+  --igelkott-tool-fs-h2: 20px;
+  --igelkott-tool-fs-h1: 24px;
+  --igelkott-tool-fs-display: 32px;
+  --igelkott-space-1: 4px;
+  --igelkott-space-2: 8px;
+  --igelkott-space-3: 12px;
+  --igelkott-space-4: 16px;
+  --igelkott-space-5: 20px;
+  --igelkott-space-6: 24px;
+  --igelkott-space-8: 32px;
+  --igelkott-space-10: 40px;
+  --igelkott-space-12: 48px;
+  --igelkott-space-16: 64px;
+  --igelkott-radius-sm: 4px;
+  --igelkott-radius-md: 8px;
+  --igelkott-radius-lg: 12px;
+  --igelkott-radius-pill: 9999px;
+  --igelkott-duration-fast: 150ms;
+  --igelkott-duration-base: 250ms;
+  --igelkott-duration-slow: 400ms;
+  --igelkott-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --igelkott-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --igelkott-focus-ring: 0 0 0 3px var(--igelkott-accent-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --igelkott-duration-fast: 0ms;
+    --igelkott-duration-base: 0ms;
+    --igelkott-duration-slow: 0ms;
+  }
+}
