@@ -25,3 +25,7 @@ AGENTS.md
 CLAUDE.md
 ARCHITECTURE_CHECKLIST.md
 HANDOFF/
+
+# Tutorial film sources too large for the repo: screenshots (35 MB) and recorded narration stay in Synology Drive
+tutorial/images/
+tutorial/vo/

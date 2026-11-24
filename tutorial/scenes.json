@@ -1,0 +1,437 @@
+[
+ {
+  "id": "title",
+  "card": [
+   "IgelkottFisheye in Live FX",
+   "Set up a wall: 4K, 8K and 16 × 2K"
+  ],
+  "say": "IgelkottFisheye in Assimilate Live FX. In a few minutes you will set up a project that plays an Igelkott fisheye plate straight on an LED wall, with the right colour, at 4K, at 8K, or as sixteen 2K screens from one machine.",
+  "cap": ""
+ },
+ {
+  "id": "project",
+  "img": "a02_project_settings",
+  "say": "Create a new project. Set the format to the size of your wall, here 3840 by 2160, and the frame rate to the plate's, here 24. Turn Color Management on, with ACES 1.1 and ACEScct.",
+  "cap": "Format = wall size · Framerate = plate · Color Management On, ACES 1.1, ACEScct",
+  "clicks": [
+   {
+    "box": [
+     1380,
+     785,
+     1495,
+     815
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1380,
+     853,
+     1617,
+     881
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1688,
+     785,
+     1847,
+     815
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     2021,
+     785,
+     2180,
+     815
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1936,
+     1119,
+     2180,
+     1147
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "filler",
+  "img": "a04_filler_black",
+  "say": "In the Construct, choose Filler, then Black, and drop it in the first slot. This black shot is the base of the wall, and it always has the timeline's size.",
+  "cap": "Filler › Black in the first slot: the base of the wall",
+  "clicks": [
+   {
+    "box": [
+     783,
+     1081,
+     1028,
+     1108
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "import",
+  "img": "a05_import",
+  "say": "Import the plate with Import Clips.",
+  "cap": "Import Clips › the plate",
+  "clicks": [
+   {
+    "box": [
+     44,
+     494,
+     448,
+     515
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1741,
+     364,
+     1969,
+     385
+    ],
+    "kind": "double"
+   }
+  ]
+ },
+ {
+  "id": "loadno",
+  "img": "a06_loadclips_no",
+  "say": "Live FX asks whether to change the timeline to the plate's size. Answer No. The plate is square, the wall is not.",
+  "cap": "Answer No: the timeline keeps the wall's size",
+  "clicks": [
+   {
+    "box": [
+     1539,
+     1120,
+     1635,
+     1144
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "pale",
+  "img": "a07_media_wrong",
+  "say": "Live FX reads the plate as Rec 709, gamma 2.4. That looks flat and grey.",
+  "cap": "Default Rec709 / Gamma 2.4: flat and grey",
+  "clicks": [
+   {
+    "box": [
+     536,
+     1183,
+     773,
+     1209
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "color",
+  "img": "a08_color_menu",
+  "say": "In Media, set Color to ACEScg, AP1,",
+  "cap": "Media › Color: ACEScg (AP1)",
+  "clicks": [
+   {
+    "box": [
+     404,
+     1032,
+     655,
+     1060
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "eotf",
+  "img": "a09_eotf_menu",
+  "say": "and the EOTF to ACEScct.",
+  "cap": "EOTF: ACEScct",
+  "clicks": [
+   {
+    "box": [
+     655,
+     999,
+     905,
+     1027
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "right",
+  "img": "a10_media_right",
+  "say": "Now the plate has its real contrast and colour.",
+  "cap": "Plate: ACEScg (AP1) / ACEScct"
+ },
+ {
+  "id": "length",
+  "img": "a16_shot_length",
+  "say": "Go back to the black shot. Click the Live FX title above the panel buttons, and set Shot Length Out to the plate's length minus one, here 2179.",
+  "cap": "Live FX menu › Shot Length Out = plate length − 1",
+  "clicks": [
+   {
+    "box": [
+     99,
+     1116,
+     471,
+     1143
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1781,
+     1185,
+     2021,
+     1213
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "plugins",
+  "img": "a11_plugins",
+  "say": "With the black shot selected, open Plug-ins, Matchbox, and choose IgelkottFisheye2D. Click Apply On Layer.",
+  "cap": "Plug-ins › Matchbox › IgelkottFisheye2D › Apply On Layer",
+  "clicks": [
+   {
+    "box": [
+     1339,
+     623,
+     1521,
+     837
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     1164,
+     1119,
+     1347,
+     1147
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "fetch",
+  "img": "a115_fetch_select",
+  "say": "The node starts with the black shot as its input. Click Fetch. In the Construct, drag the plate down into the input called Fisheye, and click.",
+  "cap": "Fetch… › drag the plate into the Fisheye input",
+  "clicks": [
+   {
+    "box": [
+     99,
+     1315,
+     220,
+     1343
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     873,
+     611,
+     1220,
+     949
+    ],
+    "kind": "drag"
+   },
+   {
+    "box": [
+     535,
+     1164,
+     901,
+     1375
+    ],
+    "kind": "drop"
+   }
+  ]
+ },
+ {
+  "id": "tag",
+  "img": "a12_input_connected",
+  "say": "The node reads the pixel tag in the plate, so the camera and the pointing are set for you.",
+  "cap": "Camera and Pointing: Auto (tag)"
+ },
+ {
+  "id": "inlen",
+  "img": "a17_input_length",
+  "say": "In Inputs, check that Length is the plate's length, so the whole plate plays.",
+  "cap": "Inputs › Length = plate length",
+  "clicks": [
+   {
+    "box": [
+     1284,
+     1181,
+     1529,
+     1212
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "blackpale",
+  "img": "a13_node_media_wrong",
+  "say": "One more step. The black shot is sRGB, gamma 2.2, so the wall looks pale.",
+  "cap": "Black is sRGB / Gamma 2.2: the wall looks pale",
+  "clicks": [
+   {
+    "box": [
+     536,
+     1183,
+     773,
+     1209
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     784,
+     1183,
+     1023,
+     1209
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "blackright",
+  "img": "a14_node_media_right",
+  "say": "Set the black shot's Media to ACEScg and ACEScct, the same as the plate.",
+  "cap": "Black › Media: ACEScg (AP1) / ACEScct"
+ },
+ {
+  "id": "wall4k",
+  "img": "a15_wall_4k",
+  "say": "That is a 4K wall, one 4K output. Yaw, Pitch, Roll and FOV aim it. FOV is the angle from the wall's left edge to its right edge.",
+  "cap": "4K wall, 3840 × 2160: one 4K output"
+ },
+ {
+  "id": "three",
+  "img": "b02_timeline_8k",
+  "say": "For a bigger wall, give the same size to three things: the timeline, the black shot and the node. For 8K, that is 7680 by 4320, two by two 4K outputs.",
+  "cap": "Same size in three places: timeline, Black, node",
+  "clicks": [
+   {
+    "box": [
+     160,
+     1215,
+     404,
+     1243
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     160,
+     1248,
+     404,
+     1276
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "wall8k",
+  "img": "b03_wall_8k",
+  "say": "The node fills the whole 8K wall.",
+  "cap": "8K wall, 7680 × 4320: 2 × 2 4K outputs"
+ },
+ {
+  "id": "mode16",
+  "img": "b05_mode_menu",
+  "say": "Sixteen 2K screens is 15360 by 2160, four 4K outputs in a row. Give that size to the timeline, the black shot and the node, and in the node choose Mode, Equirect.",
+  "cap": "16 × 2K = 15360 × 2160 · Mode › Equirect",
+  "clicks": [
+   {
+    "box": [
+     785,
+     1343,
+     1028,
+     1368
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "wall16",
+  "img": "b06_wall_16x2k_equirect",
+  "say": "Now the whole sphere, 360 degrees, runs across all sixteen screens, from one node. Yaw turns it.",
+  "cap": "16 × 2K: 360° equirect across four 4K outputs"
+ },
+ {
+  "id": "monitors",
+  "img": "b04_monitors",
+  "say": "Last, the viewer. On a Mac, the interface is sRGB, gamma 2.2. On Windows, choose Scene Linear. Set each output to what your LED processor expects: SDR, PQ or HLG.",
+  "cap": "Mac: sRGB / Gamma 2.2 · Windows: Scene Linear · outputs: SDR, PQ or HLG",
+  "clicks": [
+   {
+    "box": [
+     35,
+     1069,
+     156,
+     1097
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     160,
+     1116,
+     281,
+     1144
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     785,
+     1183,
+     969,
+     1212
+    ],
+    "kind": "click"
+   },
+   {
+    "box": [
+     972,
+     1183,
+     1155,
+     1212
+    ],
+    "kind": "click"
+   }
+  ]
+ },
+ {
+  "id": "outro",
+  "card": [
+   "Play Igelkott plates on your wall",
+   "igelkottplates.com"
+  ],
+  "say": "That's it. The node and free demo plates are at igelkott plates dot com.",
+  "cap": ""
+ }
+]

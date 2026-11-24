@@ -220,7 +220,7 @@ footer p { font-size: 14px; max-width: none; }
     <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49</div></div>
     <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23</div></div>
   </div>
-  <figure class="shot"><img src="img/livefx_A011C001.jpg" width="1920" height="1080" alt="Assimilate Live FX with IgelkottFisheye: plate A011C001 on an 8K wall and the node's panel" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX: plate A011C001 on an 8K wall. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
+  <figure class="shot"><img src="img/livefx_wall_8k.jpg" width="2560" height="1440" alt="Assimilate Live FX with IgelkottFisheye: plate A013C004 on a whole 8K wall, 7680 × 4320, and the node's panel" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX: plate A013C004 on an 8K wall, 7680 × 4320, edge to edge. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
 </section>
 
 <section class="block" id="lighter">
@@ -312,6 +312,32 @@ footer p { font-size: 14px; max-width: none; }
         <tr><td>NotchLC against the ProRes master, 18 files</td><td class="ok">0 to +3.7 of 1023</td></tr>
       </table>
     </div>
+</section>
+
+<section class="block" id="setup">
+  <div class="head">
+    <span class="label"><b>Set up</b> · Live FX, one machine, four 4K outputs</span>
+    <h2>A black base the size of the wall, the node on top</h2>
+    <p>A Live FX composite takes the size of its first shot. Put the plate first and a wall wider than the plate is cut to the plate's width. So the base is a black shot the size of the wall, and the node sits on it with the plate as its input.</p>
+  </div>
+  <div class="split">
+    <div class="points">
+      <div><b>1 · Project</b><p>Format = the wall, frame rate = the plate. Color Management on, ACES 1.1, ACEScct.</p></div>
+      <div><b>2 · Black base</b><p>Construct › Filler › Black in the first slot. Live FX menu › Shot Length Out = plate length − 1. Media › ACEScg (AP1) / ACEScct.</p></div>
+      <div><b>3 · The plate</b><p>Import Clips, answer No to the size question, then Media › ACEScg (AP1) / ACEScct. Live FX suggests Rec709 / 2.4, which looks flat and grey.</p></div>
+      <div><b>4 · The node</b><p>On the black shot: Plug-ins › Matchbox › IgelkottFisheye2D › Apply On Layer. Then Fetch.. and drag the plate into the input called Fisheye.</p></div>
+      <div><b>5 · Bigger walls</b><p>Give the same size to three things: the timeline, the black shot and the node.</p></div>
+    </div>
+    <div class="tablewrap">
+      <table style="min-width:0">
+        <tr><th>Wall</th><th>Size</th><th>Outputs</th><th>Mode</th></tr>
+        <tr><td>4K</td><td class="mono">3840 × 2160</td><td>1 × 4K</td><td>Wall</td></tr>
+        <tr><td>8K</td><td class="mono">7680 × 4320</td><td>2 × 2 4K</td><td>Wall</td></tr>
+        <tr><td>16 × 2K</td><td class="mono">15360 × 2160</td><td>4 × 4K in a row</td><td>Equirect</td></tr>
+      </table>
+    </div>
+  </div>
+  <figure class="shot"><img src="img/livefx_wall_16x2k.jpg" width="2560" height="1440" alt="Live FX with IgelkottFisheye in Mode Equirect: the whole 360° of plate A013C004 across a 15360 × 2160 wall" loading="lazy"><figcaption>16 × 2K from one node: 15360 × 2160, four 4K outputs in a row, Mode Equirect. The whole 360° runs across all sixteen 2K screens; Yaw turns it.</figcaption></figure>
 </section>
 
 <section class="block cta">
