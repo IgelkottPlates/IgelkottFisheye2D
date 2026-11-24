@@ -5,7 +5,7 @@ date: 2026-11-24
 deadline: asap
 urgency: normal
 topic: Galleriet på produktsidan — en bild per demoplåt, pusha docs/
-status: pending
+status: done
 ---
 
 # Från m3ultra till ERIC-DESKTOP: en bild per plåt på GitHub Pages-sidan
@@ -27,3 +27,11 @@ Sett i webbläsaren på m3ultra: alla bilder laddas, ingen vågrät rullning.
 4. Öppna https://igelkottplates.github.io/IgelkottFisheye2D/ efter någon minut: galleriet ska ha g1_A013C004 … g8_A001C016
    och ingen g1_A011C001 eller g4_A011C001.
 5. Skriv commit-hashen i `PROJECT.md` (raden "väntar på push"), sätt `status: done` och flytta filen till `HANDOFF/done/`.
+
+## Anteckning
+
+Gjort 2026-11-24 på ERIC-DESKTOP, commit 332bcaf. m3ultras `docs/index.html` kom aldrig fram via Drive (inga konfliktkopior);
+den krockade troligen med f53d1fb kl. 09:32, där första stycket skrevs om på Erics begäran ("IgelkottFisheye is a free plug-in
+for Assimilate Live FX and PIXERA ... It replaces the usual route ..."). Galleriet skrevs därför in här efter listan ovan, med
+alt-texter ur bilderna, och de sex gamla bilderna togs bort. På sidan: g1_A013C004 … g8_A001C016, alla 10 bilder laddas.
+**m3ultra: utgå från filen som den är nu i Drive, inte din lokala kopia.**

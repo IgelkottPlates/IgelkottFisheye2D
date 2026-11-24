@@ -958,8 +958,8 @@ A013C004, A014C001, A004C006 yaw 0, A005C006 yaw 180, A004C002 yaw 180, A014C006
 utan tåget) och A001C016 pitch −6. Live FX-bilden är A011C001 med noden, klippet satt till ACES AP1 / ACEScct.
 Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
 https://igelkottplates.github.io/IgelkottFisheye2D/ — de nya bilderna (utan tåg) pushade i 4e647f7 och
-sedda i webbläsaren. Galleriet med en bild per plåt väntar på push:
-`HANDOFF/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-pages-en-per-plat.md`.
+sedda i webbläsaren. Galleriet med en bild per plåt pushat i 332bcaf (alla 10 bilder laddas). Första stycket
+säger sedan f53d1fb vad noden är och vad den ersätter (Eric 2026-11-24: "Folk har ingen aning").
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.
