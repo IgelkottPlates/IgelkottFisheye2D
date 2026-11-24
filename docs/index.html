@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="IgelkottFisheye plays Igelkott fisheye plates straight on the LED wall in Assimilate Live FX and PIXERA, with no 16K equirect: over 4× real time, 2.5× less disk and sharper than the equirect route. Free for Igelkott plates.">
+<meta name="description" content="IgelkottFisheye plays Igelkott fisheye plates straight on the LED wall in Assimilate Live FX and PIXERA, with no 16K equirect: 2.5–4.7× faster than the equirect route on the same machine, 2.5× less disk and sharper than the equirect route. Free for Igelkott plates.">
 <title>IgelkottFisheye on the Wall</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="igelkott.css">
@@ -179,7 +179,7 @@ footer p { font-size: 14px; max-width: none; }
   <img src="img/hero_A011C001.jpg" width="3840" height="1080" alt="Plate A011C001, shot from the air with the lens pointing down, on a whole 8 × 2K wall (7680 × 2160): a snowy mountain valley with a village in the middle, drawn by the node straight from the fisheye">
 </div>
 <div class="wrap hero-copy">
-  <h1><span>Over 4× real time.</span><span>Lighter.</span><span>Sharper.</span></h1>
+  <h1><span>2.5–4.7× faster.</span><span>Lighter.</span><span>Sharper.</span></h1>
   <p class="dek">IgelkottFisheye is a free node for Assimilate Live FX (and an effect for PIXERA) that plays Igelkott's 360° fisheye driving plates straight on the LED wall. It replaces the equirect route: render the fisheye to a 16K equirect file, then turn it into a wall view with <span class="nw">Eq-&gt;2D</span>. No 16K file to render, store or stream, and one resample instead of two.</p>
   <p class="dek">It plays Igelkott plates only. A pixel tag in each plate tells the node which camera shot it and which way the lens pointed; footage without the tag stays black.</p>
   <div class="cta-actions">
@@ -191,8 +191,8 @@ footer p { font-size: 14px; max-width: none; }
   <div class="claims">
     <div class="claim">
       <span class="word">Faster</span>
-      <b>4.3–4.8×</b>
-      <p>real time: 121 fps on a Mac Studio and 108 on a Windows workstation, where the plate needs 25. That is 2.5× and 4.7× the equirect route, which falls below 25 fps on the same PC.</p>
+      <b>2.5–4.7×</b>
+      <p>faster than the equirect route on the same machine: 121 fps against 49 on a Mac Studio, 108 against 23 on a Windows workstation. The plate needs 25, so the equirect route falls short on the PC.</p>
       <a href="#faster">Playback in Live FX</a>
     </div>
     <div class="claim">
@@ -215,7 +215,7 @@ footer p { font-size: 14px; max-width: none; }
 <section class="block first" id="faster">
   <div class="head">
     <span class="label"><b>Faster</b> · Live FX, Free Run, 8 × 2K and 16 × 2K walls</span>
-    <h2>Over 100 fps on the wall, where the equirect route drops below 25</h2>
+    <h2>On the same machine, the node plays 2.5 to 4.7 times faster than the equirect route</h2>
     <p>Free Run plays as fast as the machine allows. With the node, both computers clear 100 fps on an 8 × 2K wall (7680 × 2160) and 90 on a 16 × 2K wall (15360 × 2160). Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on Windows and the transform halves that to 23, short of the plate's 25.</p>
   </div>
   <div class="chart" role="img" aria-label="Frames per second in Live FX, Free Run. 8 × 2K wall, 7680 × 2160, with IgelkottFisheye (the fisheye plate straight to the wall): Mac 121, Windows 108. The same wall the usual route (a 16K equirect file, then Eq->2D): Mac 49, Windows 23, below the plate's 25. 16 × 2K wall, 15360 × 2160, with IgelkottFisheye: Mac 123, Windows 91.">
