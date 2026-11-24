@@ -36,6 +36,26 @@ Folder…). Restart Live FX. The zip's `README.txt` has the steps and a one-line
 
 See [pixera/README.txt](pixera/README.txt).
 
+## Setting up a wall in Live FX
+
+A Live FX composite takes the size of its first shot, so the base is a black shot the size of the wall and the node sits
+on it with the plate as its input.
+
+1. **Project:** Format = the wall. Color Management on, ACES 1.1, ACEScct. A 25 fps plate plays in a 24 fps project too.
+2. **Black base:** Construct › Filler › Black in the first slot, as long as the plate (Shot Length Out = plate length − 1).
+3. **The plate:** Import Clips, answer No to the size question, then Media › ACEScg (AP1) / ACEScct (Live FX suggests
+   Rec709 / 2.4, which looks flat and grey).
+4. **The node:** on the black shot, Plug-ins › Matchbox › IgelkottFisheye2D › Apply On Layer, then Fetch.. and drag the
+   plate into the input called Fisheye.
+5. **Bigger walls:** give the same size to the timeline, the black shot and the node.
+
+| Wall | Outputs | Mode |
+|---|---|---|
+| 3840 × 2160 | 1 × 4K | Wall |
+| 7680 × 2160 | 2 × 4K in a row | Wall |
+| 7680 × 4320 | 2 × 2 4K | Wall |
+| 15360 × 2160 | 4 × 4K in a row | Equirect |
+
 ## Using it
 
 Put one node on the fisheye clip for each wall.
