@@ -58,6 +58,8 @@ p { margin: 0; color: var(--mute); max-width: 60ch; }
 .hero-copy { position: relative; margin-top: var(--igelkott-space-6); }
 .hero-copy h1 { font-size: clamp(44px, 7.4vw, 92px); line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; }
 .hero-copy h1 span { display: block; }
+.hero-copy h1 span.vs { color: var(--igelkott-accent); }
+.claim .word em { font-style: normal; color: var(--igelkott-accent); }
 .hero-copy .dek { margin-top: var(--igelkott-space-6); font-size: clamp(19px, 2vw, 23px); line-height: 1.5; color: var(--fg); max-width: 56ch; opacity: 0.88; }
 .caption { margin-top: var(--igelkott-space-3); font-size: 14px; color: var(--mute); }
 
@@ -179,7 +181,7 @@ footer p { font-size: 14px; max-width: none; }
   <img src="img/hero_A011C001.jpg" width="3840" height="1080" alt="Plate A011C001, shot from the air with the lens pointing down, on a whole 8 × 2K wall (7680 × 2160): a snowy mountain valley with a village in the middle, drawn by the node straight from the fisheye">
 </div>
 <div class="wrap hero-copy">
-  <h1><span>2.5–4.7× faster.</span><span>Lighter.</span><span>Sharper.</span></h1>
+  <h1><span>2.5–4.7× faster.</span><span>Lighter.</span><span>Sharper.</span><span class="vs">Than equirect.</span></h1>
   <p class="dek">IgelkottFisheye is a free node for Assimilate Live FX (and an effect for PIXERA) that plays Igelkott's 360° fisheye driving plates straight on the LED wall. It replaces the equirect route: render the fisheye to a 16K equirect file, then turn it into a wall view with <span class="nw">Eq-&gt;2D</span>. No 16K file to render, store or stream, and one resample instead of two.</p>
   <p class="dek">It plays Igelkott plates only. A pixel tag in each plate tells the node which camera shot it and which way the lens pointed; footage without the tag stays black.</p>
   <div class="cta-actions">
@@ -190,21 +192,21 @@ footer p { font-size: 14px; max-width: none; }
 
   <div class="claims">
     <div class="claim">
-      <span class="word">Faster</span>
+      <span class="word">Faster <em>than equirect</em></span>
       <b>2.5–4.7×</b>
-      <p>faster than the equirect route on the same machine: 121 fps against 49 on a Mac Studio, 108 against 23 on a Windows workstation. The plate needs 25, so the equirect route falls short on the PC.</p>
+      <p>the frame rate of equirect on the same machine: 121 fps against 49 on a Mac Studio, 108 against 23 on a Windows workstation. The plate needs 25; equirect falls short on the PC.</p>
       <a href="#faster">Playback in Live FX</a>
     </div>
     <div class="claim">
-      <span class="word">Lighter</span>
+      <span class="word">Lighter <em>than equirect</em></span>
       <b>2.5×</b>
-      <p>less disk in NotchLC, the codec Live FX plays fastest: an hour of plate is 2.6 TB instead of 6.6 TB, read at 0.7 GB/s instead of 1.8. In ProRes 4444 the fisheye is 1.3× smaller.</p>
+      <p>less disk than equirect in NotchLC, the codec Live FX plays fastest: an hour of plate is 2.6 TB against 6.6 TB, read at 0.7 GB/s against 1.8. In ProRes 4444, 1.3× less.</p>
       <a href="#lighter">Storage and disks</a>
     </div>
     <div class="claim">
-      <span class="word">Sharper</span>
+      <span class="word">Sharper <em>than equirect</em></span>
       <b>+20 %</b>
-      <p>detail across the wall (MTF50 at the horizon), +8 % up and down, on a 4K wall at FOV 90. The fisheye is sampled once instead of twice.</p>
+      <p>more detail than equirect across the wall (MTF50 at the horizon), +8 % up and down, on a 4K wall at FOV 90. One resample instead of two.</p>
       <a href="#sharper">Sharpness results</a>
     </div>
   </div>
