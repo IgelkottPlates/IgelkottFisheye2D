@@ -5,7 +5,7 @@ date: 2026-11-24
 deadline: asap
 urgency: normal
 topic: Nya bilder på produktsidan (inga tågbilder) — pusha docs/
-status: pending
+status: done
 ---
 
 # Från m3ultra till ERIC-DESKTOP: nya bilder på GitHub Pages-sidan
@@ -29,14 +29,19 @@ Kollad i webbläsare på m3ultra (1280 × 900 och mobil 375): alla 8 bilder 200,
 
 ## Vad jag förväntar mig att du gör
 
-- [ ] `git status` — väntat: `docs/index.html` och `PROJECT.md` ändrade, 8 nya och 12 borttagna i `docs/img/`,
+- [x] `git status` — väntat: `docs/index.html` och `PROJECT.md` ändrade, 8 nya och 12 borttagna i `docs/img/`,
       denna handoff ny. Inget i `Ref-Eric/`.
-- [ ] `git add -A docs PROJECT.md HANDOFF` (så att de borttagna bilderna följer med), committa och pusha till `main`.
-- [ ] Vänta in Pages-bygget och kolla https://igelkottplates.github.io/IgelkottFisheye2D/ — inga `wall_`- eller
+- [x] `git add -A docs PROJECT.md HANDOFF` (så att de borttagna bilderna följer med), committa och pusha till `main`.
+- [x] Vänta in Pages-bygget och kolla https://igelkottplates.github.io/IgelkottFisheye2D/ — inga `wall_`- eller
       `livefx_nod`-bilder i källan, toppbilden är snölandskapet.
-- [ ] Ändra "alla 13 bilder" i `PROJECT.md` till det du ser, flytta handoffen till `done/`.
+- [x] Ändra "alla 13 bilder" i `PROJECT.md` till det du ser, flytta handoffen till `done/`.
 
 ## Bakgrund
 
 - Förra handoffen: `HANDOFF/done/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-github-pages.md` (e6c3d49).
 - Samma sida som privat artefakt: https://claude.ai/artifact/HzvMBZcBucvaWkRFz9CtVn (Version 9).
+
+## Anteckning
+
+Gjort 2026-11-24 på ERIC-DESKTOP: 4e647f7 pushad (8 nya, 12 gamla borta), Pages byggt. Sidan visar bara de 8 nya
+bilderna, alla laddas, toppbilden är snölandskapet A011C001 i 3840 px, ingen vågrät rullning.

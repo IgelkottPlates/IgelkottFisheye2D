@@ -955,8 +955,8 @@ genom nodens linsmodell (`tools/compare_eq2d.py`, `ours`), nedskalad med area-fi
 webben: toppbilden A011C001 yaw 180 (3840 × 1080), galleriet A011C001 yaw 210 och 180, A001C016 yaw 270 pitch −8 och
 pitch −6, A013C004 och A014C001; Live FX-bilden är A011C001 med noden, klippet satt till ACES AP1 / ACEScct.
 Publicerad 2026-11-24 från ERIC-DESKTOP på GitHub Pages (`main`, `/docs`):
-https://igelkottplates.github.io/IgelkottFisheye2D/ — sedd i webbläsaren, alla 13 bilder laddas, ingen vågrät rullning. De nya bilderna
-(utan tåg) väntar på push: `HANDOFF/2026-11-24-from-IgelkottLiveFXFisheye-m3ultra-pages-bilder.md`.
+https://igelkottplates.github.io/IgelkottFisheye2D/ — de nya bilderna (utan tåg) pushade i 4e647f7 och
+sedda i webbläsaren: alla 8 bilder laddas, toppbilden 3840 px, ingen vågrät rullning.
 
 Eric: "jag vill dela denna plugin på hemsidan så den måste fungera med mac/win med en bra användarupplevelse".
 Målgruppen är Live FX-användare som inte känner Igelkott, på Mac och Windows.
