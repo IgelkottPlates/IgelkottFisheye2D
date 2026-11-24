@@ -3,9 +3,9 @@
   "id": "title",
   "card": [
    "IgelkottFisheye in Live FX",
-   "Set up a wall: 4K, 8K and 16 × 2K"
+   "Set up a wall: 4K, 8K and 15360 × 2160"
   ],
-  "say": "IgelkottFisheye in Assimilate Live FX. In a few minutes you will set up a project that plays an Igelkott fisheye plate straight on an LED wall, with the right colour, at 4K, at 8K, or as sixteen 2K screens from one machine.",
+  "say": "IgelkottFisheye in Assimilate Live FX. In a few minutes you will set up a project that plays an Igelkott fisheye plate straight on an LED wall, with the right colour, at 4K, at 8K, or at 15360 by 2160, from one machine.",
   "cap": ""
  },
  {
@@ -361,8 +361,8 @@
  {
   "id": "mode16",
   "img": "b05_mode_menu",
-  "say": "Sixteen 2K screens is 15360 by 2160, four 4K outputs in a row. Give that size to the timeline, the black shot and the node, and in the node choose Mode, Equirect.",
-  "cap": "16 × 2K = 15360 × 2160 · Mode › Equirect",
+  "say": "The widest wall is 15360 by 2160, four 4K outputs in a row. Give that size to the timeline, the black shot and the node, and in the node choose Mode, Equirect.",
+  "cap": "15360 × 2160 · Mode › Equirect",
   "clicks": [
    {
     "box": [
@@ -378,8 +378,8 @@
  {
   "id": "wall16",
   "img": "b06_wall_16x2k_equirect",
-  "say": "Now the whole sphere, 360 degrees, runs across all sixteen screens, from one node. Yaw turns it.",
-  "cap": "16 × 2K: 360° equirect across four 4K outputs"
+  "say": "Now the whole sphere, 360 degrees, runs across all four outputs, from one node. Yaw turns it.",
+  "cap": "15360 × 2160: 360° equirect across four 4K outputs"
  },
  {
   "id": "monitors",
