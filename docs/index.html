@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="IgelkottFisheye plays Igelkott fisheye plates straight on the LED wall in Assimilate Live FX and PIXERA, with no 16K equirect: 2.5–4.7× faster than the equirect route on the same machine, 2.5× less disk and sharper than the equirect route. Free for Igelkott plates.">
+<meta name="description" content="A 360° plate is usually rendered to a 16K equirect before it reaches the LED wall. IgelkottFisheye leaves the equirect out and plays Igelkott fisheye plates straight on the wall in Assimilate Live FX and PIXERA: 2.5–4.7× the frame rate, 2.5× less disk and sharper than the equirect route, measured on the same machines.">
 <title>IgelkottFisheye on the Wall</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="igelkott.css">
@@ -178,17 +178,17 @@ footer p { font-size: 14px; max-width: none; }
 </header>
 
 <div class="hero">
-  <img src="img/hero_A011C001.jpg" width="3840" height="1080" alt="Plate A011C001, shot from the air with the lens pointing down, on a whole 8 × 2K wall (7680 × 2160): a snowy mountain valley with a village in the middle, drawn by the node straight from the fisheye">
+  <img src="img/hero_A011C001.jpg" width="3840" height="1080" alt="Plate A011C001, shot from the air with the lens pointing down, on a whole 7680 × 2160 wall: a snowy mountain valley with a village in the middle, drawn by the node straight from the fisheye">
 </div>
 <div class="wrap hero-copy">
-  <h1><span>2.5–4.7× faster.</span><span>Lighter.</span><span>Sharper.</span><span class="vs">Than equirect.</span></h1>
-  <p class="dek">IgelkottFisheye is a free node for Assimilate Live FX (and an effect for PIXERA) that plays Igelkott's 360° fisheye driving plates straight on the LED wall. It replaces the equirect route: render the fisheye to a 16K equirect file, then turn it into a wall view with <span class="nw">Eq-&gt;2D</span>. No 16K file to render, store or stream, and one resample instead of two.</p>
+  <h1><span class="vs">Leave equirect.</span><span>2.5–4.7× faster.</span><span>Lighter.</span><span>Sharper.</span></h1>
+  <p class="dek">A 360° fisheye plate is usually rendered to a 16K equirect before it reaches the wall, and <span class="nw">Eq-&gt;2D</span> then cuts the wall view back out of it. That file holds 3.6× the pixels of the fisheye and no new detail. We built IgelkottFisheye to leave it out: a free node for Assimilate Live FX (and an effect for PIXERA) that draws the wall straight from the fisheye.</p>
   <p class="dek">It plays Igelkott plates only. A pixel tag in each plate tells the node which camera shot it and which way the lens pointed; footage without the tag stays black.</p>
   <div class="cta-actions">
     <a class="btn" href="https://github.com/IgelkottPlates/IgelkottFisheye2D/releases/tag/v0.22">Download v0.22 · Mac and Windows</a>
     <a class="btn ghost" href="https://igelkottplates.com/?openDemo=1">Get the free demo plates</a>
   </div>
-  <p class="caption mono">Plate A011C001 · nadir · the whole 8 × 2K wall, 7680 × 2160 · FOV 90</p>
+  <p class="caption mono">Plate A011C001 · nadir · the whole 7680 × 2160 wall · FOV 90</p>
 
   <div class="claims">
     <div class="claim">
@@ -214,19 +214,35 @@ footer p { font-size: 14px; max-width: none; }
 
 <main class="wrap">
 
-<section class="block first" id="faster">
+<section class="block first" id="why">
   <div class="head">
-    <span class="label"><b>Faster</b> · Live FX, Free Run, 8 × 2K and 15360 × 2160 walls</span>
-    <h2>On the same machine, the node plays 2.5 to 4.7 times faster than the equirect route</h2>
-    <p>Free Run plays as fast as the machine allows. With the node, both computers clear 100 fps on an 8 × 2K wall (7680 × 2160) and 90 on a 15360 × 2160 wall. Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on Windows and the transform halves that to 23, short of the plate's 25.</p>
+    <span class="label"><b>Why</b> · leave equirect</span>
+    <h2>The fisheye already holds the whole scene</h2>
+    <p>The equirect route turns the camera's fisheye into a 16K file, stores it, streams it, and turns it back into a wall view. Every step costs time, disk and detail. Drawing the wall straight from the fisheye leaves the detour out, and every number on this page comes from that one difference.</p>
   </div>
-  <div class="chart" role="img" aria-label="Frames per second in Live FX, Free Run. 8 × 2K wall, 7680 × 2160, with IgelkottFisheye (the fisheye plate straight to the wall): Mac 121, Windows 108. The same wall the usual route (a 16K equirect file, then Eq->2D): Mac 49, Windows 23, below the plate's 25. 15360 × 2160 wall, with IgelkottFisheye: Mac 123, Windows 91.">
-    <div class="title">Frames per second in Live FX, Free Run</div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Route</th><th>From plate to wall</th><th>Resamples</th><th>File played</th></tr>
+      <tr><td>Equirect</td><td>fisheye › render a 16K equirect › store › stream › <span class="nw">Eq-&gt;2D</span> › wall</td><td class="mono">2</td><td class="mono">15360 × 7680<br>6.57 TB per hour (NotchLC)</td></tr>
+      <tr><td>IgelkottFisheye</td><td>fisheye › node › wall</td><td class="ok">1</td><td class="ok">5760 × 5760<br>2.59 TB per hour (NotchLC)</td></tr>
+    </table>
+  </div>
+  <p class="caption" style="margin-top:12px">Nothing is rendered in between, so nothing touches the colour: the plate stays in ACEScct from file to wall, and you pick the output your volume runs (PQ, HLG or SDR).</p>
+</section>
+
+<section class="block" id="faster">
+  <div class="head">
+    <span class="label"><b>Faster</b> · Live FX, Free Run, NotchLC</span>
+    <h2>On the Windows workstation the equirect route cannot keep up with the plate. The node plays it four times over</h2>
+    <p>Free Run plays as fast as the machine allows. Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on the Windows workstation and the transform halves that to 23, short of the 25 the plate needs. Straight from the fisheye, the same machine plays 108. On the Mac Studio the node plays 121 against 49: 2.5×.</p>
+  </div>
+  <div class="chart" role="img" aria-label="Frames per second in Live FX, Free Run, NotchLC. 7680 × 2160 wall, with IgelkottFisheye (the fisheye plate straight to the wall): Mac 121, Windows 108. The same wall the usual route (a 16K equirect file, then Eq->2D): Mac 49, Windows 23, below the plate's 25. 15360 × 2160 wall, with IgelkottFisheye: Mac 123, Windows 91.">
+    <div class="title">Frames per second in Live FX, Free Run, NotchLC</div>
     <div class="legend"><span><i style="background:var(--fg)"></i>Mac Studio, M3 Ultra</span><span><i style="background:var(--mute);opacity:.55"></i>Windows workstation, Threadripper 3960X + RX 9070 XT</span><span><i style="background:var(--mark)"></i>the plate, 25 fps</span></div>
-    <div class="group"><b>8 × 2K wall</b>, 7680 × 2160 · with IgelkottFisheye<span class="sub">The fisheye plate, straight to the wall</span></div>
+    <div class="group"><b>7680 × 2160 wall</b> · with IgelkottFisheye<span class="sub">The fisheye plate, straight to the wall</span></div>
     <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:93%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">121 fps</div></div>
     <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:83%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">108 fps</div></div>
-    <div class="group"><b>8 × 2K wall</b>, 7680 × 2160 · the usual route<span class="sub">A 16K equirect file, then <span class="nw">Eq-&gt;2D</span></span></div>
+    <div class="group"><b>7680 × 2160 wall</b> · the equirect route<span class="sub">A 16K equirect file, then <span class="nw">Eq-&gt;2D</span></span></div>
     <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49 fps</div></div>
     <div class="row"><div class="n">Windows<span>below the plate's 25</span></div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23 fps</div></div>
     <div class="group"><b>15360 × 2160 wall</b> · with IgelkottFisheye<span class="sub">The fisheye plate, straight to the wall</span></div>
@@ -240,7 +256,7 @@ footer p { font-size: 14px; max-width: none; }
   <div class="head">
     <span class="label"><b>Lighter</b> · 60 minutes of plate at 25 fps</span>
     <h2>An hour of fisheye fits in 2.6 TB. The same hour as equirect needs 6.6 TB</h2>
-    <p>NotchLC is the codec Live FX plays fastest, and it is where the equirect gets heavy: 2.5× the fisheye. One 8 TB drive holds three hours of fisheye or a little over one hour of equirect. The plates come as ProRes 4444 masters, and the fisheye master is the smallest file of all; there the equirect is 1.3× larger.</p>
+    <p>The fisheye is what the camera recorded, and the smallest file of all. A 16K equirect is a larger copy made from it: 1.3× in the ProRes 4444 master, 2.5× in NotchLC, the codec Live FX plays fastest. One 8 TB drive holds three hours of fisheye or a little over one hour of equirect.</p>
   </div>
   <div class="chart" role="img" aria-label="Terabytes per hour, mean of the nine free demo plates. NotchLC: fisheye 2.59, equirect 6.57. ProRes 4444: fisheye 1.76, equirect 2.35.">
     <div class="legend"><span><i style="background:var(--fg)"></i>Fisheye, 5760 × 5760</span><span><i style="background:var(--mute);opacity:.55"></i>Equirect, 15360 × 7680</span></div>
@@ -263,8 +279,8 @@ footer p { font-size: 14px; max-width: none; }
   </div>
 
   <div class="head" style="margin-top:var(--igelkott-space-12)">
-    <h3>A fast Gen 4 drive keeps up</h3>
-    <p>We tested the same Corsair drive in the Mac and in the Windows workstation. It reads as fast with APFS as with NTFS. An older Gen 3 drive still plays the fisheye, but not the equirect. The plate needs 25 frames a second.</p>
+    <h3>On every drive, the fisheye reads more frames</h3>
+    <p>The same nine plates as fisheye and as 16K equirect, read from three drives. The fisheye reads two to three and a half times as many frames a second on each, and it is the only one that stays above the plate's 25 on all three.</p>
   </div>
   <div class="tablewrap">
     <table>
@@ -281,7 +297,7 @@ footer p { font-size: 14px; max-width: none; }
   <div class="head">
     <span class="label"><b>Sharper</b> · MTF50 at FOV 90 on a 4K wall</span>
     <h2>One resample keeps more of the plate</h2>
-    <p>The equirect route resamples twice: fisheye to equirect, then equirect to wall. IgelkottFisheye goes from the fisheye to the wall in one step. MTF50 is the finest detail that keeps half its contrast, in cycles per wall pixel; higher is sharper.</p>
+    <p>The fisheye holds a fixed amount of detail, and every resample spends some of it. The equirect route resamples twice, fisheye to equirect and equirect to wall; the node resamples once. Up and down, the node already reaches what the plate holds. Across the wall the equirect route loses a fifth, and looking down it loses more. MTF50 is the finest detail that keeps half its contrast, in cycles per wall pixel; higher is sharper.</p>
   </div>
   <div class="pairs">
     <div class="pair"><span class="what">Across the wall, at the horizon</span><div class="nums"><b>0.359</b><s>vs 0.300</s></div><span class="gain">+20 %</span></div>
@@ -291,12 +307,21 @@ footer p { font-size: 14px; max-width: none; }
   <p class="caption" style="margin-top:12px; max-width:80ch">Cycles per wall pixel, Venice 2 plates. IgelkottFisheye first, a 16K equirect of the same plate through <span class="nw">Eq-&gt;2D</span> second; at the horizon, the middle of the four directions. The node's MTF50 comes from a slanted edge drawn through the node (ISO 12233). The equirect route is the node's value times the ratio of the two routes' fine detail, measured on all nine plates. Up and down, the plate itself sets the limit for both routes (about 22 plate pixels per degree, spread over 43 wall pixels), so the gain is smaller there.</p>
 </section>
 
+<section class="block" id="wide">
+  <div class="head">
+    <span class="label"><b>Wider</b> · one node, four 4K outputs in a row</span>
+    <h2>The whole 360° across 15360 × 2160, from one node</h2>
+    <p>In Mode Equirect the node draws the full 360° as a panorama straight from the fisheye; no equirect file and no <span class="nw">Eq-&gt;2D</span> are involved. One node fills 15360 × 2160 at 123 fps on the Mac Studio and 91 on the Windows workstation. The equirect route was measured on the narrower 7680 × 2160 wall, where it reached 49 and 23.</p>
+  </div>
+  <figure class="shot"><img src="img/livefx_wall_16x2k.jpg" width="2560" height="1440" alt="Live FX with IgelkottFisheye in Mode Equirect: the whole 360° of plate A013C004 across a 15360 × 2160 wall" loading="lazy"><figcaption>Plate A013C004 across 15360 × 2160 from one node, Mode Equirect: the whole 360° on all sixteen 2K screens. Yaw turns it.</figcaption></figure>
+</section>
+
 <section class="block">
   <div class="head">
-    <span class="label">Free demo plates · whole walls</span>
-    <h2>Every plate tells the node what it is</h2>
-    <p>A pixel tag in each plate names the camera and which way the lens pointed: up (zenith, the car plates) or down (nadir, the plates shot from the air). The node reads it, so Camera and Pointing stay on Auto (tag), and the two nadir plates, A001C016 and A011C001, come out the right way up. A plate without the tag is not played. Each still is the whole 8 × 2K wall (7680 × 2160), 90° across: one per plate, and the ninth, A011C001, opens this page.</p>
-    <p>The node never touches colour. The plate stays in ACEScct all the way to the wall, so you pick the output your LED volume runs: PQ, HLG or SDR. The stills here are converted to SDR for the web.</p>
+    <span class="label">The plate as shot · free demo plates</span>
+    <h2>Nothing in between: the plate carries its own camera and colour</h2>
+    <p>A pixel tag in each plate names the camera and which way the lens pointed: up (zenith, the car plates) or down (nadir, the plates shot from the air). The node reads it, so Camera and Pointing stay on Auto (tag), and the two nadir plates, A001C016 and A011C001, come out the right way up. A plate without the tag is not played. Each still is the whole 7680 × 2160 wall, 90° across: one per plate, and the ninth, A011C001, opens this page.</p>
+    <p>The node never touches colour. The plate stays in ACEScct all the way to the wall. The stills here are converted to SDR for the web.</p>
   </div>
   <div class="gallery">
     <figure><img src="img/g1_A013C004.jpg" width="1600" height="450" alt="A013C004: driving down a street of brick houses, a red double-decker bus ahead" loading="lazy"><figcaption class="mono">A013C004 · zenith</figcaption></figure>
@@ -307,6 +332,57 @@ footer p { font-size: 14px; max-width: none; }
     <figure><img src="img/g6_A014C006.jpg" width="1600" height="450" alt="A014C006: an empty city road past tall buildings in sunlight" loading="lazy"><figcaption class="mono">A014C006 · zenith</figcaption></figure>
     <figure><img src="img/g7_A007C001.jpg" width="1600" height="450" alt="A007C001: a railway line through green fields" loading="lazy"><figcaption class="mono">A007C001 · zenith</figcaption></figure>
     <figure><img src="img/g8_A001C016.jpg" width="1600" height="450" alt="A001C016: a wide fjord with islands, seen from the air" loading="lazy"><figcaption class="mono">A001C016 · nadir · pitch −6°</figcaption></figure>
+  </div>
+</section>
+
+<section class="block" id="measured">
+  <div class="head">
+    <span class="label">Everything we measured</span>
+    <h2>Fisheye against equirect, on every count</h2>
+    <p>The same plates, the same machines, the same Live FX. Each row is a number from this page.</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Measured</th><th>IgelkottFisheye</th><th>Equirect route</th><th>Fisheye</th></tr>
+      <tr><td>Frame rate, Mac Studio, 7680 × 2160 wall</td><td class="mono">121 fps</td><td class="mono">49 fps</td><td class="ok">2.5× faster</td></tr>
+      <tr><td>Frame rate, Windows workstation, 7680 × 2160 wall</td><td class="mono">108 fps</td><td class="mono">23 fps</td><td class="ok">4.7× faster</td></tr>
+      <tr><td>Pixels per frame</td><td class="mono">33 million</td><td class="mono">118 million</td><td class="ok">3.6× fewer</td></tr>
+      <tr><td>One hour of plate, NotchLC</td><td class="mono">2.59 TB</td><td class="mono">6.57 TB</td><td class="ok">2.5× less</td></tr>
+      <tr><td>One hour of plate, ProRes 4444</td><td class="mono">1.76 TB</td><td class="mono">2.35 TB</td><td class="ok">1.3× less</td></tr>
+      <tr><td>Read at 25 fps, NotchLC</td><td class="mono">718 MB/s</td><td class="mono">1,825 MB/s</td><td class="ok">2.5× less</td></tr>
+      <tr><td>Frames a second from disk, three drives</td><td class="mono">54–270</td><td class="mono">15–110</td><td class="ok">more on every drive</td></tr>
+      <tr><td>Detail across the wall (MTF50, horizon)</td><td class="mono">0.359</td><td class="mono">0.300</td><td class="ok">+20 %</td></tr>
+      <tr><td>Detail up and down (MTF50, horizon)</td><td class="mono">0.234</td><td class="mono">0.217</td><td class="ok">+8 %</td></tr>
+      <tr><td>Detail across, looking down 20°</td><td class="mono">0.420</td><td class="mono">0.308</td><td class="ok">+36 %</td></tr>
+      <tr><td>Resamples between plate and wall</td><td class="mono">1</td><td class="mono">2</td><td class="ok">one fewer</td></tr>
+      <tr><td>16K render before the wall</td><td class="mono">none</td><td class="mono">one per plate</td><td class="ok">left out</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="setup">
+  <div class="head">
+    <span class="label"><b>Set up</b> · Live FX, one machine, four 4K outputs</span>
+    <h2>A black base the size of the wall, the node on top</h2>
+    <p>A Live FX composite takes the size of its first shot. Put the plate first and a wall wider than the plate is cut to the plate's width. So the base is a black shot the size of the wall, and the node sits on it with the plate as its input.</p>
+  </div>
+  <div class="split">
+    <div class="points">
+      <div><b>1 · Project</b><p>Format = the wall. Frame rate = the plate or your volume's: a 25 fps plate plays in a 24 fps project too. Color Management on, ACES 1.1, ACEScct.</p></div>
+      <div><b>2 · Black base</b><p>Construct › Filler › Black in the first slot. Live FX menu › Shot Length Out = plate length − 1. Media › ACEScg (AP1) / ACEScct.</p></div>
+      <div><b>3 · The plate</b><p>Import Clips, answer No to the size question, then Media › ACEScg (AP1) / ACEScct. Live FX suggests Rec709 / 2.4, which looks flat and grey.</p></div>
+      <div><b>4 · The node</b><p>On the black shot: Plug-ins › Matchbox › IgelkottFisheye2D (the node's file name) › Apply On Layer. Then Fetch.. and drag the plate into the input called Fisheye.</p></div>
+      <div><b>5 · Bigger walls</b><p>Give the same size to three things: the timeline, the black shot and the node.</p></div>
+    </div>
+    <div class="tablewrap">
+      <table style="min-width:0">
+        <tr><th>Wall</th><th>Outputs</th><th>Mode</th></tr>
+        <tr><td class="mono">3840 × 2160</td><td>1 × 4K</td><td>Wall</td></tr>
+        <tr><td class="mono">7680 × 2160</td><td>2 × 4K in a row</td><td>Wall</td></tr>
+        <tr><td class="mono">7680 × 4320</td><td>2 × 2 4K</td><td>Wall</td></tr>
+        <tr><td class="mono">15360 × 2160</td><td>4 × 4K in a row</td><td>Equirect: 360° from the fisheye, no equirect file</td></tr>
+      </table>
+    </div>
   </div>
 </section>
 
@@ -328,33 +404,6 @@ footer p { font-size: 14px; max-width: none; }
     </div>
 </section>
 
-<section class="block" id="setup">
-  <div class="head">
-    <span class="label"><b>Set up</b> · Live FX, one machine, four 4K outputs</span>
-    <h2>A black base the size of the wall, the node on top</h2>
-    <p>A Live FX composite takes the size of its first shot. Put the plate first and a wall wider than the plate is cut to the plate's width. So the base is a black shot the size of the wall, and the node sits on it with the plate as its input.</p>
-  </div>
-  <div class="split">
-    <div class="points">
-      <div><b>1 · Project</b><p>Format = the wall. Frame rate = the plate or your volume's: a 25 fps plate plays in a 24 fps project too. Color Management on, ACES 1.1, ACEScct.</p></div>
-      <div><b>2 · Black base</b><p>Construct › Filler › Black in the first slot. Live FX menu › Shot Length Out = plate length − 1. Media › ACEScg (AP1) / ACEScct.</p></div>
-      <div><b>3 · The plate</b><p>Import Clips, answer No to the size question, then Media › ACEScg (AP1) / ACEScct. Live FX suggests Rec709 / 2.4, which looks flat and grey.</p></div>
-      <div><b>4 · The node</b><p>On the black shot: Plug-ins › Matchbox › IgelkottFisheye2D (the node's file name) › Apply On Layer. Then Fetch.. and drag the plate into the input called Fisheye.</p></div>
-      <div><b>5 · Bigger walls</b><p>Give the same size to three things: the timeline, the black shot and the node.</p></div>
-    </div>
-    <div class="tablewrap">
-      <table style="min-width:0">
-        <tr><th>Wall</th><th>Size</th><th>Outputs</th><th>Mode</th></tr>
-        <tr><td>4K</td><td class="mono">3840 × 2160</td><td>1 × 4K</td><td>Wall</td></tr>
-        <tr><td>8 × 2K</td><td class="mono">7680 × 2160</td><td>2 × 4K in a row</td><td>Wall</td></tr>
-        <tr><td>8K</td><td class="mono">7680 × 4320</td><td>2 × 2 4K</td><td>Wall</td></tr>
-        <tr><td>Wide</td><td class="mono">15360 × 2160</td><td>4 × 4K in a row</td><td>Equirect (360°)</td></tr>
-      </table>
-    </div>
-  </div>
-  <figure class="shot"><img src="img/livefx_wall_16x2k.jpg" width="2560" height="1440" alt="Live FX with IgelkottFisheye in Mode Equirect: the whole 360° of plate A013C004 across a 15360 × 2160 wall" loading="lazy"><figcaption>15360 × 2160 from one node: four 4K outputs in a row, Mode Equirect. The node draws the whole 360° straight from the fisheye across all sixteen 2K screens, with no equirect file and no <span class="nw">Eq-&gt;2D</span>; Yaw turns it.</figcaption></figure>
-</section>
-
 <section class="block cta">
   <div class="cta-box">
     <div>
@@ -363,7 +412,6 @@ footer p { font-size: 14px; max-width: none; }
       <ul class="needs">
         <li>Assimilate Live FX on a Mac or Windows (tested with 9.9), or PIXERA on Windows.</li>
         <li>Igelkott plates. The nine demo plates are free.</li>
-        <li>For an 8K wall and up: a fast Gen 4 drive. Tested on a Mac Studio (M3 Ultra) and an AMD Radeon RX 9070 XT.</li>
       </ul>
     </div>
     <div class="cta-actions">
