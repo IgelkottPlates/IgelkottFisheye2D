@@ -78,7 +78,7 @@ section.block { padding-block: var(--igelkott-space-16); border-top: 1px solid v
 /* bars */
 .chart { background: var(--panel); border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg);
   padding: var(--igelkott-space-6); display: flex; flex-direction: column; gap: var(--igelkott-space-4); }
-.row { display: grid; grid-template-columns: 230px minmax(0, 1fr) 72px; gap: var(--igelkott-space-4); align-items: center; }
+.row { display: grid; grid-template-columns: 230px minmax(0, 1fr) 96px; gap: var(--igelkott-space-4); align-items: center; }
 .row .n { font-size: 16px; color: var(--fg); }
 .row .n span { display: block; color: var(--mute); font-size: 14px; }
 .row .v { font-size: 18px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
@@ -91,6 +91,9 @@ section.block { padding-block: var(--igelkott-space-16); border-top: 1px solid v
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
 .group { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
   margin-top: var(--igelkott-space-2); }
+.group b { color: var(--fg); font-weight: 600; }
+.group span.sub { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.chart .title { font-size: 16px; font-weight: 600; color: var(--fg); }
 @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* screenshots */
@@ -156,7 +159,7 @@ footer p { font-size: 14px; max-width: none; }
   .claims, .pairs { grid-template-columns: minmax(0, 1fr); }
   .split { grid-template-columns: minmax(0, 1fr); }
   .gallery { grid-template-columns: minmax(0, 1fr); }
-  .row { grid-template-columns: minmax(0, 1fr) 64px; }
+  .row { grid-template-columns: minmax(0, 1fr) 88px; }
   .row .n { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) { .fill { animation: none; } .gallery figure img { transition: none; } }
@@ -204,21 +207,22 @@ footer p { font-size: 14px; max-width: none; }
 
 <section class="block first" id="faster">
   <div class="head">
-    <span class="label"><b>Faster</b> · Live FX, Free Run, 8K wall</span>
+    <span class="label"><b>Faster</b> · Live FX, Free Run, 8 × 2K and 16 × 2K walls</span>
     <h2>The wall runs four times ahead of the plate</h2>
-    <p>Free Run plays as fast as the machine allows. With the node, both computers clear 100 fps on an 8K wall and 90 on 16K. Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on Windows and the transform halves that to 23, short of the plate's 25.</p>
+    <p>Free Run plays as fast as the machine allows. With the node, both computers clear 100 fps on an 8 × 2K wall (7680 × 2160) and 90 on a 16 × 2K wall (15360 × 2160). Through <span class="nw">Eq-&gt;2D</span>, the 16K equirect decodes at 42 fps on Windows and the transform halves that to 23, short of the plate's 25.</p>
   </div>
-  <div class="chart" role="img" aria-label="Frames per second in Live FX. Fisheye with the node, 8K wall: Mac 121, Windows 108. 16K wall: Mac 123, Windows 91. Equirect with Eq->2D, 8K wall: Mac 49, Windows 23. The plate's rate is 25.">
+  <div class="chart" role="img" aria-label="Frames per second in Live FX, Free Run. 8 × 2K wall, 7680 × 2160, with IgelkottFisheye (the fisheye plate straight to the wall): Mac 121, Windows 108. The same wall the usual route (a 16K equirect file, then Eq->2D): Mac 49, Windows 23, below the plate's 25. 16 × 2K wall, 15360 × 2160, with IgelkottFisheye: Mac 123, Windows 91.">
+    <div class="title">Frames per second in Live FX, Free Run</div>
     <div class="legend"><span><i style="background:var(--fg)"></i>Mac Studio, M3 Ultra</span><span><i style="background:var(--mute);opacity:.55"></i>Windows workstation, Threadripper 3960X + RX 9070 XT</span><span><i style="background:var(--mark)"></i>the plate, 25 fps</span></div>
-    <div class="group">Fisheye + IgelkottFisheye, 7680 × 2160</div>
-    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:93%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">121</div></div>
-    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:83%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">108</div></div>
-    <div class="group">Fisheye + IgelkottFisheye, 15360 × 2160</div>
-    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:94.6%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">123</div></div>
-    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:70%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">91</div></div>
-    <div class="group">16K equirect + <span class="nw">Eq-&gt;2D</span>, 7680 × 2160</div>
-    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49</div></div>
-    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23</div></div>
+    <div class="group"><b>8 × 2K wall</b>, 7680 × 2160 · with IgelkottFisheye<span class="sub">The fisheye plate, straight to the wall</span></div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:93%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">121 fps</div></div>
+    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:83%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">108 fps</div></div>
+    <div class="group"><b>8 × 2K wall</b>, 7680 × 2160 · the usual route<span class="sub">A 16K equirect file, then <span class="nw">Eq-&gt;2D</span></span></div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:37.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">49 fps</div></div>
+    <div class="row"><div class="n">Windows<span>below the plate's 25</span></div><div class="track"><div class="fill alt" style="width:17.7%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">23 fps</div></div>
+    <div class="group"><b>16 × 2K wall</b>, 15360 × 2160 · with IgelkottFisheye<span class="sub">The fisheye plate, straight to the wall</span></div>
+    <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:94.6%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">123 fps</div></div>
+    <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:70%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">91 fps</div></div>
   </div>
   <figure class="shot"><img src="img/livefx_wall_8k.jpg" width="2560" height="1440" alt="Assimilate Live FX with IgelkottFisheye: plate A013C004 on a whole 8K wall, 7680 × 4320, and the node's panel" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX: plate A013C004 on an 8K wall, 7680 × 4320, edge to edge. Camera and Pointing stay on Auto (tag); Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
 </section>
