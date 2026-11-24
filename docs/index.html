@@ -130,6 +130,7 @@ svg text { fill: var(--mute); font-family: var(--font); font-size: 13px; }
 .svgbox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg); padding: var(--igelkott-space-4); }
 .svgbox svg { width: 100%; height: auto; display: block; }
 
+.subhead { font-size: var(--igelkott-storefront-fs-h3); margin: var(--igelkott-space-10) 0 var(--igelkott-space-4); }
 /* facts tables */
 .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--igelkott-radius-lg); }
 table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 16px; }
@@ -249,6 +250,31 @@ footer p { font-size: 14px; max-width: none; }
     <div class="row"><div class="n">Mac</div><div class="track"><div class="fill" style="width:94.6%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">123 fps</div></div>
     <div class="row"><div class="n">Windows</div><div class="track"><div class="fill alt" style="width:70%"></div><div class="ref" style="left:19.2%"></div></div><div class="v">91 fps</div></div>
   </div>
+  <h3 class="subhead">The two machines</h3>
+  <div class="tablewrap">
+    <table>
+      <tr><th></th><th>Mac Studio</th><th>Windows workstation</th></tr>
+      <tr><td>Processor</td><td>Apple M3 Ultra, 28 cores (20 performance, 8 efficiency)</td><td>AMD Ryzen Threadripper 3960X, 24 cores, 48 threads</td></tr>
+      <tr><td>Graphics</td><td>M3 Ultra, 60 GPU cores, Metal 4</td><td>AMD Radeon RX 9070 XT, 16 GB, Adrenalin 26.11.2</td></tr>
+      <tr><td>Memory</td><td>96 GB unified</td><td>256 GB DDR4-3200</td></tr>
+      <tr><td>System</td><td>macOS 26.5 (25F71)</td><td>Windows 10 Pro 22H2 (19045)</td></tr>
+      <tr><td>Live FX</td><td>9.9 build 1212</td><td>9.9 build 1214</td></tr>
+      <tr><td>Plate drive</td><td colspan="2">The same Corsair MP600 PRO NH 8 TB NVMe, reading 4.6–7 GB/s: in an external enclosure on the Mac (APFS), inside the workstation on PCIe 4 ×4 (NTFS)</td></tr>
+    </table>
+  </div>
+  <h3 class="subhead">What the playback uses</h3>
+  <div class="tablewrap">
+    <table>
+      <tr><th>Wall and route</th><th>Machine</th><th>Frames per second</th><th>Processor</th><th>Graphics load</th><th>Read from disk</th></tr>
+      <tr><td rowspan="2">7680 × 2160<br>with IgelkottFisheye</td><td>Mac</td><td class="mono">121</td><td class="mono">1.9 cores</td><td class="mono">68 %</td><td class="mono">3.6 GB/s</td></tr>
+      <tr><td>Windows</td><td class="mono">108</td><td class="mono">2.1 cores</td><td class="mono">30 %</td><td class="mono">3.4 GB/s</td></tr>
+      <tr><td rowspan="2">7680 × 2160<br>the equirect route</td><td>Mac</td><td class="mono">49</td><td class="mono">2.8 cores</td><td class="mono">44 %</td><td class="mono">4.2 GB/s</td></tr>
+      <tr><td>Windows</td><td class="mono">23</td><td class="mono">1.6 cores</td><td class="mono">32 %</td><td class="mono">1.9 GB/s</td></tr>
+      <tr><td rowspan="2">15360 × 2160<br>with IgelkottFisheye</td><td>Mac</td><td class="mono">123</td><td class="mono">not measured</td><td class="mono">99 %</td><td class="mono">not measured</td></tr>
+      <tr><td>Windows</td><td class="mono">91</td><td class="mono">1.7 cores</td><td class="mono">44 %</td><td class="mono">2.9 GB/s</td></tr>
+    </table>
+  </div>
+  <p class="caption" style="margin-top:12px; max-width:80ch">Plate A007C001 in NotchLC, Free Run, the median of about 20 seconds. Processor is the average load in whole cores; graphics load is the busiest engine of the graphics processor. Both machines play the node at far more than 25 fps with most of the processor idle, so neither number is a minimum requirement: these are the only two machines measured.</p>
   <figure class="shot"><img src="img/livefx_wall_8k.jpg" width="2560" height="1440" alt="Assimilate Live FX with IgelkottFisheye: plate A013C004 on a whole 8K wall, 7680 × 4320, in a 24 fps project, and the node's panel" loading="lazy"><figcaption>IgelkottFisheye in Assimilate Live FX: plate A013C004 on an 8K wall, 7680 × 4320 (2 × 2 4K outputs), edge to edge. The project runs at 24 fps and the 25 fps plate plays in it without trouble. Camera and Pointing stay on Auto (tag), read from the plate's pixel tag; Yaw, Pitch, Roll and FOV aim the wall, and Split gives a second wall its own view.</figcaption></figure>
 </section>
 
@@ -313,7 +339,7 @@ footer p { font-size: 14px; max-width: none; }
     <h2>The whole 360° across 15360 × 2160, from one node</h2>
     <p>In Mode Equirect the node draws the full 360° as a panorama straight from the fisheye; no equirect file and no <span class="nw">Eq-&gt;2D</span> are involved. One node fills 15360 × 2160 at 123 fps on the Mac Studio and 91 on the Windows workstation. The equirect route was measured on the narrower 7680 × 2160 wall, where it reached 49 and 23.</p>
   </div>
-  <figure class="shot"><img src="img/livefx_wall_16x2k.jpg" width="2560" height="1440" alt="Live FX with IgelkottFisheye in Mode Equirect: the whole 360° of plate A013C004 across a 15360 × 2160 wall" loading="lazy"><figcaption>Plate A013C004 across 15360 × 2160 from one node, Mode Equirect: the whole 360° on all sixteen 2K screens. Yaw turns it.</figcaption></figure>
+  <figure class="shot"><img src="img/livefx_wall_16x2k.jpg" width="2560" height="1440" alt="Live FX with IgelkottFisheye in Mode Equirect: the whole 360° of plate A013C004 across a 15360 × 2160 wall" loading="lazy"><figcaption>Plate A013C004 across 15360 × 2160 from one node, Mode Equirect: the whole 360° across all four 4K outputs. Yaw turns it.</figcaption></figure>
 </section>
 
 <section class="block">
