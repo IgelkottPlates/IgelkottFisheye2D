@@ -21,7 +21,7 @@ Igelkott Film AB, https://igelkottplates.com"
     SoftwareVersion="2017.0.0"
     TimelineUseBack="False"
     SupportsTimeline="False"
-    Version="0.22">
+    Version="0.23">
     <Shader
         Index="1"
         OutputBitDepth="Float16">

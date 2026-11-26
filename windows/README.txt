@@ -75,6 +75,18 @@ The folder PIXERA holds the same effect for PIXERA (AV Stumpfl):
 IgelkottFisheye.glsl and its own README.txt with how to install it.
 
 
+Adobe After Effects
+-------------------
+The same effect for After Effects is in the AfterEffects folder:
+see AfterEffects/README.txt.
+
+
+DaVinci Resolve
+---------------
+The same effect for DaVinci Resolve (a Fusion tool) is in the Resolve folder:
+see Resolve/README.txt.
+
+
 Files
 -----
   Install IgelkottFisheye.cmd       installs the node
@@ -82,6 +94,8 @@ Files
   Install-IgelkottFisheye.ps1       the installer itself (used by both .cmd)
   IgelkottFisheye2D.glsl / .xml     the node
   PIXERA\                           the same effect for PIXERA
+  Resolve\                          the same effect for DaVinci Resolve
+  AfterEffects\                     the same effect for Adobe After Effects
   VERSION                           version of this package
   LICENSE.txt                       may be used only to play back Igelkott plates
 

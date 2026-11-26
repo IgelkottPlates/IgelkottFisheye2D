@@ -10,6 +10,8 @@ going through an equirect first. It is the same maths IgelkottStage uses, writte
 |---|---|---|
 | Assimilate Live FX (Windows, Mac) | Works, tested on real plates | `matchbox/IgelkottFisheye2D.glsl` + `.xml` |
 | PIXERA (AV Stumpfl) | Built and tested on a graphics card; not yet seen inside PIXERA | `pixera/IgelkottFisheye.glsl` |
+| DaVinci Resolve / Fusion (Fuse) | Tested in Resolve Studio 21.1 on a Mac (rendered, every pixel against the lens model) | `resolve/IgelkottFisheye.fuse` |
+| Adobe After Effects (Mac, Windows) | Tested in After Effects 27.0 on a Mac (a real ProRes plate, every pixel against the lens model); the Windows build is not yet tested | `ae/` (Rust), built as `IgelkottFisheye.plugin` / `.aex` |
 | Nuke, Nuke Stage, Flame, Unreal, Notch, Smode, disguise, ISF hosts… | Not yet: see [docs/PLAYERS.md](docs/PLAYERS.md) | |
 
 What it does on the wall, with numbers: [IgelkottFisheye on the Wall](https://igelkottplates.github.io/IgelkottFisheye2D/).
@@ -35,6 +37,22 @@ Folder…). Restart Live FX. The zip's `README.txt` has the steps and a one-line
 ### PIXERA
 
 See [pixera/README.txt](pixera/README.txt).
+
+### Adobe After Effects
+
+The Mac and Windows zips in [Releases](../../releases) have the plugin in the `AfterEffects` folder. Quit After Effects
+and copy `IgelkottFisheye.plugin` (Mac) to `/Library/Application Support/Adobe/Common/Plug-ins/7.0/MediaCore/`, or
+`IgelkottFisheye.aex` (Windows) to `C:\Program Files\Adobe\Common\Plug-ins\7.0\MediaCore\`. The effect is under
+**Effect → Igelkott → IgelkottFisheye**. Put it on the fisheye clip in a composition the size of the wall and set
+**Wall Width** and **Wall Height** to the composition's size. Details: [ae/README.txt](ae/README.txt).
+
+### DaVinci Resolve
+
+Copy `resolve/IgelkottFisheye.fuse` to `~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Fuses/`
+(Mac) or `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Fuses\` (Windows) and restart Resolve.
+Select the plate on the timeline, open the Fusion page and put **IgelkottFisheye** (Add Tool → Fuses → Igelkott)
+between MediaIn1 and MediaOut1. Set **Wall Width** and **Wall Height** to the timeline's resolution: the clip's own
+Fusion composition has the plate's size, and a Fusion Clip would shrink the plate to the timeline before the effect.
 
 ## Setting up a wall in Live FX
 
@@ -81,14 +99,23 @@ Yaw, Pitch and Roll, so a node with leftover wall angles shows a rotated sphere.
 ## How it is built
 
 The shader source is in `shader/`: `core.glsl` (the lens, the pixel tag, the warning sign), one thin wrapper per player
-and the Live FX panel `IgelkottFisheye2D.xml`. The files in `matchbox/` and `pixera/` are generated from it:
+and the Live FX panel `IgelkottFisheye2D.xml`. Resolve's GPU language (DCTL) has no GLSL, so `core.dctl` is the same
+core by hand, line for line, with the Fuse in `resolve.fuse` and `resolve.dctl`. The files in `matchbox/`, `pixera/` and
+`resolve/` are generated from it:
 
 ```
-python tools/build_shaders.py           # writes matchbox/ and pixera/
+python tools/build_shaders.py           # writes matchbox/, pixera/ and resolve/
 python tools/build_shaders.py --check   # 0 when they are up to date
 python tools/verify_windows.py          # Windows: draws both on the graphics card, compares every pixel with the lens model
 python3 tools/verify_mac.py             # Mac: the same cases for the Live FX version
 ```
+
+Both tests also run the Resolve kernel on the CPU through the same cases when a C++ compiler is there
+(`tools/dctl_cpu.h`); Resolve's own GPU compile is checked in Resolve.
+
+The After Effects plugin (`ae/`, Rust with the [after-effects](https://crates.io/crates/after-effects) crate, no Adobe
+SDK needed) runs the same kernel on the processor: `ae/build.rs` compiles the Fuse's kernel text as C++ after
+`tools/dctl_cpu.h`. Build it with `ae/build-plugin.sh` (Mac) or `ae\build-plugin.ps1` (Windows).
 
 Only Python 3 is needed, with no packages. The camera numbers are in `shader/cameras.json`. Don't edit them by hand,
 because they come from Igelkott's lens package. `tools/verify_windows.py` fails if any output pixel lands more than half

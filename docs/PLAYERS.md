@@ -37,7 +37,8 @@ an STMap or UV map could play a *baked* version (one map per camera, pointing an
 | **TouchDesigner** | Interactive, media server | GLSL TOP *(unverified details)* | GLSL | GLSL wrapper | not started |
 | **Ventuz** | Broadcast, media server | Custom Effect Shader layer ([docs](https://www.ventuz.com/support/help/V8_01/NodeLayerCustomEffectShader.html)) | HLSL | HLSL core | not started |
 | **ISF hosts**: MadMapper, Millumin, VDMX, Modulo Player, Smode, CoGe, Synesthesia; After Effects via ISF4AE, Final Cut Pro and Motion via ISF for Motion ([list](https://docs.isf.video/using_isf)) | Projection mapping, VJ, editing | ISF: one GLSL file with a JSON header for the controls | GLSL | one ISF file reaches all of them | not started |
-| **DaVinci Resolve / Fusion** | Grading, editing | DCTL *(unverified: random access to the source image)*; Fusion Fuse | DCTL (CUDA-like C), Lua + OpenCL | hand port of the core | not started (Igelkott's existing DCTLs only repair plates) |
+| **Adobe After Effects** | Compositing | Native effect plugin (SmartFX, 32 bpc); no custom shader layer in After Effects 27 | Rust ([after-effects](https://crates.io/crates/after-effects) crate) + the DCTL kernel compiled as C++ | `ae/`, same kernel as Resolve | done in 0.23: tested in After Effects 27.0 (Mac); Windows build not yet tested |
+| **DaVinci Resolve / Fusion** | Grading, editing | Fusion Fuse with a DCTL GPU kernel (a Color page DCTL only sees the clip already scaled to the timeline) | DCTL (CUDA-like C) + Lua | `shader/core.dctl`, a hand port of the core | done in 0.23: `resolve/IgelkottFisheye.fuse`, tested in Resolve Studio 21.1 (Mac) |
 | **Resolume** | VJ, media server | FFGL plug-ins; ISF reported to work in Resolume Wire *(unverified)* | C++ / GLSL | FFGL or Wire | not started |
 | **vvvv gamma** | Creative coding, media server | Shader files | SDSL (HLSL-like) | HLSL core | not started |
 | **Hippotizer** (Green Hippo), **Watchout** (Dataton), **Aximmetry**, **Brainstorm** | Media servers, virtual studio | No custom shader route found in this search | ? | ? | ask the vendors or their users |
@@ -50,7 +51,7 @@ an STMap or UV map could play a *baked* version (one map per camera, pointing an
 4. **Unreal Engine**: the largest share of LED volumes; needs an HLSL version of the core, which then also serves
    Notch (and so disguise), Ventuz and vvvv.
 5. **Nuke (BlinkScript)**: plate prep and comp.
-6. **Resolve (DCTL)**: grading; check first that a DCTL can read the source at any point.
+6. ~~**Resolve**~~: done (0.23, a Fusion Fuse).
 7. The rest on request from people who use them.
 
 ## First look in Flame and Nuke Stage

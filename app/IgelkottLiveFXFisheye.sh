@@ -36,6 +36,20 @@ else
     REPORT="✓ Already up to date in $DEST"
     NEXT="Nothing to do."
 fi
+# DaVinci Resolve (0.23): the same effect as a Fuse, copied to the user's Fuses folder when Resolve is installed
+RV_REPORT=""
+RV_ROOT="${IGELKOTT_RESOLVE_DIR:-$HOME/Library/Application Support/Blackmagic Design/DaVinci Resolve}"
+if [ -f "$HERE/Resources/Resolve/IgelkottFisheye.fuse" ] && [ -d "$RV_ROOT" ]; then
+    RV_DEST="$RV_ROOT/Fusion/Fuses"
+    if cmp -s "$HERE/Resources/Resolve/IgelkottFisheye.fuse" "$RV_DEST/IgelkottFisheye.fuse" 2>/dev/null; then
+        RV_REPORT="\n✓ Resolve: IgelkottFisheye.fuse already up to date"
+    elif mkdir -p "$RV_DEST" && cp "$HERE/Resources/Resolve/IgelkottFisheye.fuse" "$RV_DEST/"; then
+        /usr/bin/xattr -d com.apple.quarantine "$RV_DEST/IgelkottFisheye.fuse" 2>/dev/null
+        RV_REPORT="\n✓ Resolve: IgelkottFisheye.fuse updated (restart Resolve; Fusion: Add Tool → Fuses → Igelkott)"
+    else
+        RV_REPORT="\n✗ Resolve: could not write to $RV_DEST"
+    fi
+fi
 # Direction Lock: tracker CSVs (exported from the Curve Editor) in the folder are converted to Stab curves in the
 # subfolder Stab. One click after tracking: start the app. The settings (k, pixels/degrees, signs) are in
 # installningar.txt.
@@ -83,7 +97,7 @@ stabilize() {
 }
 if [ -n "$IGELKOTT_CLIP" ]; then stabilize "$IGELKOTT_CLIP"; exit 0; fi
 
-MSG="IgelkottFisheye2D $VER (build $BUILD)\n$REPORT\n\nLive FX: $LV\nUse the node instead of Eq->2D Transformer on each wall with an 8040 x 8040 fisheye clip: same Yaw, Pitch, Roll and FOV.\n\n$NEXT$DL_REPORT"
+MSG="IgelkottFisheye2D $VER (build $BUILD)\n$REPORT$RV_REPORT\n\nLive FX: $LV\nUse the node instead of Eq->2D Transformer on each wall with an 8040 x 8040 fisheye clip: same Yaw, Pitch, Roll and FOV.\n\n$NEXT$DL_REPORT"
 if [ -n "$IGELKOTT_NO_DIALOG" ] || [ ! -x "$HERE/MacOS/autoyaw" ]; then say_dialog "$MSG" note; exit 0; fi
 CHOICE="$(/usr/bin/osascript -e "button returned of (display dialog \"$MSG\" with title \"Igelkott Live FX Fisheye $VER\" buttons {\"Stabilize a clip …\", \"OK\"} default button 2 with icon note)" 2>/dev/null)"
 if [ "$CHOICE" = "Stabilize a clip …" ]; then

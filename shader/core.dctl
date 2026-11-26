@@ -1,0 +1,236 @@
+// IgelkottFisheye core in DCTL, for DaVinci Resolve (the Fusion Fuse's GPU kernel). A hand port of shader/core.glsl,
+// line for line: the same lens, nadir turn, rotation, wall and equirect directions, pixel tag, warning sign and refusal
+// message. DCTL has no matrices, no swizzles and no overloaded constructors, so a matrix is three columns, and every
+// float literal carries an f (Metal has no double). Change core.glsl and this file together; tools/verify_dctl.py
+// runs this file on the CPU through the same cases as verify_windows.py.
+//
+// tools/build_shaders.py puts the camera numbers and the colours (#define IGK_...) in front of this text and the Fuse
+// wrapper (shader/resolve.fuse) around it. FETCH(p) reads the source at p, fractions of the picture with the top row
+// first; the wrapper defines it.
+
+#define IGK_PI 3.14159265358979f
+#define IGK_DEG 0.017453292519943295f
+
+typedef struct { float3 c0, c1, c2; } IgkMat3;      // three columns, as GLSL's mat3
+
+__DEVICE__ float3 igkMul(IgkMat3 m, float3 v) {
+    return m.c0 * v.x + m.c1 * v.y + m.c2 * v.z;
+}
+
+__DEVICE__ IgkMat3 igkMatMul(IgkMat3 a, IgkMat3 b) {
+    IgkMat3 r;
+    r.c0 = igkMul(a, b.c0); r.c1 = igkMul(a, b.c1); r.c2 = igkMul(a, b.c2);
+    return r;
+}
+
+// GLSL's mod (x - y * floor(x / y)); DCTL's _fmod truncates
+__DEVICE__ float igkMod(float x, float y) {
+    return x - y * _floorf(x / y);
+}
+
+// Cameras: the pixel tag's codes. 1 PYXIS 12K, 2 Sony Venice 2, 3 Z-Cam E2 S6, 0 and 4-7 none.
+__DEVICE__ bool igkHasModel(int cam) {
+    return cam >= 1 && cam <= 3;
+}
+
+__DEVICE__ float2 igkLensCenter(int cam) {
+    if (cam == 3) return to_float2(IGK_ZCAM_CENTER_X, IGK_ZCAM_CENTER_Y) / IGK_ZCAM_REF;
+    if (cam == 2) return to_float2(IGK_VENICE_CENTER_X, IGK_VENICE_CENTER_Y) / IGK_VENICE_REF;
+    return to_float2(IGK_PYXIS_CENTER_X, IGK_PYXIS_CENTER_Y) / IGK_PYXIS_REF;
+}
+
+__DEVICE__ float4 igkLensK(int cam) {
+    if (cam == 3) return to_float4(IGK_ZCAM_K1, IGK_ZCAM_K2, IGK_ZCAM_K3, IGK_ZCAM_K4) / IGK_ZCAM_REF;
+    if (cam == 2) return to_float4(IGK_VENICE_K1, IGK_VENICE_K2, IGK_VENICE_K3, IGK_VENICE_K4) / IGK_VENICE_REF;
+    return to_float4(IGK_PYXIS_K1, IGK_PYXIS_K2, IGK_PYXIS_K3, IGK_PYXIS_K4) / IGK_PYXIS_REF;
+}
+
+// The direction's point in the source, fractions of the picture, top row first
+__DEVICE__ float2 igkLensPoint(float3 d, int cam, bool nadir) {
+    if (nadir) d = to_float3(d.x, -d.y, -d.z);
+    float4 k = igkLensK(cam);
+    float rho = _sqrtf(d.x * d.x + d.z * d.z);
+    float th = _atan2f(rho, d.y);
+    float t2 = th * th;
+    float poly = k.x + t2 * (k.y + t2 * (k.z + t2 * k.w));
+    float f = rho > 1e-9f ? poly * th / rho : poly;
+    return igkLensCenter(cam) + to_float2(d.x, d.z) * f;
+}
+
+__DEVICE__ bool igkInside(float2 p) {
+    return p.x >= 0.0f && p.x <= 1.0f && p.y >= 0.0f && p.y <= 1.0f;
+}
+
+// R = Ry(yaw) * Rx(-pitch) * Rz(roll), as IgelkottStage (CameraCost.rotation) and Eq->2D
+__DEVICE__ IgkMat3 igkRotation(float y, float p, float r) {
+    y *= IGK_DEG; p *= -IGK_DEG; r *= IGK_DEG;
+    IgkMat3 ry, rx, rz;
+    ry.c0 = to_float3(_cosf(y), 0.0f, -_sinf(y)); ry.c1 = to_float3(0.0f, 1.0f, 0.0f); ry.c2 = to_float3(_sinf(y), 0.0f, _cosf(y));
+    rx.c0 = to_float3(1.0f, 0.0f, 0.0f); rx.c1 = to_float3(0.0f, _cosf(p), _sinf(p)); rx.c2 = to_float3(0.0f, -_sinf(p), _cosf(p));
+    rz.c0 = to_float3(_cosf(r), _sinf(r), 0.0f); rz.c1 = to_float3(-_sinf(r), _cosf(r), 0.0f); rz.c2 = to_float3(0.0f, 0.0f, 1.0f);
+    return igkMatMul(igkMatMul(ry, rx), rz);
+}
+
+// A flat wall: c = the point relative to the wall's middle (y up), ww = the wall's width, fov = the horizontal angle
+// from the wall's left edge to its right edge
+__DEVICE__ float3 igkWallDirection(float2 c, float ww, IgkMat3 r, float fov) {
+    float f = 0.5f * _fmaxf(ww, 1e-4f) / _tanf(_clampf(fov, 1.0f, 179.0f) * IGK_DEG * 0.5f);
+    float3 v = to_float3(c.x / f, c.y / f, 1.0f);
+    v = v / _sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return igkMul(r, v);
+}
+
+// Mode Equirect: 360 degrees over the whole canvas width w, the same degrees per pixel up and down; w = 0 past a pole
+__DEVICE__ float4 igkEquirectDirection(float2 c, float w, IgkMat3 r) {
+    float k = 2.0f * IGK_PI / w;
+    float lat = c.y * k;
+    if (_fabs(lat) > 0.5f * IGK_PI) return to_float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float lon = c.x * k;
+    float3 d = igkMul(r, to_float3(_cosf(lat) * _sinf(lon), _sinf(lat), _cosf(lat) * _cosf(lon)));
+    return to_float4(d.x, d.y, d.z, 1.0f);
+}
+
+// MARK: The pixel tag (PixelTag in _shared/IgelkottFisheyeLens; the rules live there, see core.glsl)
+
+#define IGK_TAG_CELL 0.011f
+#define IGK_TAG_X 0.116f
+#define IGK_TAG_Y 0.010f
+#define IGK_TAG_MIN_CONTRAST 0.1f
+
+__DEVICE__ float2 igkTagCell(int k, int i) {
+    float fi = (float)i;
+    float row = _floorf(fi / 10.0f);
+    float2 p = to_float2(IGK_TAG_X + (fi - 10.0f * row + 0.5f) * IGK_TAG_CELL, IGK_TAG_Y + (row + 0.5f) * IGK_TAG_CELL);
+    if (k == 1 || k == 3) p.x = 1.0f - p.x;
+    if (k >= 2) p.y = 1.0f - p.y;
+    return p;
+}
+
+__DEVICE__ float igkLuma(float4 c) {
+    return 0.2126f * c.x + 0.7152f * c.y + 0.0722f * c.z;
+}
+
+__DEVICE__ float igkXor39(float c) {
+    float r = c;
+    r += igkMod(c, 2.0f) > 0.5f ? -1.0f : 1.0f;
+    r += igkMod(_floorf(c / 2.0f), 2.0f) > 0.5f ? -2.0f : 2.0f;
+    r += igkMod(_floorf(c / 4.0f), 2.0f) > 0.5f ? -4.0f : 4.0f;
+    r += c >= 32.0f ? -32.0f : 32.0f;
+    return r;
+}
+
+__DEVICE__ float igkCrcStep(float crc, float bit) {
+    float top = crc >= 32.0f ? 1.0f : 0.0f;
+    crc = igkMod(crc * 2.0f, 64.0f);
+    return top != bit ? igkXor39(crc) : crc;
+}
+
+// The tag in corner k: camera * 2 + nadir, or -1
+__DEVICE__ float igkTagCorner(SRC_PARAM int k) {
+    float white = igkLuma(FETCH(igkTagCell(k, 0)));
+    float black = igkLuma(FETCH(igkTagCell(k, 1)));
+    if (white - black < IGK_TAG_MIN_CONTRAST) return -1.0f;
+    float mid = 0.5f * (white + black);
+    float data = 0.0f;
+    float crc = 63.0f;
+    float check = 0.0f;
+    for (int i = 2; i < 20; i++) {
+        float bit = igkLuma(FETCH(igkTagCell(k, i))) > mid ? 1.0f : 0.0f;
+        if (i < 14) {
+            data = data * 2.0f + bit;
+            crc = igkCrcStep(crc, bit);
+        } else {
+            check = check * 2.0f + bit;
+        }
+    }
+    if (check != crc || _floorf(data / 1024.0f) != 1.0f) return -1.0f;
+    return igkMod(_floorf(data / 128.0f), 8.0f) * 2.0f + igkMod(_floorf(data / 64.0f), 2.0f);
+}
+
+__DEVICE__ float igkVotes(float t, float a, float b, float c, float d) {
+    return t < 0.0f ? 0.0f : (a == t ? 1.0f : 0.0f) + (b == t ? 1.0f : 0.0f) + (c == t ? 1.0f : 0.0f) + (d == t ? 1.0f : 0.0f);
+}
+
+// The tag most corners agree on (camera * 2 + nadir), or -1 when no corner reads
+__DEVICE__ float igkTag(SRC_PARAM float unused) {
+    float a = igkTagCorner(SRC_ARG 0);
+    float b = igkTagCorner(SRC_ARG 1);
+    if (a >= 0.0f && a == b) return a;
+    float c = igkTagCorner(SRC_ARG 2);
+    float d = igkTagCorner(SRC_ARG 3);
+    float best = a;
+    float n = igkVotes(a, a, b, c, d);
+    float m = igkVotes(b, a, b, c, d);
+    if (m > n) { best = b; n = m; }
+    m = igkVotes(c, a, b, c, d);
+    if (m > n) { best = c; n = m; }
+    m = igkVotes(d, a, b, c, d);
+    if (m > n) { best = d; n = m; }
+    return best;
+}
+
+// The plate: (camera, nadir 0/1, state); state 0 play, 1 no lens model, 2 no valid tag (refused)
+__DEVICE__ float3 igkPlate(float tag, int camera, int pointing) {
+    if (tag < 0.0f) return to_float3(0.0f, 0.0f, 2.0f);
+    int cam = camera == 0 ? (int)_floorf(tag / 2.0f + 0.25f) : camera;
+    float nadir = pointing == 0 ? igkMod(tag, 2.0f) : (pointing == 2 ? 1.0f : 0.0f);
+    return to_float3((float)cam, nadir, igkHasModel(cam) ? 0.0f : 1.0f);
+}
+
+// The warning sign: 0 = not on the sign, 1 = yellow, 2 = black. q from the output's top left corner, y down.
+__DEVICE__ float igkWarning(float2 q, float size) {
+    float2 p = (q - to_float2(0.5f * size, 0.5f * size)) / size;
+    if (p.x < 0.0f || p.x > 1.0f || p.y < 0.0f || p.y > 0.9f) return 0.0f;
+    if (_fabs(p.x - 0.5f) > 0.5f * p.y / 0.9f) return 0.0f;
+    if (_fabs(p.x - 0.5f) < 0.06f && ((p.y > 0.3f && p.y < 0.62f) || (p.y > 0.7f && p.y < 0.8f))) return 2.0f;
+    return 1.0f;
+}
+
+// MARK: The refusal message (see core.glsl): letters of 5 x 7 dots, two whole numbers per letter
+
+__DEVICE__ float2 igkMessageGlyph(int i) {
+    if (i == 0 || i == 5) return to_float2(583347.0f, 17969.0f);                                   // N
+    if (i == 1 || i == 12 || i == 25 || i == 36) return to_float2(476721.0f, 17966.0f);            // O
+    if (i == 2 || i == 13 || i == 14 || i == 26 || i == 27 || i == 31) return to_float2(1020036.0f, 4228.0f);   // T
+    if (i == 4 || i == 30) return to_float2(476735.0f, 17969.0f);                                  // A
+    if (i == 7 || i == 18 || i == 20) return to_float2(462980.0f, 4238.0f);                        // I
+    if (i == 8 || i == 21) return to_float2(476695.0f, 17967.0f);                                  // G
+    if (i == 9 || i == 22 || i == 32) return to_float2(1032734.0f, 16927.0f);                      // E
+    if (i == 10 || i == 17 || i == 23 || i == 29) return to_float2(541200.0f, 16927.0f);           // L
+    if (i == 11 || i == 24) return to_float2(576152.0f, 21073.0f);                                 // K
+    if (i == 16 || i == 35) return to_float2(476688.0f, 16942.0f);                                 // C
+    if (i == 19 || i == 28) return to_float2(1001022.0f, 16912.0f);                                // P
+    if (i == 33) return to_float2(508430.0f, 1086.0f);                                             // S
+    if (i == 34) return to_float2(0.0f, 396.0f);                                                   // .
+    if (i == 37) return to_float2(585397.0f, 17969.0f);                                            // M
+    return to_float2(0.0f, 0.0f);                                                                  // the spaces
+}
+
+__DEVICE__ float igkPow32(float n) {
+    return n < 0.5f ? 1.0f : (n < 1.5f ? 32.0f : (n < 2.5f ? 1024.0f : 32768.0f));
+}
+
+__DEVICE__ float igkPow2(float n) {
+    return n < 0.5f ? 1.0f : (n < 1.5f ? 2.0f : (n < 2.5f ? 4.0f : (n < 3.5f ? 8.0f : 16.0f)));
+}
+
+// 1 on the first line, 2 on IGELKOTTPLATES, 3 on .COM, else 0. q from the output's top left corner (y down).
+__DEVICE__ float igkMessage(float2 q, float2 size) {
+    float unit = _fminf(0.7f * size.x / 119.0f, 0.15f * size.y / 7.0f);
+    float2 p = (q - size * 0.5f) / unit + to_float2(59.5f, 9.0f);
+    if (p.x < 0.0f || p.x >= 119.0f || p.y < 0.0f || p.y >= 18.0f) return 0.0f;
+    float letter = _floorf(p.x / 6.0f);
+    float col = _floorf(p.x - 6.0f * letter);
+    if (col > 4.5f) return 0.0f;
+    float row = _floorf(p.y);
+    float line = 1.0f;
+    if (row > 6.5f) {
+        if (row < 10.5f || letter < 0.5f || letter > 18.5f) return 0.0f;
+        row -= 11.0f;
+        letter += 19.0f;
+        line = letter > 33.5f ? 3.0f : 2.0f;
+    }
+    float2 g = igkMessageGlyph((int)letter);
+    float bits = row < 3.5f ? igkMod(_floorf(g.x / igkPow32(3.0f - row)), 32.0f) : igkMod(_floorf(g.y / igkPow32(6.0f - row)), 32.0f);
+    return line * igkMod(_floorf(bits / igkPow2(4.0f - col)), 2.0f);
+}

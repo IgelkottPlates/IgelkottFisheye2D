@@ -1,0 +1,56 @@
+// The Resolve kernel (Fusion Fuse), as matchbox.glsl's main. Fusion counts pixels and texture coordinates from the
+// bottom left (Fusion Fuse SDK, "Image Basics"); the core works with the top row first, so the row from the top is
+// h - 1 - y and the source is read at (p.x, 1 - p.y).
+
+__KERNEL__ void IgkKernel(__CONSTANTREF__ IgkParams *params, __TEXTURE2D__ src, __TEXTURE2D_WRITE__ dst) {
+    DEFINE_KERNEL_ITERATORS_XY(x, y)
+    if (x < params->dstsize[0] && y < params->dstsize[1]) {
+        float w = (float)params->dstsize[0];
+        float h = (float)params->dstsize[1];
+        float2 frag = to_float2((float)x + 0.5f, h - (float)y - 0.5f);      // as gl_FragCoord in Live FX: rows from the top
+        float tag = igkTag(SRC_ARG 0.0f);
+        float3 pl = igkPlate(tag, params->camera, params->pointing);
+        int cam = (int)(pl.x + 0.5f);
+        bool nadir = pl.y > 0.5f;
+        bool split = params->split != 0;
+        float splitX = split ? _clampf(params->splitPos, 0.0f, 100.0f) * 0.01f * w : w;
+        IgkMat3 rLeft = igkRotation(params->view[0], params->view[1], params->view[2]);
+        IgkMat3 rRight = igkRotation(params->viewR[0], params->viewR[1], params->viewR[2]);
+        float3 sum = to_float3(0.0f, 0.0f, 0.0f);
+        if (pl.z < 0.5f) {
+            for (int j = 0; j < 2; j++) {
+                for (int i = 0; i < 2; i++) {
+                    float2 q = frag + (to_float2((float)i, (float)j) + 0.5f) * 0.5f - 0.5f;
+                    q.y = h - q.y;                                                  // y up from the bottom
+                    bool right = q.x >= splitX;
+                    float2 s = q - (right ? to_float2(params->offset[2], params->offset[3]) : to_float2(params->offset[0], params->offset[1]));
+                    float2 c = s - to_float2(right ? 0.5f * (splitX + w) : 0.5f * splitX, 0.5f * h);
+                    float3 d;
+                    if (params->mode == 1) {
+                        float4 e = igkEquirectDirection(c, w, right ? rRight : rLeft);
+                        if (e.w < 0.5f) continue;                                   // past a pole: black
+                        d = to_float3(e.x, e.y, e.z);
+                    } else {
+                        d = igkWallDirection(c, right ? w - splitX : splitX, right ? rRight : rLeft, right ? params->viewR[3] : params->view[3]);
+                    }
+                    float2 p = igkLensPoint(d, cam, nadir);
+                    if (igkInside(p)) {
+                        float4 v = FETCH(p);
+                        sum = sum + to_float3(v.x, v.y, v.z);
+                    }
+                }
+            }
+        }
+        float3 color = sum * 0.25f;
+        if (pl.z > 1.5f) {
+            float m = igkMessage(frag, to_float2(w, h));
+            if (m > 0.5f) color = m > 2.5f ? IGK_BRAND_ACCENT : (m > 1.5f ? IGK_BRAND_TEXT : IGK_WARNING_YELLOW);
+        }
+        if (pl.z > 0.5f) {
+            float mark = igkWarning(frag, _fmaxf(16.0f, 0.05f * h));
+            if (mark > 1.5f) color = to_float3(0.0f, 0.0f, 0.0f);
+            else if (mark > 0.5f) color = IGK_WARNING_YELLOW;
+        }
+        _tex2DVec4Write(dst, x, y, to_float4(color.x, color.y, color.z, 1.0f));
+    }
+}

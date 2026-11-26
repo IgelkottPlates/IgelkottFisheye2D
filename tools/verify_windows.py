@@ -13,8 +13,12 @@
 # and Sony Venice 2, zenith and nadir, Wall, Split and Equirect, and the warning sign pixel by pixel. The limit is 0.5
 # source pixels at 8040.
 #
+# The Resolve edition (resolve/IgelkottFisheye.fuse, a DCTL kernel by hand) is run on the CPU through the same cases when
+# a C++ compiler is there (clang++, g++ or c++; tools/dctl_cpu.h gives it the DCTL types and texture reads); it is
+# skipped otherwise. That tests the port's maths, not Resolve's GPU compiler (seen in Resolve).
+#
 # Returns 0 when all cases hold, otherwise 1.
-import array, ctypes, ctypes.wintypes as wt, json, math, os, subprocess, sys
+import array, ctypes, ctypes.wintypes as wt, json, math, os, shutil, subprocess, sys, tempfile
 
 root = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
@@ -355,6 +359,9 @@ for pname, val in ((GL_TEXTURE_MIN_FILTER, GL_LINEAR), (GL_TEXTURE_MAG_FILTER, G
 gl.glPixelStorei(GL_PACK_ALIGNMENT, 1); gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
 
+uploaded = {}
+
+
 def upload(n, tag, top_row_first):
     """The gradient n × n (R = x, G = y from the top) with the tag drawn: tag = four corners, each None or
     (cells, white, black)."""
@@ -381,6 +388,7 @@ def upload(n, tag, top_row_first):
         img = array.array("f")
         for r in reversed(rows):
             img.extend(r)
+    uploaded.update(n=n, img=img, top=top_row_first)
     buf = (GLfloat * len(img)).from_buffer(img)
     gl.glBindTexture(GL_TEXTURE_2D, src_tex)
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, n, n, 0, GL_RGBA, GL_FLOAT, buf)
@@ -417,6 +425,78 @@ def render(prog, c, setup):
             px[row] = list(line)
     glDeleteFramebuffers(1, ctypes.byref(fbo)); gl.glDeleteTextures(1, ctypes.byref(out))
     return px
+
+
+# MARK: - The Resolve edition: the Fuse's DCTL kernel compiled for the CPU
+
+resolve_src = read_file("resolve", "IgelkottFisheye.fuse")
+
+
+class IgkParams(ctypes.Structure):
+    _fields_ = [("camera", ctypes.c_int), ("pointing", ctypes.c_int), ("mode", ctypes.c_int), ("split", ctypes.c_int),
+                ("offset", ctypes.c_float * 4), ("view", ctypes.c_float * 4), ("viewR", ctypes.c_float * 4),
+                ("splitPos", ctypes.c_float), ("dstsize", ctypes.c_int * 2)]
+
+
+def build_resolve():
+    """The kernel text out of the .fuse (between [==[ and ]==]) after tools/dctl_cpu.h, as a shared library, or None."""
+    cxx = next((c for c in ("clang++", "g++", "c++") if shutil.which(c)), None)
+    if cxx is None:
+        print("Resolve (Fuse kernel): SKIP, no C++ compiler (clang++, g++ or c++) here.")
+        return None
+    params = resolve_src.split("IgkParams = [[", 1)[1].split("]]", 1)[0]
+    kernel = resolve_src.split("[==[", 1)[1].split("]==]", 1)[0]
+    with open(os.path.join(root, "tools", "dctl_cpu.h"), encoding="utf-8") as fh:
+        header = fh.read()
+    text = (header + "\ntypedef struct {" + params + "} IgkParams;\n" + kernel + "\n"
+            'extern "C" void igk_run(const float *src, int n, float *out, const IgkParams *p) {\n'
+            "    Tex s = {src, nullptr, n, n, 16LL * n, 0, 0}; Tex d = {nullptr, out, p->dstsize[0], p->dstsize[1], 16LL * p->dstsize[0], 0, 0};\n"
+            "    for (igk_gy = 0; igk_gy < d.h; igk_gy++) for (igk_gx = 0; igk_gx < d.w; igk_gx++) IgkKernel(p, &s, &d);\n}\n")
+    tmp = tempfile.mkdtemp(prefix="igk_resolve_")
+    cpp, lib = os.path.join(tmp, "kernel.cpp"), os.path.join(tmp, "kernel" + (".dll" if os.name == "nt" else ".so"))
+    with open(cpp, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    r = subprocess.run([cxx, "-std=c++14", "-O2", "-shared", "-fPIC", "-o", lib, cpp], capture_output=True, text=True)
+    if r.returncode != 0:
+        fail("the Resolve kernel does not compile for the CPU:\n" + r.stderr[-3000:])
+    so = ctypes.CDLL(lib)
+    so.igk_run.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(IgkParams)]
+    print("Resolve (Fuse kernel): the DCTL kernel compiles for the CPU (%s)." % cxx)
+    return so
+
+
+resolve_lib = build_resolve()
+
+
+def render_resolve(c):
+    """The kernel over the whole output; the source as Fusion holds it (rows from the bottom). Returns the pixels with
+    the top row first, as the Live FX render."""
+    n, img = uploaded["n"], uploaded["img"]
+    if uploaded["top"]:                                        # Fusion: rows from the bottom
+        flipped = array.array("f")
+        for r in range(n - 1, -1, -1):
+            flipped.extend(img[r * n * 4:(r + 1) * n * 4])
+        img = flipped
+    w, h = c["w"], c["h"]
+    p = IgkParams(c["cam"], c["pointing"], c["mode"], int(c["split"]))
+    p.offset[:] = [c["offset"][0], c["offset"][1], c["roffset"][0], c["roffset"][1]]
+    p.view[:] = [c["yaw"], c["pitch"], c["roll"], c["fov"]]
+    p.viewR[:] = list(c["right"])
+    p.splitPos = c["pos"]; p.dstsize[0] = w; p.dstsize[1] = h
+    src = (ctypes.c_float * len(img)).from_buffer(img)
+    out = (ctypes.c_float * (w * h * 4))()
+    resolve_lib.igk_run(src, n, out, ctypes.byref(p))
+    step = c.get("step", 1)
+    rows = {}
+    for row in (range(h) if step == 1 else range(step // 2, h, step)):
+        y = h - 1 - row                                        # the kernel's y counts from the bottom
+        rows[row] = out[y * w * 4:(y + 1) * w * 4]
+    if step > 1:
+        return rows
+    flat = []
+    for row in range(h):
+        flat.extend(rows[row])
+    return flat
 
 
 def uniforms(prefix):
@@ -670,6 +750,13 @@ if "--canvas" in sys.argv:
             if last != repr(c["tag"]):
                 upload(2048, c["tag"], top); last = repr(c["tag"])
             all_good &= check(c, render(matchbox if host == "livefx" else pixera, c, setup), 2048, host)
+    if resolve_lib is not None:
+        print("Resolve (Fuse kernel on the CPU), source 2048 x 2048:")
+        last = "unset"
+        for c in big:
+            if last != repr(c["tag"]):
+                upload(2048, c["tag"], True); last = repr(c["tag"])
+            all_good &= check(c, render_resolve(c), 2048, "livefx")
     print("All canvases match IgelkottStage." if all_good else "Some canvases differ from IgelkottStage.")
     sys.exit(0 if all_good else 1)
 
@@ -683,6 +770,13 @@ for n in (1024, 1008):
         if last != repr(c["tag"]):
             upload(n, c["tag"], True); last = repr(c["tag"])
         all_good &= check(c, render(matchbox, c, setup_matchbox), n, "livefx")
+    if resolve_lib is not None:
+        print("Resolve (Fuse kernel on the CPU, rows from the bottom), source %d x %d:" % (n, n))
+        last = "unset"
+        for c in cases:
+            if last != repr(c["tag"]):
+                upload(n, c["tag"], True); last = repr(c["tag"])
+            all_good &= check(c, render_resolve(c), n, "livefx")
     print("PIXERA (texture coordinates up), source %d x %d:" % (n, n))
     last = "unset"
     for c in cases:
@@ -980,10 +1074,10 @@ for name, nums in (("pyxis12K", CENTER + K), ("sonyVenice2", VCENTER + VK), ("zc
     block = shared[at:at + 600] if at >= 0 else ""
     for v in nums:
         in_block = repr(v) in block or (repr(v).endswith(".0") and repr(v)[:-2] in block)   # Swift: 1936
-        if not in_block or repr(v) not in matchbox_src or repr(v) not in pixera_src:
+        if not in_block or repr(v) not in matchbox_src or repr(v) not in pixera_src or repr(v) not in resolve_src:
             same = False; print("  differs: %s %r" % (name, v))
 all_good &= same
-print("  %s PYXIS 12K, Sony Venice 2 and Z-Cam E2 S6: both shaders and this test use the numbers in %s"
+print("  %s PYXIS 12K, Sony Venice 2 and Z-Cam E2 S6: Live FX, PIXERA, Resolve and this test use the numbers in %s"
       % ("PASS" if same else "FAIL", source))
 
 print("All cases match IgelkottStage." if all_good else "Some cases differ from IgelkottStage.")

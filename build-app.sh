@@ -45,12 +45,13 @@ command -v node >/dev/null || { echo "ERROR: node is missing (needed for tools/t
 
 echo "==> Building the .app bundle ($VERSION, build $BUILD_NUMBER)"
 rm -rf "$APP_DIR"
-mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources/Matchbox"
+mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources/Matchbox" "$APP_DIR/Contents/Resources/Resolve"
 cp "$SRC_ROOT/app/$APP_NAME.sh" "$APP_DIR/Contents/MacOS/$APP_NAME"
 chmod +x "$APP_DIR/Contents/MacOS/$APP_NAME"
 swiftc -O "$SRC_ROOT/tools/directionlock.swift" -o "$APP_DIR/Contents/MacOS/directionlock" 2>/dev/null
 cp "$AUTOYAW_BIN" "$APP_DIR/Contents/MacOS/autoyaw"
 cp "$SRC_ROOT/matchbox/IgelkottFisheye2D.glsl" "$SRC_ROOT/matchbox/IgelkottFisheye2D.xml" "$APP_DIR/Contents/Resources/Matchbox/"
+cp "$SRC_ROOT/resolve/IgelkottFisheye.fuse" "$APP_DIR/Contents/Resources/Resolve/"
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
